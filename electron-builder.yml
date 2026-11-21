@@ -1,5 +1,5 @@
 appId: com.stackblitz.bolt.diy
-productName: CodeWriterAI
+productName: CodeApp AI
 directories:
   buildResources: build
   output: dist

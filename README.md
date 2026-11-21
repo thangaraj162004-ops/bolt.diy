@@ -1,8 +1,8 @@
-# CodeWriterAI
+# CodeApp AI
 
-**CodeWriterAI** is a website and app builder. Describe the site or app you want, pick your preferred LLM for every prompt, and CodeWriterAI writes the code and shows a live preview in your browser. It supports 22+ model providers (OpenAI, Anthropic, Gemini, Groq, xAI, DeepSeek, Ollama, LM Studio, and more), and any provider supported by the Vercel AI SDK. OpenRouter, Anthropic, OpenAI, and Google are enabled by default; enable and configure other providers in Settings.
+**CodeApp AI** is a website and app builder. Describe the site or app you want, pick your preferred LLM for every prompt, and CodeApp AI writes the code and shows a live preview in your browser. It supports 22+ model providers (OpenAI, Anthropic, Gemini, Groq, xAI, DeepSeek, Ollama, LM Studio, and more), and any provider supported by the Vercel AI SDK. OpenRouter, Anthropic, OpenAI, and Google are enabled by default; enable and configure other providers in Settings.
 
-CodeWriterAI is built on the open-source project [bolt.diy](https://github.com/stackblitz-labs/bolt.diy) (MIT license). Bolt and StackBlitz names and logos belong to their owners and are not used as the CodeWriterAI brand. See the in-app **Open source notices** page (`/open-source`) and [LICENSE](LICENSE).
+CodeApp AI is built on the open-source project [bolt.diy](https://github.com/stackblitz-labs/bolt.diy) (MIT license). Bolt and StackBlitz names and logos belong to their owners and are not used as the CodeApp AI brand. See the in-app **Open source notices** page (`/open-source`) and [LICENSE](LICENSE).
 
 ---
 

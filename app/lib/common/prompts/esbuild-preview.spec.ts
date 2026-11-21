@@ -88,9 +88,9 @@ describe('esbuild-preview prompt', () => {
     expect(artifactPrompt).toContain('<boltAction type="start">npm run dev</boltAction>');
   });
 
-  it('names the assistant CodeWriterAI in both versions, never Bolt', () => {
-    expect(artifactPrompt.startsWith('You are CodeWriterAI, a website and app builder')).toBe(true);
-    expect(toolPrompt.startsWith('You are CodeWriterAI,')).toBe(true);
+  it('names the assistant CodeApp AI in both versions, never Bolt', () => {
+    expect(artifactPrompt.startsWith('You are CodeApp AI, a website and app builder')).toBe(true);
+    expect(toolPrompt.startsWith('You are CodeApp AI,')).toBe(true);
     expect(artifactPrompt).not.toMatch(/\bBolt\b/);
     expect(toolPrompt).not.toMatch(/\bBolt\b/);
 

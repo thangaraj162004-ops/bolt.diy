@@ -51,14 +51,14 @@ function visibleStrings(source: string) {
 }
 
 describe('brand', () => {
-  it('is CodeWriterAI', () => {
-    expect(PRODUCT_NAME).toBe('CodeWriterAI');
-    expect(pageTitle()).toBe('CodeWriterAI');
-    expect(pageTitle('Open source notices')).toBe('Open source notices | CodeWriterAI');
+  it('is CodeApp AI', () => {
+    expect(PRODUCT_NAME).toBe('CodeApp AI');
+    expect(pageTitle()).toBe('CodeApp AI');
+    expect(pageTitle('Open source notices')).toBe('Open source notices | CodeApp AI');
   });
 
-  it('the chat placeholder names CodeWriterAI', () => {
-    expect(chatPlaceholder('build')).toBe('How can CodeWriterAI help you today?');
+  it('the chat placeholder names CodeApp AI', () => {
+    expect(chatPlaceholder('build')).toBe('How can CodeApp AI help you today?');
     expect(chatPlaceholder('discuss')).toBe('What would you like to discuss?');
     expect(chatPlaceholder('build')).not.toMatch(OLD_BRAND);
   });

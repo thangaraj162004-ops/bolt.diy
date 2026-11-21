@@ -3,14 +3,13 @@
  * BoltShell, CSS classes, storage keys, API routes, package and Worker names)
  * intentionally stay as they are.
  */
-export const PRODUCT_NAME = 'CodeWriterAI';
+export const PRODUCT_NAME = 'CodeApp AI';
 
 export const PRODUCT_TAGLINE = 'A website and app builder';
 
-export const PRODUCT_DESCRIPTION =
-  'CodeWriterAI is a website and app builder: describe what you want and it builds it.';
+export const PRODUCT_DESCRIPTION = 'CodeApp AI is a website and app builder: describe what you want and it builds it.';
 
-/** A page title: "Page | CodeWriterAI", or just the product name. */
+/** A page title: "Page | CodeApp AI", or just the product name. */
 export function pageTitle(page?: string) {
   return page ? `${page} | ${PRODUCT_NAME}` : PRODUCT_NAME;
 }

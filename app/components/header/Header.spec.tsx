@@ -14,12 +14,12 @@ import DeployChatAlert from '~/components/deploy/DeployAlert';
 const OLD_BRAND = /\bBolt\b|bolt\.diy|bolt\.new|StackBlitz/i;
 
 describe('Header', () => {
-  it('shows the CodeWriterAI wordmark and no Bolt logo', () => {
+  it('shows the CodeApp AI wordmark and no Bolt logo', () => {
     const { container } = render(<Header />);
 
     const wordmark = screen.getByTestId('brand-wordmark');
-    expect(wordmark.getAttribute('aria-label')).toBe('CodeWriterAI');
-    expect(wordmark.textContent).toBe('CodeWriterAI');
+    expect(wordmark.getAttribute('aria-label')).toBe('CodeApp AI');
+    expect(wordmark.textContent).toBe('CodeApp AI');
     expect(container.querySelectorAll('img')).toHaveLength(0);
     expect(container.textContent).not.toMatch(OLD_BRAND);
     expect(container.innerHTML).not.toMatch(/logo-(light|dark)/);
@@ -27,7 +27,7 @@ describe('Header', () => {
 });
 
 describe('alerts', () => {
-  it('the preview/terminal alert asks CodeWriterAI, not Bolt', () => {
+  it('the preview/terminal alert asks CodeApp AI, not Bolt', () => {
     const { container } = render(
       <ChatAlert
         alert={{ type: 'preview', title: 'Uncaught Exception', description: 'boom', content: 'x', source: 'preview' }}
@@ -36,12 +36,12 @@ describe('alerts', () => {
       />,
     );
 
-    expect(screen.getByText('Ask CodeWriterAI')).toBeTruthy();
-    expect(container.textContent).toContain('Would you like CodeWriterAI to analyze');
+    expect(screen.getByText('Ask CodeApp AI')).toBeTruthy();
+    expect(container.textContent).toContain('Would you like CodeApp AI to analyze');
     expect(container.textContent).not.toMatch(OLD_BRAND);
   });
 
-  it('the deploy alert asks CodeWriterAI, not Bolt', () => {
+  it('the deploy alert asks CodeApp AI, not Bolt', () => {
     const { container } = render(
       <DeployChatAlert
         alert={{
@@ -58,6 +58,6 @@ describe('alerts', () => {
     );
 
     expect(container.textContent).not.toMatch(OLD_BRAND);
-    expect(container.textContent).toContain('Ask CodeWriterAI');
+    expect(container.textContent).toContain('Ask CodeApp AI');
   });
 });
