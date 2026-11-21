@@ -22,7 +22,15 @@ if (!import.meta.env.SSR) {
   webcontainer =
     import.meta.hot?.data.webcontainer ??
     Promise.resolve()
-      .then(() => {
+      .then(async () => {
+        // Preview engine switch: 'webcontainer' (default) or 'esbuild' (in-memory shim, no WebContainer boot).
+        if (import.meta.env.VITE_PREVIEW_ENGINE === 'esbuild') {
+          const shimModule = await import('./shim/shim');
+
+          // the shim implements our own `~/lib/webcontainer/types` interface, not the full upstream class
+          return new shimModule.WebContainerShim() as unknown as WebContainer;
+        }
+
         return WebContainer.boot({
           coep: 'credentialless',
           workdirName: WORK_DIR_NAME,
