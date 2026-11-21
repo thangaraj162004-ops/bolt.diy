@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { SPAWN_NOT_SUPPORTED_MESSAGE, ShimEventEmitter, WebContainerShim } from './shim';
+import { ShimEventEmitter, WebContainerShim } from './shim';
 import type { PreviewMessage, WebContainer } from '~/lib/webcontainer/types';
 import { WORK_DIR } from '~/utils/constants';
 
@@ -59,16 +59,13 @@ describe('WebContainerShim', () => {
     expect(shim.previewScript).toBe('console.log("inspector")');
   });
 
-  it('spawns a fake process that says commands are not supported', async () => {
+  it('spawns a one-off process for an unsupported command that exits with 127', async () => {
     const shim = new WebContainerShim();
-    const process = await shim.spawn('npm', ['run', 'dev'], { terminal: { cols: 80, rows: 24 } });
+    const process = await shim.spawn('python', ['app.py'], { terminal: { cols: 80, rows: 24 } });
 
     const output = await readAll(process.output);
-    expect(output).toContain(SPAWN_NOT_SUPPORTED_MESSAGE);
-    expect(output).toContain('npm run dev');
-    expect(output.trim().split('\n')).toHaveLength(1);
-
-    await expect(process.exit).resolves.toBe(1);
+    expect(output).toContain('command not supported in the browser preview: python');
+    await expect(process.exit).resolves.toBe(127);
 
     const writer = process.input.getWriter();
     await expect(writer.write('ls\n')).resolves.toBeUndefined();
