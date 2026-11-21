@@ -359,6 +359,31 @@ describe('dev server', () => {
     await waitFor(() => shim.getPreviewHtml(PREVIEW_PORT)?.includes('back') === true);
   });
 
+  it('puts the error bridge in the HTML with the current token, a new one per build, and reports updates', async () => {
+    const shim = await createShim(REACT_PROJECT);
+    const updates: string[] = [];
+    shim.onPreviewUpdate((update) => updates.push(update.kind));
+
+    collect(await shim.spawn('npm', ['run', 'dev']));
+    await waitFor(() => shim.previewRuntime?.version === 1);
+
+    const firstToken = shim.getPreviewBridgeToken(PREVIEW_PORT)!;
+    expect(firstToken).toMatch(/^[0-9a-f]{32}$/);
+    expect(shim.getPreviewHtml(PREVIEW_PORT)).toContain(`"token":"${firstToken}"`);
+    expect(shim.getPreviewHtml(PREVIEW_PORT)).toContain('data-bolt-preview-bridge');
+
+    await shim.rebuildPreview(PREVIEW_PORT);
+
+    const secondToken = shim.getPreviewBridgeToken(PREVIEW_PORT);
+    expect(secondToken).not.toBe(firstToken);
+    expect(shim.getPreviewHtml(PREVIEW_PORT)).toContain(`"token":"${secondToken}"`);
+
+    await shim.fs.writeFile('src/App.tsx', `import x from './gone';\nexport default () => x;`);
+    await waitFor(() => updates.includes('build-error'));
+    expect(shim.getPreviewBridgeToken(PREVIEW_PORT)).toBeUndefined();
+    expect(updates).toEqual(['ready', 'rebuilt', 'build-error']);
+  });
+
   it('kill() stops the runtime and its watcher: no more rebuilds, port closes', async () => {
     const shim = await createShim(REACT_PROJECT);
     const ports = vi.fn();
