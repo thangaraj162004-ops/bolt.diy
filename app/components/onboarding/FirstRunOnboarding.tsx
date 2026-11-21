@@ -2,6 +2,7 @@ import Cookies from 'js-cookie';
 import { useEffect, useMemo, useState } from 'react';
 import { Dialog, DialogDescription, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { API_KEYS_UPDATED_EVENT, type ApiKeysUpdatedDetail } from '~/lib/api/apiKeys';
+import { PRODUCT_NAME } from '~/lib/brand';
 import { getAll, openDatabase } from '~/lib/persistence/db';
 import type { MCPConfig } from '~/lib/services/mcpService';
 import { useMCPStore } from '~/lib/stores/mcp';
@@ -208,7 +209,7 @@ export function FirstRunOnboarding() {
               />
             ))}
           </div>
-          <DialogTitle className="text-xl font-semibold">Welcome to Bolt</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">Welcome to {PRODUCT_NAME}</DialogTitle>
           <DialogDescription className="mt-1 text-sm !text-[#a09baa]">
             Let’s get your workspace ready. Optional details can be left blank and changed later in Settings.
           </DialogDescription>

@@ -5,10 +5,17 @@ import { BaseChat } from '~/components/chat/BaseChat';
 import { GitUrlImport } from '~/components/git/GitUrlImport.client';
 import { Header } from '~/components/header/Header';
 import BackgroundRays from '~/components/ui/BackgroundRays';
+import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '~/lib/brand';
 
-export const meta: MetaFunction = () => {
-  return [{ title: 'Bolt' }, { name: 'description', content: 'Talk with Bolt, an AI assistant from StackBlitz' }];
-};
+export const meta: MetaFunction = () => [
+  { title: PRODUCT_NAME },
+  { name: 'description', content: PRODUCT_DESCRIPTION },
+  { property: 'og:title', content: PRODUCT_NAME },
+  { property: 'og:description', content: PRODUCT_DESCRIPTION },
+  { property: 'og:site_name', content: PRODUCT_NAME },
+  { name: 'twitter:title', content: PRODUCT_NAME },
+  { name: 'twitter:description', content: PRODUCT_DESCRIPTION },
+];
 
 export async function loader(args: LoaderFunctionArgs) {
   return Response.json({ url: args.params.url });

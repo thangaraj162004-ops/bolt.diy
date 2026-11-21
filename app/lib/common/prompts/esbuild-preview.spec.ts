@@ -88,6 +88,17 @@ describe('esbuild-preview prompt', () => {
     expect(artifactPrompt).toContain('<boltAction type="start">npm run dev</boltAction>');
   });
 
+  it('names the assistant CodeWriterAI in both versions, never Bolt', () => {
+    expect(artifactPrompt.startsWith('You are CodeWriterAI, a website and app builder')).toBe(true);
+    expect(toolPrompt.startsWith('You are CodeWriterAI,')).toBe(true);
+    expect(artifactPrompt).not.toMatch(/\bBolt\b/);
+    expect(toolPrompt).not.toMatch(/\bBolt\b/);
+
+    // the default engine's prompts keep their original wording
+    expect(getProjectToolPrompt(OPTIONS).startsWith('You are Bolt,')).toBe(true);
+    expect(getFineTunedPrompt()).toContain('You are Bolt');
+  });
+
   it('every shell and start action it shows is one of the allowed commands', () => {
     const commands = commandsIn(artifactPrompt);
 

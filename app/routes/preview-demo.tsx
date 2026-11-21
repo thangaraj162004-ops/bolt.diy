@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import type { MetaFunction } from 'react-router';
 import { ClientOnly } from 'remix-utils/client-only';
+import { pageTitle } from '~/lib/brand';
 import { isPreviewDemoEnabled } from '~/lib/webcontainer/engine';
 
 /*
@@ -14,7 +15,10 @@ const PreviewDemo = lazy(() =>
   import('~/components/preview-demo/PreviewDemo.client').then((m) => ({ default: m.PreviewDemo })),
 );
 
-export const meta: MetaFunction = () => [{ title: 'Preview demo' }, { name: 'robots', content: 'noindex, nofollow' }];
+export const meta: MetaFunction = () => [
+  { title: pageTitle('Preview demo') },
+  { name: 'robots', content: 'noindex, nofollow' },
+];
 
 export function loader() {
   if (!isPreviewDemoEnabled()) {

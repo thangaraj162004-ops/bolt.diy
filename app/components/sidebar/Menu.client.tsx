@@ -15,8 +15,7 @@ const LazyControlPanel = lazy(() =>
 );
 import { Button } from '~/components/ui/Button';
 import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
-import { DocumentationPanel } from '~/components/ui/DocumentationPanel';
-import { SettingsButton, HelpButton } from '~/components/ui/SettingsButton';
+import { SettingsButton, OpenSourceNoticesLink } from '~/components/ui/SettingsButton';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { db, deleteById, getAll, chatId, type ChatHistoryItem, useChatHistory } from '~/lib/persistence';
@@ -77,7 +76,6 @@ export const Menu = () => {
   const [open, setOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState<DialogContent>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isDocumentationOpen, setIsDocumentationOpen] = useState(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<string | undefined>(undefined);
   const profile = useStore(profileStore);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -366,7 +364,7 @@ export const Menu = () => {
         <div className="h-12 flex items-center justify-between px-4 border-b border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 rounded-tr-2xl">
           <div className="text-bolt-elements-textPrimary font-medium"></div>
           <div className="flex items-center gap-3">
-            <HelpButton onClick={() => setIsDocumentationOpen(true)} />
+            <OpenSourceNoticesLink />
             <span className="font-medium text-sm text-bolt-elements-textPrimary truncate">
               {profile?.username || 'Guest User'}
             </span>
@@ -577,7 +575,6 @@ export const Menu = () => {
       <Suspense fallback={null}>
         <LazyControlPanel open={isSettingsOpen} onClose={handleSettingsClose} initialTab={settingsInitialTab as any} />
       </Suspense>
-      <DocumentationPanel open={isDocumentationOpen} onClose={() => setIsDocumentationOpen(false)} />
     </>
   );
 };

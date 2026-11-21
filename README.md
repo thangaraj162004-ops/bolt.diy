@@ -1,16 +1,8 @@
-# bolt.diy
+# CodeWriterAI
 
-[![bolt.diy: AI-Powered Full-Stack Web Development in the Browser](./public/social_preview_index(1).jpg)](https://bolt.diy)
+**CodeWriterAI** is a website and app builder. Describe the site or app you want, pick your preferred LLM for every prompt, and CodeWriterAI writes the code and shows a live preview in your browser. It supports 22+ model providers (OpenAI, Anthropic, Gemini, Groq, xAI, DeepSeek, Ollama, LM Studio, and more), and any provider supported by the Vercel AI SDK. OpenRouter, Anthropic, OpenAI, and Google are enabled by default; enable and configure other providers in Settings.
 
-Welcome to **bolt.diy**, the open-source AI developer workspace that lets you select your preferred LLM for every prompt. Build full-stack web applications in the browser with support for 22+ model providers (OpenAI, Anthropic, Gemini, Groq, xAI, DeepSeek, Ollama, LM Studio, and more), or extend it with any provider supported by the Vercel AI SDK. OpenRouter, Anthropic, OpenAI, and Google are enabled by default; enable and configure other providers in Settings.
-
-[Documentation](https://stackblitz-labs.github.io/bolt.diy/) | [Community Forum](https://thinktank.ottomator.ai) | [FAQ & Troubleshooting](FAQ.md)
-
----
-
-Also [this pinned post in our community](https://thinktank.ottomator.ai/t/videos-tutorial-helpful-content/3243) has a bunch of incredible resources for running and deploying bolt.diy yourself!
-
-bolt.diy was originally started by [Cole Medin](https://www.youtube.com/@ColeMedin) but has quickly grown into a massive community effort to build the BEST open source AI coding assistant!
+CodeWriterAI is built on the open-source project [bolt.diy](https://github.com/stackblitz-labs/bolt.diy) (MIT license). Bolt and StackBlitz names and logos belong to their owners and are not used as the CodeWriterAI brand. See the in-app **Open source notices** page (`/open-source`) and [LICENSE](LICENSE).
 
 ---
 

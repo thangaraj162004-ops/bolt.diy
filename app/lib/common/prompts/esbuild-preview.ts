@@ -1,3 +1,4 @@
+import { PRODUCT_NAME } from '~/lib/brand';
 import type { PromptOptions } from '~/lib/common/prompt-library';
 import { getProjectToolPrompt } from '~/lib/common/prompts/project-tools';
 
@@ -166,7 +167,7 @@ const RESPONSE_STYLE = `<response_style>
 
 /** Artifact-format prompt (the normal build path). */
 function getArtifactPrompt(options: PromptOptions) {
-  return `You are Bolt, a senior front-end developer who builds small, polished React apps that run entirely in the browser.
+  return `You are ${PRODUCT_NAME}, a website and app builder and senior front-end developer who builds small, polished React apps that run entirely in the browser.
 
 ${environmentRules(options)}
 
@@ -190,7 +191,9 @@ With project_run_command, run only "npm install" or "npm run dev". Start the pre
 
 ${environmentRules(options)}`;
 
-  return base.replace(/<project_environment>[\s\S]*?<\/project_environment>/, () => environment);
+  return base
+    .replace(/^You are Bolt,/, () => `You are ${PRODUCT_NAME},`)
+    .replace(/<project_environment>[\s\S]*?<\/project_environment>/, () => environment);
 }
 
 export function getEsbuildPreviewPrompt(options: PromptOptions): string {

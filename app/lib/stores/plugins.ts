@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { PRODUCT_NAME } from '~/lib/brand';
 import { isSupportedAdapter } from '~/lib/plugins/adapters';
 import {
   pluginDatabase,
@@ -110,7 +111,7 @@ export const usePluginStore = create<PluginStore>((set, get) => ({
       const manifest = pluginManifestSchema.parse(input.manifest);
 
       if (!isSupportedAdapter(manifest)) {
-        throw new Error('This plugin requires an adapter that is not supported by this version of Bolt.');
+        throw new Error(`This plugin requires an adapter that is not supported by this version of ${PRODUCT_NAME}.`);
       }
 
       const existing = await pluginDatabase.get(manifest.id);

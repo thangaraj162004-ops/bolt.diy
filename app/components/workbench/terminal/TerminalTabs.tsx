@@ -4,6 +4,7 @@ import { Panel, type PanelImperativeHandle } from 'react-resizable-panels';
 import { Terminal, type TerminalRef } from './Terminal';
 import { TerminalManager } from './TerminalManager';
 import { IconButton } from '~/components/ui/IconButton';
+import { PRODUCT_NAME } from '~/lib/brand';
 import { themeStore } from '~/lib/stores/theme';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
@@ -162,7 +163,7 @@ export const TerminalTabs = memo(() => {
                       onClick={() => setActiveTerminal(index)}
                     >
                       <div className="i-ph:terminal-window-duotone text-lg" />
-                      Bolt Terminal
+                      {PRODUCT_NAME} Terminal
                     </button>
                   ) : (
                     <React.Fragment>

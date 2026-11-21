@@ -41,6 +41,7 @@ const DOM_TESTS = [
   'app/components/workbench/WorkbenchReopenButton.spec.tsx',
   'app/components/workbench/Preview.spec.tsx',
   'app/components/preview-demo/PreviewDemo.spec.tsx',
+  'app/components/header/Header.spec.tsx',
   'app/lib/hooks/useMessageParser.spec.ts',
   'app/lib/persistence/useChatHistory.spec.tsx',
 

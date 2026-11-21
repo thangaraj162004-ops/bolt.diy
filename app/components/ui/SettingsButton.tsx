@@ -17,19 +17,17 @@ export const SettingsButton = memo(({ onClick }: SettingsButtonProps) => {
   );
 });
 
-interface HelpButtonProps {
-  onClick: () => void;
-}
-
-export const HelpButton = memo(({ onClick }: HelpButtonProps) => {
+/** Small icon link to the open source notices page (/open-source). */
+export const OpenSourceNoticesLink = memo(() => {
   return (
-    <IconButton
-      onClick={onClick}
-      icon="i-ph:question"
-      size="xl"
-      title="Help & Documentation"
-      data-testid="help-button"
-      className="text-[#666] hover:text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive/10 transition-colors"
-    />
+    <a
+      href="/open-source"
+      title="Open source notices"
+      aria-label="Open source notices"
+      data-testid="open-source-link"
+      className="flex items-center justify-center rounded-md p-1 text-xl text-[#666] hover:text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive/10 transition-colors"
+    >
+      <span className="i-ph:scales" />
+    </a>
   );
 });
