@@ -3,6 +3,7 @@
  * builds once on start, rebuilds (debounced) when files change, and keeps the
  * latest HTML document and build error.
  */
+import { createBridgeToken } from './bridge';
 import { BuildError, buildProject, projectFilesFromFileSystem, type BuildInput, type BuildResult } from './compiler';
 import { renderPreviewHtml } from './html-template';
 import type { MemoryFileSystem } from '~/lib/webcontainer/shim/memory-fs';
@@ -27,6 +28,9 @@ export interface PreviewRuntimeOptions {
   getPreviewScript?: () => string | undefined;
   env?: Record<string, string>;
   rebuildDelayMs?: number;
+
+  /** When set, every build gets the error bridge with a fresh random token. */
+  bridge?: { previewId: string; port: number; targetOrigin: string };
 }
 
 export interface ReadyEvent {
@@ -89,6 +93,8 @@ export class PreviewRuntime {
   #getPreviewScript: () => string | undefined;
   #env: Record<string, string> | undefined;
   #delay: number;
+  #bridge: PreviewRuntimeOptions['bridge'];
+  #bridgeToken: string | undefined;
 
   #listeners: { [K in keyof PreviewRuntimeEvents]: Set<PreviewRuntimeEvents[K]> } = {
     ready: new Set(),
@@ -112,6 +118,12 @@ export class PreviewRuntime {
     this.#getPreviewScript = options.getPreviewScript ?? (() => undefined);
     this.#env = options.env;
     this.#delay = options.rebuildDelayMs ?? DEFAULT_REBUILD_DELAY_MS;
+    this.#bridge = options.bridge;
+  }
+
+  /** Token of the error bridge in the current HTML (changes with every successful build). */
+  get bridgeToken(): string | undefined {
+    return this.#lastError ? undefined : this.#bridgeToken;
   }
 
   /** Latest successful HTML document, if any. */
@@ -216,7 +228,10 @@ export class PreviewRuntime {
       const result = await this.#compiler.buildProject({ files: projectFilesFromFileSystem(this.#fs), env: this.#env });
       const indexHtml = await this.#readIndexHtml();
 
+      const token = this.#bridge ? createBridgeToken() : undefined;
+
       const html = renderPreviewHtml({
+        bridge: this.#bridge && token ? { ...this.#bridge, token } : undefined,
         js: result.js,
         css: result.css,
         indexHtml,
@@ -229,6 +244,7 @@ export class PreviewRuntime {
       }
 
       this.#html = html;
+      this.#bridgeToken = token;
       this.#lastError = undefined;
       this.#version++;
 

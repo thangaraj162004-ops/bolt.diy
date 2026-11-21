@@ -9,6 +9,10 @@ import { IconButton } from '~/components/ui/IconButton';
 import { ExpoQrModal } from '~/components/workbench/ExpoQrModal';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import { workbenchStore } from '~/lib/stores/workbench';
+import { webcontainer } from '~/lib/webcontainer';
+import { ESBUILD_PREVIEW_SANDBOX, PREVIEW_ENGINE, parseEsbuildPreviewUrl } from '~/lib/webcontainer/engine';
+import { createPreviewBridgeListener } from '~/lib/webcontainer/shim/preview/bridge';
+import type { WebContainerShim } from '~/lib/webcontainer/shim/shim';
 
 type ResizeSide = 'left' | 'right' | null;
 
@@ -65,6 +69,16 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
   const hasSelectedPreview = useRef(false);
   const previews = useStore(workbenchStore.previews);
   const activePreview = previews[activePreviewIndex];
+
+  /*
+   * esbuild engine: the preview is an HTML document from the shim, shown with
+   * `srcDoc` in a sandboxed iframe (no allow-same-origin). Undefined for the
+   * WebContainer engine, which keeps using `src` exactly as before.
+   */
+  const esbuildPort = PREVIEW_ENGINE === 'esbuild' ? parseEsbuildPreviewUrl(activePreview?.baseUrl) : undefined;
+  const isEsbuildPreview = esbuildPort !== undefined;
+  const esbuildShimRef = useRef<WebContainerShim | undefined>(undefined);
+  const [esbuildSrcDoc, setEsbuildSrcDoc] = useState<string | undefined>();
   const [displayPath, setDisplayPath] = useState('/');
   const [iframeUrl, setIframeUrl] = useState<string | undefined>();
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -111,6 +125,62 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
     setDisplayPath('/');
   }, [activePreview]);
 
+  // esbuild engine: show the shim's latest HTML and update it after every build (ready, rebuilt, build-error)
+  useEffect(() => {
+    if (esbuildPort === undefined) {
+      setEsbuildSrcDoc(undefined);
+      return undefined;
+    }
+
+    let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
+
+    void webcontainer.then((instance) => {
+      const shim = instance as unknown as WebContainerShim;
+
+      if (cancelled || typeof shim.getPreviewHtml !== 'function') {
+        return;
+      }
+
+      esbuildShimRef.current = shim;
+
+      const refresh = () => setEsbuildSrcDoc(shim.getPreviewHtml(esbuildPort));
+      refresh();
+      unsubscribe = shim.onPreviewUpdate((update) => {
+        if (update.port === esbuildPort) {
+          refresh();
+        }
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
+  }, [esbuildPort]);
+
+  /*
+   * esbuild engine: the one listener for the preview's error bridge. A message
+   * counts only if it comes from this iframe's window, carries the current
+   * build's token and has a valid shape; it then goes to the shim's
+   * `preview-message` event (handled in ~/lib/webcontainer).
+   */
+  useEffect(() => {
+    if (esbuildPort === undefined) {
+      return undefined;
+    }
+
+    const listener = createPreviewBridgeListener({
+      getFrameWindow: () => iframeRef.current?.contentWindow,
+      getToken: () => esbuildShimRef.current?.getPreviewBridgeToken(esbuildPort),
+      onMessage: (message) => esbuildShimRef.current?.events.emit('preview-message', message),
+    });
+
+    window.addEventListener('message', listener);
+
+    return () => window.removeEventListener('message', listener);
+  }, [esbuildPort]);
+
   const findMinPortIndex = useCallback(
     (minIndex: number, preview: { port: number }, index: number, array: { port: number }[]) => {
       return preview.port < array[minIndex].port ? index : minIndex;
@@ -126,6 +196,12 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
   }, [previews, findMinPortIndex]);
 
   const reloadPreview = () => {
+    // esbuild engine: rebuild; the new HTML (new bridge token) reloads the iframe
+    if (esbuildPort !== undefined) {
+      void esbuildShimRef.current?.rebuildPreview(esbuildPort);
+      return;
+    }
+
     if (iframeRef.current) {
       iframeRef.current.src = iframeRef.current.src;
     }
@@ -384,6 +460,11 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
   );
 
   const openInNewWindow = (size: WindowSize) => {
+    // never for the esbuild engine: outside the sandbox the generated code would run in our origin
+    if (isEsbuildPreview) {
+      return;
+    }
+
     if (activePreview?.baseUrl) {
       const match = activePreview.baseUrl.match(/^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/);
 
@@ -559,6 +640,10 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
   };
 
   const openInNewTab = () => {
+    if (isEsbuildPreview) {
+      return;
+    }
+
     if (activePreview?.baseUrl) {
       window.open(activePreview?.baseUrl, '_blank');
     }
@@ -882,7 +967,7 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                 }
               }
             }}
-            disabled={!activePreview}
+            disabled={!activePreview || isEsbuildPreview}
           />
         </div>
 
@@ -941,46 +1026,51 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                       <span className="text-sm font-medium text-[#111827] dark:text-gray-300">Window Options</span>
                     </div>
                     <div className="flex flex-col gap-2">
-                      <button
-                        className={`flex w-full justify-between items-center text-start bg-transparent text-xs text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary`}
-                        onClick={() => {
-                          openInNewTab();
-                        }}
-                      >
-                        <span>Open in new tab</span>
-                        <div className="i-ph:arrow-square-out h-5 w-4" />
-                      </button>
-                      <button
-                        className={`flex w-full justify-between items-center text-start bg-transparent text-xs text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary`}
-                        onClick={() => {
-                          if (!activePreview?.baseUrl) {
-                            console.warn('[Preview] No active preview available');
-                            return;
-                          }
+                      {/* esbuild engine: no new tab/window, the preview must stay inside the sandboxed iframe */}
+                      {!isEsbuildPreview && (
+                        <>
+                          <button
+                            className={`flex w-full justify-between items-center text-start bg-transparent text-xs text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary`}
+                            onClick={() => {
+                              openInNewTab();
+                            }}
+                          >
+                            <span>Open in new tab</span>
+                            <div className="i-ph:arrow-square-out h-5 w-4" />
+                          </button>
+                          <button
+                            className={`flex w-full justify-between items-center text-start bg-transparent text-xs text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary`}
+                            onClick={() => {
+                              if (!activePreview?.baseUrl) {
+                                console.warn('[Preview] No active preview available');
+                                return;
+                              }
 
-                          const match = activePreview.baseUrl.match(
-                            /^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/,
-                          );
+                              const match = activePreview.baseUrl.match(
+                                /^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/,
+                              );
 
-                          if (!match) {
-                            console.warn('[Preview] Invalid WebContainer URL:', activePreview.baseUrl);
-                            return;
-                          }
+                              if (!match) {
+                                console.warn('[Preview] Invalid WebContainer URL:', activePreview.baseUrl);
+                                return;
+                              }
 
-                          const previewId = match[1];
-                          const previewUrl = `/webcontainer/preview/${previewId}`;
+                              const previewId = match[1];
+                              const previewUrl = `/webcontainer/preview/${previewId}`;
 
-                          // Open in a new window with simple parameters
-                          window.open(
-                            previewUrl,
-                            `preview-${previewId}`,
-                            'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no,resizable=yes',
-                          );
-                        }}
-                      >
-                        <span>Open in new window</span>
-                        <div className="i-ph:browser h-5 w-4" />
-                      </button>
+                              // Open in a new window with simple parameters
+                              window.open(
+                                previewUrl,
+                                `preview-${previewId}`,
+                                'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no,resizable=yes',
+                              );
+                            }}
+                          >
+                            <span>Open in new window</span>
+                            <div className="i-ph:browser h-5 w-4" />
+                          </button>
+                        </>
+                      )}
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-bolt-elements-textTertiary">Show Device Frame</span>
                         <button
@@ -1026,7 +1116,10 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                       onClick={() => {
                         setSelectedWindowSize(size);
                         setIsWindowSizeDropdownOpen(false);
-                        openInNewWindow(size);
+
+                        if (!isEsbuildPreview) {
+                          openInNewWindow(size);
+                        }
                       }}
                     >
                       <div
@@ -1154,22 +1247,46 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                       }}
                     />
 
-                    <iframe
-                      ref={iframeRef}
-                      title="preview"
-                      style={{
-                        border: 'none',
-                        width: isLandscape ? `${selectedWindowSize.height}px` : `${selectedWindowSize.width}px`,
-                        height: isLandscape ? `${selectedWindowSize.width}px` : `${selectedWindowSize.height}px`,
-                        background: 'white',
-                        display: 'block',
-                      }}
-                      src={iframeUrl}
-                      sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                      allow="cross-origin-isolated"
-                    />
+                    {isEsbuildPreview ? (
+                      <iframe
+                        ref={iframeRef}
+                        title="preview"
+                        style={{
+                          border: 'none',
+                          width: isLandscape ? `${selectedWindowSize.height}px` : `${selectedWindowSize.width}px`,
+                          height: isLandscape ? `${selectedWindowSize.width}px` : `${selectedWindowSize.height}px`,
+                          background: 'white',
+                          display: 'block',
+                        }}
+                        srcDoc={esbuildSrcDoc ?? ''}
+                        sandbox={ESBUILD_PREVIEW_SANDBOX}
+                      />
+                    ) : (
+                      <iframe
+                        ref={iframeRef}
+                        title="preview"
+                        style={{
+                          border: 'none',
+                          width: isLandscape ? `${selectedWindowSize.height}px` : `${selectedWindowSize.width}px`,
+                          height: isLandscape ? `${selectedWindowSize.width}px` : `${selectedWindowSize.height}px`,
+                          background: 'white',
+                          display: 'block',
+                        }}
+                        src={iframeUrl}
+                        sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
+                        allow="cross-origin-isolated"
+                      />
+                    )}
                   </div>
                 </div>
+              ) : isEsbuildPreview ? (
+                <iframe
+                  ref={iframeRef}
+                  title="preview"
+                  className="border-none w-full h-full bg-bolt-elements-background-depth-1"
+                  srcDoc={esbuildSrcDoc ?? ''}
+                  sandbox={ESBUILD_PREVIEW_SANDBOX}
+                />
               ) : (
                 <iframe
                   ref={iframeRef}

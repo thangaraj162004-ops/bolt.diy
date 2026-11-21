@@ -5,8 +5,10 @@
  * that compiles the project with esbuild-wasm.
  */
 import { MemoryFileSystem } from './memory-fs';
+import type { BuildError } from './preview/compiler';
 import { PreviewRuntime, buildForProduction, defaultCompiler, type Compiler } from './preview/runtime';
 import { createCommandProcess, createShellProcess, type CommandHost, type DevServerHandle } from './shell-commands';
+import { esbuildPreviewUrl } from '~/lib/webcontainer/engine';
 import type {
   PortListener,
   PreviewMessage,
@@ -28,7 +30,19 @@ export const PREVIEW_PORT = 5173;
  * domain never resolves, so nothing can accidentally load it; the preview
  * HTML comes from `getPreviewHtml(port)` instead.
  */
-export const PREVIEW_URL = `https://esbuild-preview.invalid/${PREVIEW_PORT}/`;
+export const PREVIEW_URL = esbuildPreviewUrl(PREVIEW_PORT);
+
+/** What changed in the preview of a port. */
+export type PreviewUpdate =
+  | { port: number; kind: 'ready' | 'rebuilt'; version: number }
+  | { port: number; kind: 'build-error'; error: BuildError }
+  | { port: number; kind: 'stopped' };
+
+/** The app's origin, so the preview's error bridge posts only to us. */
+function appOrigin() {
+  const origin = typeof location === 'undefined' ? undefined : location.origin;
+  return origin && origin !== 'null' ? origin : '*';
+}
 
 export interface WebContainerShimOptions {
   compiler?: Compiler;
@@ -90,6 +104,7 @@ export class WebContainerShim implements WebContainer {
   #options: WebContainerShimOptions;
   #runtime: PreviewRuntime | undefined;
   #host: CommandHost;
+  #previewListeners = new Set<(update: PreviewUpdate) => void>();
 
   constructor(workdir: string = WORK_DIR, options: WebContainerShimOptions = {}) {
     this.fs = new MemoryFileSystem(workdir);
@@ -125,6 +140,37 @@ export class WebContainerShim implements WebContainer {
     return port === PREVIEW_PORT ? this.#runtime?.currentHtml : undefined;
   }
 
+  /** Token the error bridge in the current preview HTML uses (see preview/bridge.ts). */
+  getPreviewBridgeToken(port: number): string | undefined {
+    return port === PREVIEW_PORT ? this.#runtime?.bridgeToken : undefined;
+  }
+
+  /** Rebuilds the preview of a port now (the preview's reload button). */
+  async rebuildPreview(port: number): Promise<void> {
+    if (port === PREVIEW_PORT) {
+      await this.#runtime?.rebuild();
+    }
+  }
+
+  /** Called after every build (ready, rebuilt, build-error) and when the dev server stops. */
+  onPreviewUpdate(listener: (update: PreviewUpdate) => void): Unsubscribe {
+    this.#previewListeners.add(listener);
+
+    return () => {
+      this.#previewListeners.delete(listener);
+    };
+  }
+
+  #notifyPreview(update: PreviewUpdate) {
+    for (const listener of [...this.#previewListeners]) {
+      try {
+        listener(update);
+      } catch (error) {
+        console.error('[WebContainerShim] preview update listener failed:', error);
+      }
+    }
+  }
+
   /**
    * `/bin/jsh` (or `jsh`) gives an interactive shell speaking the OSC 654
    * protocol that app/utils/shell.ts expects. Anything else runs once.
@@ -147,8 +193,13 @@ export class WebContainerShim implements WebContainer {
       env: this.#options.env,
       rebuildDelayMs: this.#options.rebuildDelayMs,
       getPreviewScript: () => this.#previewScript,
+      bridge: { previewId: String(PREVIEW_PORT), port: PREVIEW_PORT, targetOrigin: appOrigin() },
     });
     this.#runtime = runtime;
+
+    runtime.on('ready', ({ version }) => this.#notifyPreview({ port: PREVIEW_PORT, kind: 'ready', version }));
+    runtime.on('rebuilt', ({ version }) => this.#notifyPreview({ port: PREVIEW_PORT, kind: 'rebuilt', version }));
+    runtime.on('build-error', ({ error }) => this.#notifyPreview({ port: PREVIEW_PORT, kind: 'build-error', error }));
 
     runtime.on('ready', ({ durationMs, warnings }) => {
       write(`built in ${durationMs}ms\n`);
@@ -168,6 +219,7 @@ export class WebContainerShim implements WebContainer {
       if (this.#runtime === runtime) {
         this.#runtime = undefined;
         this.#events.emit('port', PREVIEW_PORT, 'close', PREVIEW_URL);
+        this.#notifyPreview({ port: PREVIEW_PORT, kind: 'stopped' });
       }
     };
 
@@ -184,6 +236,7 @@ export class WebContainerShim implements WebContainer {
       this.#runtime.stop();
       this.#runtime = undefined;
       this.#events.emit('port', PREVIEW_PORT, 'close', PREVIEW_URL);
+      this.#notifyPreview({ port: PREVIEW_PORT, kind: 'stopped' });
     }
   }
 

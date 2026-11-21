@@ -1,6 +1,6 @@
 import { WebContainer } from '@webcontainer/api';
+import { reportPreviewMessage, reportPreviewUpdate } from './preview-alerts';
 import { WORK_DIR_NAME } from '~/utils/constants';
-import { cleanStackTrace } from '~/utils/stacktrace';
 
 interface WebContainerContext {
   loaded: boolean;
@@ -46,23 +46,14 @@ if (!import.meta.env.SSR) {
         const inspectorScript = await response.text();
         await webcontainer.setPreviewScript(inspectorScript);
 
-        // Listen for preview errors
-        webcontainer.on('preview-message', (message) => {
-          console.log('WebContainer preview message:', message);
+        // Listen for preview errors (for the esbuild engine they come through the iframe error bridge)
+        webcontainer.on('preview-message', (message) => reportPreviewMessage(message, workbenchStore.actionAlert));
 
-          // Handle both uncaught exceptions and unhandled promise rejections
-          if (message.type === 'PREVIEW_UNCAUGHT_EXCEPTION' || message.type === 'PREVIEW_UNHANDLED_REJECTION') {
-            const isPromise = message.type === 'PREVIEW_UNHANDLED_REJECTION';
-            const title = isPromise ? 'Unhandled Promise Rejection' : 'Uncaught Exception';
-            workbenchStore.actionAlert.set({
-              type: 'preview',
-              title,
-              description: 'message' in message ? message.message : 'Unknown error',
-              content: `Error occurred at ${message.pathname}${message.search}${message.hash}\nPort: ${message.port}\n\nStack trace:\n${cleanStackTrace(message.stack || '')}`,
-              source: 'preview',
-            });
-          }
-        });
+        // esbuild engine: compile errors never reach the preview, so they become the same kind of alert
+        if (import.meta.env.VITE_PREVIEW_ENGINE === 'esbuild') {
+          const shim = webcontainer as unknown as import('./shim/shim').WebContainerShim;
+          shim.onPreviewUpdate((update) => reportPreviewUpdate(update, workbenchStore.actionAlert));
+        }
 
         return webcontainer;
       });

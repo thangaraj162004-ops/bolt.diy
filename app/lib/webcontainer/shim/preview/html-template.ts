@@ -1,6 +1,7 @@
 /**
  * Builds the HTML document shown in the preview iframe. Pure function.
  */
+import { renderBridgeScript, type BridgeConfig } from './bridge';
 
 export const TAILWIND_CDN_URL = 'https://cdn.tailwindcss.com';
 
@@ -17,6 +18,9 @@ export interface PreviewHtmlInput {
   /** Extra script text to run before the app (for example the inspector). */
   previewScript?: string;
   usesTailwind?: boolean;
+
+  /** When set, the error bridge (bridge.ts) is injected first, before every other script. */
+  bridge?: BridgeConfig;
 }
 
 const DEFAULT_DOCUMENT = `<!doctype html>
@@ -68,10 +72,22 @@ function insertBefore(html: string, closingTag: RegExp, content: string, fallbac
   return html.slice(0, match.index) + content + html.slice(match.index);
 }
 
-export function renderPreviewHtml({ js, css, indexHtml, previewScript, usesTailwind }: PreviewHtmlInput): string {
+export function renderPreviewHtml({
+  js,
+  css,
+  indexHtml,
+  previewScript,
+  usesTailwind,
+  bridge,
+}: PreviewHtmlInput): string {
   const base = indexHtml?.trim() ? removeLocalModuleScripts(indexHtml) : DEFAULT_DOCUMENT;
 
   const head: string[] = [];
+
+  // first, so it also reports errors thrown by the other scripts
+  if (bridge) {
+    head.push(`<script data-bolt-preview-bridge>\n${escapeScriptContent(renderBridgeScript(bridge))}\n</script>`);
+  }
 
   if (usesTailwind) {
     head.push(`<script src="${TAILWIND_CDN_URL}"></script>`);
