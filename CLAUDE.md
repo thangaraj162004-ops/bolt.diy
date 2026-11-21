@@ -31,3 +31,12 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
 
 - Make small changes.
 - Finish every task by listing the files that were changed.
+
+## Deployment
+
+- The Cloudflare production branch for this test deploy is `esbuild-shim-1`.
+- Set `VITE_PREVIEW_ENGINE` as a Cloudflare **build** variable. It is read at
+  build time, not at runtime, so a runtime variable has no effect.
+- Never set any `VITE_*_TOKEN` variables on a public deploy. Every `VITE_*`
+  value is copied into the public JavaScript that anyone can read.
+- Never commit secrets.
