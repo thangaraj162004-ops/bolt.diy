@@ -1,0 +1,66 @@
+I'll build a simple counter with increment, decrement and reset.
+
+<boltArtifact id="counter-app" title="Counter app">
+<boltAction type="file" filePath="package.json">{
+  "name": "counter-app",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "vite" },
+  "dependencies": { "react": "18.3.1", "react-dom": "18.3.1" },
+  "devDependencies": { "tailwindcss": "3.4.17" }
+}</boltAction>
+<boltAction type="file" filePath="index.html"><!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Counter</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html></boltAction>
+<boltAction type="file" filePath="src/index.css">@tailwind base;
+@tailwind components;
+@tailwind utilities;</boltAction>
+<boltAction type="file" filePath="src/main.tsx">import { createRoot } from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+createRoot(document.getElementById('root')!).render(<App />);</boltAction>
+<boltAction type="file" filePath="src/components/CounterButton.tsx">interface CounterButtonProps {
+  label: string;
+  onClick: () => void;
+}
+
+export function CounterButton({ label, onClick }: CounterButtonProps) {
+  return (
+    <button className="rounded-lg bg-indigo-600 px-4 py-2 font-semibold text-white hover:bg-indigo-500" onClick={onClick}>
+      {label}
+    </button>
+  );
+}</boltAction>
+<boltAction type="file" filePath="src/App.tsx">import { useState } from 'react';
+import { CounterButton } from './components/CounterButton';
+
+export default function App() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-slate-50">
+      <h1 className="text-3xl font-bold text-slate-800">Counter</h1>
+      <p className="text-6xl font-light tabular-nums">{count}</p>
+      <div className="flex gap-3">
+        <CounterButton label="−1" onClick={() => setCount((value) => value - 1)} />
+        <CounterButton label="Reset" onClick={() => setCount(0)} />
+        <CounterButton label="+1" onClick={() => setCount((value) => value + 1)} />
+      </div>
+    </main>
+  );
+}</boltAction>
+<boltAction type="shell">npm install</boltAction>
+<boltAction type="start">npm run dev</boltAction>
+</boltArtifact>
+
+A counter with increment, decrement and reset buttons, styled with Tailwind.

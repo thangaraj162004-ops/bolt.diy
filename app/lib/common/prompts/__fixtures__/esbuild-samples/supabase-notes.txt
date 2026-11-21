@@ -1,0 +1,145 @@
+I'll build a notes app that uses Supabase when it is configured and demo data otherwise.
+
+<boltArtifact id="supabase-notes" title="Notes app with Supabase">
+<boltAction type="file" filePath="package.json">{
+  "name": "supabase-notes",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "vite" },
+  "dependencies": {
+    "@supabase/supabase-js": "2.47.10",
+    "date-fns": "4.1.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": { "tailwindcss": "3.4.17" }
+}</boltAction>
+<boltAction type="file" filePath="index.html"><!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notes</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html></boltAction>
+<boltAction type="file" filePath="src/index.css">@tailwind base;
+@tailwind components;
+@tailwind utilities;</boltAction>
+<boltAction type="file" filePath="src/main.tsx">import { createRoot } from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+createRoot(document.getElementById('root')!).render(<App />);</boltAction>
+<boltAction type="file" filePath="src/lib/supabase.ts">import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+
+const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+
+/** Null when the project has no Supabase settings; the app then uses demo data. */
+export const supabase: SupabaseClient | null = url && anonKey ? createClient(url, anonKey) : null;</boltAction>
+<boltAction type="file" filePath="src/lib/notes.ts">import { supabase } from './supabase';
+
+export interface Note {
+  id: string;
+  text: string;
+  created_at: string;
+}
+
+const DEMO_NOTES: Note[] = [
+  { id: 'demo-1', text: 'Welcome! These are demo notes.', created_at: '2025-01-02T09:00:00Z' },
+  { id: 'demo-2', text: 'Connect Supabase to save real notes.', created_at: '2025-01-03T15:30:00Z' },
+];
+
+export const usingDemoData = supabase === null;
+
+export async function listNotes(): Promise<Note[]> {
+  if (!supabase) {
+    return DEMO_NOTES;
+  }
+
+  const { data, error } = await supabase.from('notes').select('id, text, created_at').order('created_at', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data ?? [];
+}
+
+export async function addNote(text: string): Promise<Note> {
+  if (!supabase) {
+    return { id: `local-${Date.now()}`, text, created_at: new Date().toISOString() };
+  }
+
+  const { data, error } = await supabase.from('notes').insert({ text }).select('id, text, created_at').single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}</boltAction>
+<boltAction type="file" filePath="src/App.tsx">import { useEffect, useState, type FormEvent } from 'react';
+import { formatDistanceToNow } from 'date-fns';
+import { addNote, listNotes, usingDemoData, type Note } from './lib/notes';
+
+export default function App() {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [text, setText] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    listNotes()
+      .then(setNotes)
+      .catch((err: Error) => setError(err.message));
+  }, []);
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+
+    if (!text.trim()) {
+      return;
+    }
+
+    try {
+      const note = await addNote(text.trim());
+      setNotes((list) => [note, ...list]);
+      setText('');
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  };
+
+  return (
+    <main className="mx-auto max-w-lg p-6">
+      <h1 className="text-2xl font-bold">Notes</h1>
+      {usingDemoData && (
+        <p className="mt-2 rounded-md bg-amber-100 px-3 py-2 text-sm text-amber-800">
+          Demo data: set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to save notes in Supabase.
+        </p>
+      )}
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      <form onSubmit={submit} className="mt-4 flex gap-2">
+        <input value={text} onChange={(event) => setText(event.target.value)} placeholder="Write a note" className="flex-1 rounded-md border px-3 py-2" />
+        <button className="rounded-md bg-sky-600 px-4 py-2 text-white">Save</button>
+      </form>
+      <ul className="mt-4 space-y-2">
+        {notes.map((note) => (
+          <li key={note.id} className="rounded-md border bg-white p-3">
+            <p>{note.text}</p>
+            <p className="text-xs text-slate-500">{formatDistanceToNow(new Date(note.created_at), { addSuffix: true })}</p>
+          </li>
+        ))}
+      </ul>
+    </main>
+  );
+}</boltAction>
+<boltAction type="shell">npm install</boltAction>
+<boltAction type="start">npm run dev</boltAction>
+</boltArtifact>
+
+A notes app that uses Supabase when VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set and shows demo notes otherwise.
