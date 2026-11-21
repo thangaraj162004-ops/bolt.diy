@@ -1,4 +1,4 @@
-const DATABASE_NAME = 'boltPlugins';
+const DATABASE_NAME = 'caPlugins';
 const DATABASE_VERSION = 1;
 
 export type InstalledPlugin = {

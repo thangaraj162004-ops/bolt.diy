@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { createRequestHandler } from 'react-router';
-import { BoltRouterContext, type BoltCloudflare } from '../../app/lib/cloudflare-context';
+import { CaRouterContext, type CaCloudflare } from '../../app/lib/cloudflare-context';
 import electron, { app, BrowserWindow, ipcMain, protocol, session } from 'electron';
 import log from 'electron-log';
 import path from 'node:path';
@@ -124,7 +124,7 @@ declare global {
        * Electron has no Workers bindings, but routes read `context.cloudflare.env`
        * unconditionally, so hand them an empty environment rather than undefined.
        */
-      const result = await handler(req, new BoltRouterContext({} as BoltCloudflare, '127.0.0.1'));
+      const result = await handler(req, new CaRouterContext({} as CaCloudflare, '127.0.0.1'));
 
       return result;
     } catch (err) {

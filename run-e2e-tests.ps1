@@ -1,9 +1,9 @@
-# E2E Test Runner Script for Bolt.diy (PowerShell)
+# E2E Test Runner Script for CodeApp AI (PowerShell)
 # This script runs the complete E2E test suite using Playwright
 
 $ErrorActionPreference = "Stop"
 
-Write-Host "🚀 Starting Bolt.diy E2E Test Suite" -ForegroundColor Cyan
+Write-Host "🚀 Starting CodeApp AI E2E Test Suite" -ForegroundColor Cyan
 Write-Host "====================================" -ForegroundColor Cyan
 Write-Host ""
 

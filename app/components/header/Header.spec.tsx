@@ -11,7 +11,7 @@ const { Header } = await import('./Header');
 import ChatAlert from '~/components/chat/ChatAlert';
 import DeployChatAlert from '~/components/deploy/DeployAlert';
 
-const OLD_BRAND = /\bBolt\b|bolt\.diy|bolt\.new|StackBlitz/i;
+const OLD_BRAND = /\bCa\b|bolt\.diy|bolt\.new|StackBlitz/i;
 
 describe('Header', () => {
   it('shows the CodeApp AI wordmark and no Bolt logo', () => {

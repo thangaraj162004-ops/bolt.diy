@@ -64,7 +64,7 @@ function getCompletionTokenLimit(modelDetails: any): number {
 }
 
 function sanitizeText(text: string): string {
-  let sanitized = text.replace(/<div class=\\"__boltThought__\\">.*?<\/div>/s, '');
+  let sanitized = text.replace(/<div class=\\"__caThought__\\">.*?<\/div>/s, '');
   sanitized = sanitized.replace(/<think>.*?<\/think>/s, '');
   sanitized = sanitized.replace(/<boltAction type="file" filePath="package-lock\.json">[\s\S]*?<\/boltAction>/g, '');
 
@@ -360,7 +360,7 @@ export async function streamText(props: {
   );
 
   /*
-   * supabaseConnection is Bolt's own option, not a v7 one. It is consumed above
+   * supabaseConnection is CodeApp AI's own option, not a v7 one. It is consumed above
    * to build the system prompt, and must not be forwarded, because v7 spreads
    * unknown keys all the way into the model call where they are silently
    * ignored. messages is excluded because this module builds the prompt itself.

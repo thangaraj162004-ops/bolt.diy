@@ -1,6 +1,6 @@
 import type { UIMessage } from 'ai';
 import { generateId } from './fileUtils';
-import { detectProjectCommands, createCommandsMessage, escapeBoltTags } from './projectCommands';
+import { detectProjectCommands, createCommandsMessage, escapeCaTags } from './projectCommands';
 import { createMessage } from '~/lib/persistence/messageMigration';
 
 export const createChatFromFolder = async (
@@ -44,7 +44,7 @@ export const createChatFromFolder = async (
 ${fileArtifacts
   .map(
     (file) => `<boltAction type="file" filePath="${file.path}">
-${escapeBoltTags(file.content)}
+${escapeCaTags(file.content)}
 </boltAction>`,
   )
   .join('\n\n')}

@@ -1,7 +1,7 @@
 import { generateText, type UIMessage } from 'ai';
 import ignore from 'ignore';
 import { IGNORE_PATTERNS, type FileMap } from './constants';
-import { createFilesContext, extractCurrentContext, extractPropertiesFromMessage, simplifyBoltActions } from './utils';
+import { createFilesContext, extractCurrentContext, extractPropertiesFromMessage, simplifyCaActions } from './utils';
 import { PRODUCT_NAME } from '~/lib/brand';
 import { LLMManager } from '~/lib/modules/llm/manager';
 import { createMessage, getFirstTextPart, getMessageText } from '~/lib/persistence/messageMigration';
@@ -38,7 +38,7 @@ export async function selectContext(props: {
 
       return message;
     } else if (message.role == 'assistant') {
-      let text = simplifyBoltActions(getMessageText(message));
+      let text = simplifyCaActions(getMessageText(message));
       text = text.replace(/<think>.*?<\/think>/s, '');
 
       return createMessage({ id: message.id, role: 'assistant', text }) as UIMessage;

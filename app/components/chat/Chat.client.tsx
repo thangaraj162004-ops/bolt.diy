@@ -942,7 +942,7 @@ export const ChatImpl = memo(
 
       if (selectedElement) {
         const encodedElement = encodeURIComponent(JSON.stringify(selectedElement)).replace(/'/g, '%27');
-        const elementInfo = `<div class=\"__boltSelectedElement__\" data-element=\"${encodedElement}\"></div>`;
+        const elementInfo = `<div class=\"__caSelectedElement__\" data-element=\"${encodedElement}\"></div>`;
 
         const visualEditPrompt = selectedElement.visualEdits?.length
           ? `\nPlease apply these visual edits to the selected element in the project source: ${selectedElement.visualEdits
@@ -1171,7 +1171,7 @@ export const ChatImpl = memo(
         })}
 
         /*
-         * Markdown's quick-action buttons (__boltQuickAction__) call append to
+         * Markdown's quick-action buttons (__caQuickAction__) call append to
          * re-send a message. Without this they rendered but did nothing.
          */
         append={(message) => sendChatMessage(message as UIMessage)}

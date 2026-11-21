@@ -1,7 +1,7 @@
 /**
  * Our own minimal description of the WebContainer runtime.
  *
- * These interfaces list ONLY the methods, properties and events that bolt.diy
+ * These interfaces list ONLY the methods, properties and events that CodeApp AI
  * actually uses today. They let most of the app stop importing types from
  * `@webcontainer/api`, so a different preview engine (for example esbuild-wasm
  * running in a sandboxed iframe) can implement the same shape later.
@@ -76,14 +76,14 @@ export interface PathWatcherEvent {
   ino: number;
 }
 
-/** Options for `internal.watchPaths`. Only the fields bolt.diy passes. */
+/** Options for `internal.watchPaths`. Only the fields CodeApp AI passes. */
 export interface WatchPathsOptions {
   include?: string[];
   exclude?: string[];
   includeContent?: boolean;
 }
 
-/** The non-public helpers bolt.diy relies on. */
+/** The non-public helpers CodeApp AI relies on. */
 export interface WebContainerInternal {
   watchPaths(options: WatchPathsOptions, cb: (events: PathWatcherEvent[]) => void): () => void;
 }
@@ -157,6 +157,6 @@ export interface WebContainer {
   on(event: 'server-ready', listener: ServerReadyListener): Unsubscribe;
   on(event: 'preview-message', listener: PreviewMessageListener): Unsubscribe;
 
-  /** Injects a script into every preview page (bolt.diy uses it for the inspector). */
+  /** Injects a script into every preview page (CodeApp AI uses it for the inspector). */
   setPreviewScript(scriptSrc: string): Promise<void>;
 }

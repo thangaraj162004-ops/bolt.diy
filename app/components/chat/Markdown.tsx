@@ -176,7 +176,7 @@ export const Markdown = memo(
             return <Artifact messageId={messageId} artifactId={artifactId} />;
           }
 
-          if (className?.includes('__boltSelectedElement__')) {
+          if (className?.includes('__caSelectedElement__')) {
             const messageId = node?.properties.dataMessageId as string;
             const elementDataAttr = node?.properties.dataElement as string;
 
@@ -216,11 +216,11 @@ export const Markdown = memo(
             );
           }
 
-          if (className?.includes('__boltThought__')) {
+          if (className?.includes('__caThought__')) {
             return <ThoughtBox title="Thought process">{children}</ThoughtBox>;
           }
 
-          if (className?.includes('__boltQuickAction__') || dataProps?.dataBoltQuickAction) {
+          if (className?.includes('__caQuickAction__') || dataProps?.dataBoltQuickAction) {
             return <div className="flex items-center gap-2 flex-wrap mt-3.5">{children}</div>;
           }
 
@@ -264,10 +264,7 @@ export const Markdown = memo(
         button: ({ node, children, ...props }) => {
           const dataProps = node?.properties as Record<string, unknown>;
 
-          if (
-            dataProps?.class?.toString().includes('__boltQuickAction__') ||
-            dataProps?.dataBoltQuickAction === 'true'
-          ) {
+          if (dataProps?.class?.toString().includes('__caQuickAction__') || dataProps?.dataBoltQuickAction === 'true') {
             const type = dataProps['data-type'] || dataProps.dataType;
             const message = dataProps['data-message'] || dataProps.dataMessage;
             const path = dataProps['data-path'] || dataProps.dataPath;

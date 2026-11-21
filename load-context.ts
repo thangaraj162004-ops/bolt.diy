@@ -1,4 +1,4 @@
-import type { BoltCloudflare } from '~/lib/cloudflare-context';
+import type { CaCloudflare } from '~/lib/cloudflare-context';
 
 /*
  * This file must stay a module (note the `export {}`), otherwise the
@@ -10,7 +10,7 @@ import type { BoltCloudflare } from '~/lib/cloudflare-context';
  */
 declare module 'react-router' {
   interface RouterContextProvider {
-    cloudflare: BoltCloudflare;
+    cloudflare: CaCloudflare;
   }
 }
 

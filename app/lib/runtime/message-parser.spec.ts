@@ -789,7 +789,7 @@ export { Button } from './Button';
 
 /*
  * Gaps closed ahead of the AI SDK upgrade. The server rewrites model reasoning
- * into `<div class="__boltThought__">` text deltas before they reach this
+ * into `<div class="__caThought__">` text deltas before they reach this
  * parser, so the parser must tolerate that wrapper arriving split across
  * arbitrary chunk boundaries.
  */
@@ -807,9 +807,9 @@ describe('StreamingMessageParser thought-div handling', () => {
 
   it('passes thought-div content through when it arrives in one chunk', () => {
     const { parser } = createParser();
-    const output = parser.parse('msg', '<div class="__boltThought__">reasoning here</div>');
+    const output = parser.parse('msg', '<div class="__caThought__">reasoning here</div>');
 
-    expect(output).toBe('<div class="__boltThought__">reasoning here</div>');
+    expect(output).toBe('<div class="__caThought__">reasoning here</div>');
   });
 
   it('mangles a thought-div opening tag split across chunks (known limitation)', () => {
@@ -837,12 +837,12 @@ describe('StreamingMessageParser thought-div handling', () => {
     const { parser, callbacks } = createParser();
 
     const input =
-      '<div class="__boltThought__">let me think</div>' +
+      '<div class="__caThought__">let me think</div>' +
       '<boltArtifact id="hello" title="Hello">\n```html\n<h1>hi</h1>\n```\n</boltArtifact>';
 
     const output = parser.parse('msg', input);
 
-    expect(output).toContain('<div class="__boltThought__">let me think</div>');
+    expect(output).toContain('<div class="__caThought__">let me think</div>');
     expect(callbacks.onArtifactOpen).toHaveBeenCalledTimes(1);
   });
 
@@ -851,7 +851,7 @@ describe('StreamingMessageParser thought-div handling', () => {
 
     parser.parse(
       'msg',
-      '<div class="__boltThought__">thought</div><boltArtifact id="a" title="A">\n```html\n<b>x</b>\n```\n</boltArtifact>',
+      '<div class="__caThought__">thought</div><boltArtifact id="a" title="A">\n```html\n<b>x</b>\n```\n</boltArtifact>',
     );
 
     expect(callbacks.onArtifactOpen).toHaveBeenCalledTimes(1);
@@ -861,7 +861,7 @@ describe('StreamingMessageParser thought-div handling', () => {
   it('does not emit artifacts for thought content that looks like code', () => {
     const { parser, callbacks } = createParser();
 
-    parser.parse('msg', '<div class="__boltThought__">```html\n<h1>hi</h1>\n```</div>');
+    parser.parse('msg', '<div class="__caThought__">```html\n<h1>hi</h1>\n```</div>');
 
     expect(callbacks.onArtifactOpen).not.toHaveBeenCalled();
   });

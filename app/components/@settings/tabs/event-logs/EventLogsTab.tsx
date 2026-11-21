@@ -516,7 +516,7 @@ export function EventLogsTab() {
       doc.setFont('helvetica', 'bold');
       doc.text('Event Logs Report', margin, 35);
 
-      // Add subtitle with bolt.diy
+      // Add subtitle with CodeApp AI
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
       doc.text(`${PRODUCT_NAME} - ${PRODUCT_TAGLINE}`, margin, 45);

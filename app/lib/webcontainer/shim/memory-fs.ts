@@ -238,7 +238,7 @@ export class MemoryFileSystem implements FileSystemAPI {
       /*
        * Node returns the first folder it created, or undefined when nothing
        * was created. The shared type says `string`, so callers must not rely
-       * on it; bolt.diy never reads it.
+       * on it; CodeApp AI never reads it.
        */
       return this.#mkdirp(absolute, true) as string;
     }

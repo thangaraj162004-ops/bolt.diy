@@ -10,7 +10,7 @@ import { LoadingOverlay } from '~/components/ui/LoadingOverlay';
 import { useGit } from '~/lib/hooks/useGit';
 import { useChatHistory } from '~/lib/persistence';
 import { createMessage } from '~/lib/persistence/messageMigration';
-import { createCommandsMessage, detectProjectCommands, escapeBoltTags } from '~/utils/projectCommands';
+import { createCommandsMessage, detectProjectCommands, escapeCaTags } from '~/utils/projectCommands';
 
 const IGNORE_PATTERNS = [
   'node_modules/**',
@@ -82,7 +82,7 @@ ${fileContents
   .map(
     (file) =>
       `<boltAction type="file" filePath="${file.path}">
-${escapeBoltTags(file.content)}
+${escapeCaTags(file.content)}
 </boltAction>`,
   )
   .join('\n')}

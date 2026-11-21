@@ -3,7 +3,7 @@
  *
  * `spawn('/bin/jsh', ...)` returns an interactive shell process that speaks
  * the same OSC 654 marker protocol as WebContainer's jsh, which is what
- * `app/utils/shell.ts` (BoltShell) waits for:
+ * `app/utils/shell.ts` (CaShell) waits for:
  *
  *   - `ESC ] 654 ; interactive BEL`  once, as the FIRST marker of its own output
  *     chunk (shell.ts only checks the first marker of each chunk for it)

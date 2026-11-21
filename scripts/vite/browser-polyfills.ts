@@ -18,10 +18,10 @@ export function browserPolyfills() {
   const shims = 'vite-plugin-node-polyfills/shims';
 
   const prelude = [
-    `import { Buffer as __boltBuffer } from '${shims}/buffer';`,
-    `import __boltProcess from '${shims}/process';`,
-    `globalThis.Buffer ??= __boltBuffer;`,
-    `globalThis.process ??= __boltProcess;`,
+    `import { Buffer as __caBuffer } from '${shims}/buffer';`,
+    `import __caProcess from '${shims}/process';`,
+    `globalThis.Buffer ??= __caBuffer;`,
+    `globalThis.process ??= __caProcess;`,
     `globalThis.global ??= globalThis;`,
   ].join('\n');
 

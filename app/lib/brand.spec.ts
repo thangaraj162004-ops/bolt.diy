@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { PRODUCT_NAME, chatPlaceholder, pageTitle } from './brand';
 
-const OLD_BRAND = /\bBolt\b|bolt\.diy|bolt\.new|StackBlitz/i;
+const OLD_BRAND = /\bCa\b|bolt\.diy|bolt\.new|StackBlitz/i;
 const APP_DIR = fileURLToPath(new URL('..', import.meta.url));
 
 /** The open source notices are the one place that must name the original project. */

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ActionRunner } from './action-runner';
 import type { WebContainer } from '~/lib/webcontainer/types';
-import type { BoltShell } from '~/utils/shell';
+import type { CaShell } from '~/utils/shell';
 
 describe('ActionRunner file actions', () => {
   it('marks a file action failed when creating its directory fails', async () => {
@@ -13,7 +13,7 @@ describe('ActionRunner file actions', () => {
       },
     } as unknown as WebContainer;
 
-    const runner = new ActionRunner(Promise.resolve(webcontainer), () => ({}) as BoltShell);
+    const runner = new ActionRunner(Promise.resolve(webcontainer), () => ({}) as CaShell);
 
     const action = {
       artifactId: 'artifact-1',
@@ -38,7 +38,7 @@ describe('ActionRunner file actions', () => {
       },
     } as unknown as WebContainer;
 
-    const runner = new ActionRunner(Promise.resolve(webcontainer), () => ({}) as BoltShell);
+    const runner = new ActionRunner(Promise.resolve(webcontainer), () => ({}) as CaShell);
 
     const action = {
       artifactId: 'artifact-1',
@@ -70,7 +70,7 @@ describe('ActionRunner cancellation', () => {
 
       const runner = new ActionRunner(
         Promise.resolve({} as WebContainer),
-        () => ({ ready: () => shellReady, executeCommand, terminal: {}, process: {} }) as unknown as BoltShell,
+        () => ({ ready: () => shellReady, executeCommand, terminal: {}, process: {} }) as unknown as CaShell,
       );
       const action = {
         artifactId: 'old-project',

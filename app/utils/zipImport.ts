@@ -1,7 +1,7 @@
 import type { UIMessage } from 'ai';
 import JSZip from 'jszip';
 import { generateId, shouldIncludeFile } from './fileUtils';
-import { escapeBoltTags } from './projectCommands';
+import { escapeCaTags } from './projectCommands';
 import { createMessage } from '~/lib/persistence/messageMigration';
 
 /**
@@ -183,7 +183,7 @@ export const createChatFromZip = async (zipFile: File): Promise<ZipImportResult>
 ${fileArtifacts
   .map(
     (file) => `<boltAction type="file" filePath="${file.path}">
-${escapeBoltTags(file.content)}
+${escapeCaTags(file.content)}
 </boltAction>`,
   )
   .join('\n\n')}

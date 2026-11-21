@@ -30,7 +30,7 @@ vi.mock('./previews', () => ({
 }));
 vi.mock('./terminal', () => ({
   TerminalStore: class {
-    boltTerminal = { executionState: atom(undefined), stop: vi.fn(async () => undefined) };
+    caTerminal = { executionState: atom(undefined), stop: vi.fn(async () => undefined) };
   },
 }));
 
@@ -41,10 +41,10 @@ describe('WorkbenchStore chat lifecycle', () => {
     const store = new WorkbenchStore();
     const abortAllActions = vi.fn();
     store.artifacts.setKey('outgoing', { runner: { abortAllActions } } as unknown as ArtifactState);
-    store.boltTerminal.executionState.set({ sessionId: 'outgoing', active: true });
+    store.caTerminal.executionState.set({ sessionId: 'outgoing', active: true });
 
     let finishStop!: () => void;
-    vi.mocked(store.boltTerminal.stop).mockImplementationOnce(
+    vi.mocked(store.caTerminal.stop).mockImplementationOnce(
       () => new Promise<void>((resolve) => (finishStop = resolve)),
     );
 
@@ -52,7 +52,7 @@ describe('WorkbenchStore chat lifecycle', () => {
     const resetting = store.resetWorkbench();
 
     expect(abortAllActions).toHaveBeenCalledOnce();
-    expect(store.boltTerminal.stop).toHaveBeenCalledWith('outgoing');
+    expect(store.caTerminal.stop).toHaveBeenCalledWith('outgoing');
     expect(clearFiles).not.toHaveBeenCalled();
 
     finishStop();

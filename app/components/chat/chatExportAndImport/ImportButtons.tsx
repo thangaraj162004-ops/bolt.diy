@@ -6,7 +6,7 @@ import { Button } from '~/components/ui/Button';
 import { classNames } from '~/utils/classNames';
 
 type ChatData = {
-  messages?: UIMessage[]; // Standard Bolt format
+  messages?: UIMessage[]; // Standard CodeApp AI format
   description?: string; // Optional description
 };
 

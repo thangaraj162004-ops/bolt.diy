@@ -10,7 +10,7 @@ import {
 import { PREVIEW_PORT, PREVIEW_URL, WebContainerShim } from './shim';
 import type { WebContainer, WebContainerProcess } from '~/lib/webcontainer/types';
 import type { ITerminal } from '~/types/terminal';
-import { BoltShell } from '~/utils/shell';
+import { CaShell } from '~/utils/shell';
 
 /*
  * No network: React and other packages become esm.sh URLs that are never fetched.
@@ -114,9 +114,9 @@ function createTerminal() {
   return terminal;
 }
 
-/** Drives the real BoltShell from app/utils/shell.ts against the shim's /bin/jsh. */
-async function createBoltShell(shim: WebContainerShim) {
-  const shell = new BoltShell();
+/** Drives the real CaShell from app/utils/shell.ts against the shim's /bin/jsh. */
+async function createCaShell(shim: WebContainerShim) {
+  const shell = new CaShell();
   const terminal = createTerminal();
   await shell.init(shim as WebContainer, terminal as ITerminal);
   processes.push(shell.process!);
@@ -450,9 +450,9 @@ describe('shell marker protocol', () => {
     expect(out.text).not.toContain('654;exit');
   });
 
-  it('works with the real BoltShell: exit codes and output for each command', async () => {
+  it('works with the real CaShell: exit codes and output for each command', async () => {
     const shim = await createShim({ 'a.txt': 'alpha' });
-    const { shell } = await createBoltShell(shim);
+    const { shell } = await createCaShell(shim);
 
     const first = await shell.executeCommand('s1', 'echo hi && cat a.txt');
     expect(first).toEqual({ output: expect.stringContaining('hi'), exitCode: 0 });
@@ -469,18 +469,18 @@ describe('shell marker protocol', () => {
     });
   });
 
-  it('works with the real BoltShell: a dev server runs until the next command interrupts it with exit 130', async () => {
+  it('works with the real CaShell: a dev server runs until the next command interrupts it with exit 130', async () => {
     const shim = await createShim(REACT_PROJECT);
     const ready = vi.fn();
     shim.on('server-ready', ready);
 
-    const { shell } = await createBoltShell(shim);
+    const { shell } = await createCaShell(shim);
 
     const dev = shell.executeCommand('dev', 'npm install && npm run dev');
     await waitFor(() => ready.mock.calls.length === 1);
     expect(shell.executionState.get()).toMatchObject({ sessionId: 'dev', active: true });
 
-    // BoltShell sends Ctrl-C, waits for the exit marker of the dev server, then the prompt
+    // CaShell sends Ctrl-C, waits for the exit marker of the dev server, then the prompt
     const next = await shell.executeCommand('next', 'echo after');
 
     await expect(dev).resolves.toMatchObject({ exitCode: 130 });

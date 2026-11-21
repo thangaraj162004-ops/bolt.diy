@@ -1,15 +1,15 @@
 import { atom, type WritableAtom } from 'nanostores';
 import type { WebContainer, WebContainerProcess } from '~/lib/webcontainer/types';
 import type { ITerminal } from '~/types/terminal';
-import { newBoltShellProcess, newShellProcess } from '~/utils/shell';
+import { newCaShellProcess, newShellProcess } from '~/utils/shell';
 import { coloredText } from '~/utils/terminal';
 
 export class TerminalStore {
   #webcontainer: Promise<WebContainer>;
   #terminals: Array<{ terminal: ITerminal; process: WebContainerProcess }> = [];
-  #boltTerminal = newBoltShellProcess();
-  #pendingBoltOutput = '';
-  #boltOutputReady = false;
+  #caTerminal = newCaShellProcess();
+  #pendingCaOutput = '';
+  #caOutputReady = false;
 
   showTerminal: WritableAtom<boolean> = import.meta.hot?.data.showTerminal ?? atom(true);
 
@@ -20,38 +20,38 @@ export class TerminalStore {
       import.meta.hot.data.showTerminal = this.showTerminal;
     }
   }
-  get boltTerminal() {
-    return this.#boltTerminal;
+  get caTerminal() {
+    return this.#caTerminal;
   }
 
   toggleTerminal(value?: boolean) {
     this.showTerminal.set(value !== undefined ? value : !this.showTerminal.get());
   }
 
-  writeToBoltTerminal(data: string) {
-    const terminal = this.#boltTerminal.terminal;
+  writeToCaTerminal(data: string) {
+    const terminal = this.#caTerminal.terminal;
 
-    if (terminal && this.#boltOutputReady) {
+    if (terminal && this.#caOutputReady) {
       terminal.write(data);
     } else {
       // Tools can start before the workbench mounts its terminal.
-      this.#pendingBoltOutput = (this.#pendingBoltOutput + data).slice(-64_000);
+      this.#pendingCaOutput = (this.#pendingCaOutput + data).slice(-64_000);
     }
   }
 
-  async attachBoltTerminal(terminal: ITerminal) {
-    this.#boltOutputReady = false;
+  async attachCaTerminal(terminal: ITerminal) {
+    this.#caOutputReady = false;
 
     try {
       const wc = await this.#webcontainer;
-      await this.#boltTerminal.init(wc, terminal);
+      await this.#caTerminal.init(wc, terminal);
 
-      if (this.#pendingBoltOutput) {
-        terminal.write(this.#pendingBoltOutput);
-        this.#pendingBoltOutput = '';
+      if (this.#pendingCaOutput) {
+        terminal.write(this.#pendingCaOutput);
+        this.#pendingCaOutput = '';
       }
 
-      this.#boltOutputReady = true;
+      this.#caOutputReady = true;
     } catch (error: any) {
       terminal.write(coloredText.red('Failed to spawn bolt shell\n\n') + error.message);
       return;

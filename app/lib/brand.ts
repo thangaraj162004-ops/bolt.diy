@@ -1,6 +1,6 @@
 /**
  * The product's visible name. Internal names (boltArtifact/boltAction tags,
- * BoltShell, CSS classes, storage keys, API routes, package and Worker names)
+ * CaShell, CSS classes, storage keys, API routes, package and Worker names)
  * intentionally stay as they are.
  */
 export const PRODUCT_NAME = 'CodeApp AI';

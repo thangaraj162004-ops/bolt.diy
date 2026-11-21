@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createFilesContext, extractCurrentContext, extractPropertiesFromMessage, simplifyBoltActions } from './utils';
+import { createFilesContext, extractCurrentContext, extractPropertiesFromMessage, simplifyCaActions } from './utils';
 
 const WORK_DIR = '/home/project';
 const MODEL_REGEX = /^\[Model: (.*?)\]\n\n/;
@@ -108,18 +108,18 @@ describe('extractPropertiesFromMessage', () => {
   });
 });
 
-describe('simplifyBoltActions', () => {
+describe('simplifyCaActions', () => {
   it('elides the body of file actions', () => {
     const input = '<boltAction type="file" filePath="a.ts">const a = 1;</boltAction>';
 
-    expect(simplifyBoltActions(input)).toContain('...');
-    expect(simplifyBoltActions(input)).not.toContain('const a = 1;');
+    expect(simplifyCaActions(input)).toContain('...');
+    expect(simplifyCaActions(input)).not.toContain('const a = 1;');
   });
 
   it('leaves non-file actions untouched', () => {
     const input = '<boltAction type="start">npm run dev</boltAction>';
 
-    expect(simplifyBoltActions(input)).toBe(input);
+    expect(simplifyCaActions(input)).toBe(input);
   });
 });
 

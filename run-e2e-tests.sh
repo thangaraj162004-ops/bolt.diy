@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# E2E Test Runner Script for Bolt.diy
+# E2E Test Runner Script for CodeApp AI
 # This script runs the complete E2E test suite using Playwright
 
-echo "🚀 Starting Bolt.diy E2E Test Suite"
+echo "🚀 Starting CodeApp AI E2E Test Suite"
 echo "===================================="
 echo ""
 

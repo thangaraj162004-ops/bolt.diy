@@ -6,7 +6,7 @@
  * ever reference the `ai` package.
  */
 
-export type BoltToolState =
+export type CaToolState =
   | 'input-streaming'
   | 'input-available'
   | 'approval-requested'
@@ -15,60 +15,60 @@ export type BoltToolState =
   | 'output-error'
   | 'output-denied';
 
-export interface BoltTextPart {
+export interface CaTextPart {
   type: 'text';
   text: string;
 }
 
-export interface BoltReasoningPart {
+export interface CaReasoningPart {
   type: 'reasoning';
   text: string;
   id?: string;
   state?: 'streaming' | 'done';
 }
 
-export interface BoltToolPart {
+export interface CaToolPart {
   type: `tool-${string}` | 'dynamic-tool';
   toolName?: string;
   toolCallId: string;
   input?: unknown;
   output?: unknown;
   errorText?: string;
-  state?: BoltToolState;
+  state?: CaToolState;
   providerExecuted?: boolean;
 }
 
-export interface BoltSourcePart {
+export interface CaSourcePart {
   type: 'source-url';
   sourceId: string;
   url: string;
   title?: string;
 }
 
-export interface BoltFilePart {
+export interface CaFilePart {
   type: 'file';
   mediaType: string;
   filename?: string;
   url: string;
 }
 
-export interface BoltStepStartPart {
+export interface CaStepStartPart {
   type: 'step-start';
 }
 
-export interface BoltDataPart {
+export interface CaDataPart {
   type: `data-${string}`;
   id?: string;
   data: unknown;
 }
 
-export type BoltPart =
-  BoltTextPart | BoltReasoningPart | BoltToolPart | BoltSourcePart | BoltFilePart | BoltStepStartPart | BoltDataPart;
+export type CaPart =
+  CaTextPart | CaReasoningPart | CaToolPart | CaSourcePart | CaFilePart | CaStepStartPart | CaDataPart;
 
-export interface BoltUIMessage {
+export interface CaUIMessage {
   id: string;
   role: 'system' | 'user' | 'assistant';
-  parts: BoltPart[];
+  parts: CaPart[];
   metadata?: { flags?: string[] } & Record<string, unknown>;
   name?: string;
   function_call?: unknown;
@@ -107,7 +107,7 @@ export interface LegacyV4Message {
   metadata?: Record<string, unknown>;
 }
 
-const TOOL_STATE_MAP: Record<LegacyToolInvocation['state'], BoltToolState> = {
+const TOOL_STATE_MAP: Record<LegacyToolInvocation['state'], CaToolState> = {
   'partial-call': 'input-streaming',
   call: 'input-available',
   result: 'output-available',
@@ -165,8 +165,8 @@ function toDataUrl(mediaType: string, data: string): string {
   return `data:${mediaType};base64,${data}`;
 }
 
-function convertToolInvocation(invocation: LegacyToolInvocation): BoltToolPart {
-  const converted: BoltToolPart = {
+function convertToolInvocation(invocation: LegacyToolInvocation): CaToolPart {
+  const converted: CaToolPart = {
     type: `tool-${invocation.toolName}`,
     toolCallId: invocation.toolCallId,
     state: TOOL_STATE_MAP[invocation.state],
@@ -183,7 +183,7 @@ function convertToolInvocation(invocation: LegacyToolInvocation): BoltToolPart {
   return converted;
 }
 
-function convertPart(part: unknown): BoltPart | null {
+function convertPart(part: unknown): CaPart | null {
   if (!part || typeof part !== 'object') {
     return null;
   }
@@ -255,7 +255,7 @@ function convertPart(part: unknown): BoltPart | null {
   }
 }
 
-function convertAnnotation(annotation: unknown): BoltDataPart | null {
+function convertAnnotation(annotation: unknown): CaDataPart | null {
   if (!annotation || typeof annotation !== 'object' || Array.isArray(annotation)) {
     return null;
   }
@@ -272,7 +272,7 @@ function convertAnnotation(annotation: unknown): BoltDataPart | null {
   return { type: `data-${name}`, data };
 }
 
-function convertAttachment(attachment: LegacyAttachment): BoltFilePart | null {
+function convertAttachment(attachment: LegacyAttachment): CaFilePart | null {
   if (!attachment?.url) {
     return null;
   }
@@ -285,9 +285,9 @@ function convertAttachment(attachment: LegacyAttachment): BoltFilePart | null {
   };
 }
 
-export function migrateLegacyMessage(message: LegacyV4Message): BoltUIMessage {
+export function migrateLegacyMessage(message: LegacyV4Message): CaUIMessage {
   const flags: string[] = [];
-  const dataParts: BoltDataPart[] = [];
+  const dataParts: CaDataPart[] = [];
 
   for (const annotation of message.annotations ?? []) {
     if (typeof annotation === 'string') {
@@ -302,7 +302,7 @@ export function migrateLegacyMessage(message: LegacyV4Message): BoltUIMessage {
     }
   }
 
-  const parts: BoltPart[] = [];
+  const parts: CaPart[] = [];
 
   if (message.parts?.length) {
     for (const part of message.parts) {
@@ -340,7 +340,7 @@ export function migrateLegacyMessage(message: LegacyV4Message): BoltUIMessage {
 
   parts.push(...dataParts);
 
-  const converted: BoltUIMessage = {
+  const converted: CaUIMessage = {
     id: message.id,
     role: message.role === 'data' ? 'assistant' : message.role,
     parts,
@@ -372,13 +372,13 @@ export function migrateLegacyMessage(message: LegacyV4Message): BoltUIMessage {
   return converted;
 }
 
-export function migrateLegacyMessages(messages: unknown): BoltUIMessage[] {
+export function migrateLegacyMessages(messages: unknown): CaUIMessage[] {
   if (!Array.isArray(messages)) {
     return [];
   }
 
   return messages.map((message) =>
-    isLegacyV4Message(message) ? migrateLegacyMessage(message) : (message as BoltUIMessage),
+    isLegacyV4Message(message) ? migrateLegacyMessage(message) : (message as CaUIMessage),
   );
 }
 
@@ -607,7 +607,7 @@ export function getToolCallId(part: unknown): string | undefined {
  * Normalised tool state. v4 nested states map onto their v5 equivalents so
  * callers compare against one vocabulary.
  */
-export function getToolState(part: unknown): BoltToolState | undefined {
+export function getToolState(part: unknown): CaToolState | undefined {
   if (!part || typeof part !== 'object') {
     return undefined;
   }
@@ -623,7 +623,7 @@ export function getToolState(part: unknown): BoltToolState | undefined {
     return TOOL_STATE_MAP[state as LegacyToolInvocation['state']];
   }
 
-  return state as BoltToolState;
+  return state as CaToolState;
 }
 
 export function getToolInput(part: unknown): unknown {
@@ -694,7 +694,7 @@ export function getFileMediaType(part: unknown): string | undefined {
 }
 
 /**
- * Bolt's per-message string sentinels. v4 kept `'no-store'` and `'hidden'` as
+ * CodeApp AI's per-message string sentinels. v4 kept `'no-store'` and `'hidden'` as
  * string entries in `annotations`; v5 removed `annotations`, so they move to
  * `metadata.flags`.
  */
@@ -721,7 +721,7 @@ export function hasMessageFlag(message: AnyMessage, flag: string): boolean {
 }
 
 /**
- * Bolt's annotation objects, read from v5 `data-${name}` parts or v4 object
+ * CodeApp AI's annotation objects, read from v5 `data-${name}` parts or v4 object
  * entries in `annotations`. Returned as `{ type, ...payload }` so callers can
  * keep matching on `.type` regardless of which shape is on disk.
  */

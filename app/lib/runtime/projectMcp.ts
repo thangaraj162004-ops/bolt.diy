@@ -675,7 +675,7 @@ export async function createProjectMcpBridge() {
 
           const processId = crypto.randomUUID();
           workbenchStore.toggleTerminal(true);
-          workbenchStore.writeToBoltTerminal(`\r\n$ ${command}\r\n`);
+          workbenchStore.writeToCaTerminal(`\r\n$ ${command}\r\n`);
 
           const record: ProcessRecord = {
             command,
@@ -696,7 +696,7 @@ export async function createProjectMcpBridge() {
                     workbenchStore.projectGeneration.get() === bridgeProjectGeneration &&
                     chatId.get() === bridgeChatId
                   ) {
-                    workbenchStore.writeToBoltTerminal(chunk);
+                    workbenchStore.writeToCaTerminal(chunk);
                   }
                 },
               }),
@@ -714,7 +714,7 @@ export async function createProjectMcpBridge() {
               await record.done;
 
               if (workbenchStore.projectGeneration.get() === bridgeProjectGeneration && chatId.get() === bridgeChatId) {
-                workbenchStore.writeToBoltTerminal(`\r\n[Command exited with code ${exitCode}]\r\n`);
+                workbenchStore.writeToCaTerminal(`\r\n[Command exited with code ${exitCode}]\r\n`);
               }
             })
             .catch(() => {
@@ -733,7 +733,7 @@ export async function createProjectMcpBridge() {
         const result = failure(error);
 
         if (workbenchStore.projectGeneration.get() === bridgeProjectGeneration && chatId.get() === bridgeChatId) {
-          workbenchStore.writeToBoltTerminal(`\r\n[Command failed: ${result.content[0].text}]\r\n`);
+          workbenchStore.writeToCaTerminal(`\r\n[Command failed: ${result.content[0].text}]\r\n`);
         }
 
         return result;

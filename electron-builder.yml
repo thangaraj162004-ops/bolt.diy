@@ -1,4 +1,4 @@
-appId: com.stackblitz.bolt.diy
+appId: ai.codeapp.desktop
 productName: CodeApp AI
 directories:
   buildResources: build

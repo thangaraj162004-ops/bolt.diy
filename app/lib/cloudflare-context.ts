@@ -1,6 +1,6 @@
 import { RouterContextProvider } from 'react-router';
 
-export interface BoltCloudflare {
+export interface CaCloudflare {
   env: Env;
   ctx: ExecutionContext;
 }
@@ -15,11 +15,11 @@ export interface BoltCloudflare {
  * bindings as a plain `cloudflare` property. The matching type augmentation
  * lives in `load-context.ts`.
  */
-export class BoltRouterContext extends RouterContextProvider {
-  readonly cloudflare: BoltCloudflare;
+export class CaRouterContext extends RouterContextProvider {
+  readonly cloudflare: CaCloudflare;
   readonly clientAddress?: string;
 
-  constructor(cloudflare: BoltCloudflare, clientAddress?: string) {
+  constructor(cloudflare: CaCloudflare, clientAddress?: string) {
     super();
     this.cloudflare = cloudflare;
     this.clientAddress = clientAddress;

@@ -14,7 +14,7 @@ import type { IChatMetadata } from '~/lib/persistence/db';
 import { createMessage } from '~/lib/persistence/messageMigration';
 import { classNames } from '~/utils/classNames';
 import { generateId } from '~/utils/fileUtils';
-import { detectProjectCommands, createCommandsMessage, escapeBoltTags } from '~/utils/projectCommands';
+import { detectProjectCommands, createCommandsMessage, escapeCaTags } from '~/utils/projectCommands';
 
 const IGNORE_PATTERNS = [
   'node_modules/**',
@@ -137,7 +137,7 @@ ${fileContents
   .map(
     (file) =>
       `<boltAction type="file" filePath="${file.path}">
-${escapeBoltTags(file.content)}
+${escapeCaTags(file.content)}
 </boltAction>`,
   )
   .join('\n')}

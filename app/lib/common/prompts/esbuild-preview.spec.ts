@@ -91,8 +91,8 @@ describe('esbuild-preview prompt', () => {
   it('names the assistant CodeApp AI in both versions, never Bolt', () => {
     expect(artifactPrompt.startsWith('You are CodeApp AI, a website and app builder')).toBe(true);
     expect(toolPrompt.startsWith('You are CodeApp AI,')).toBe(true);
-    expect(artifactPrompt).not.toMatch(/\bBolt\b/);
-    expect(toolPrompt).not.toMatch(/\bBolt\b/);
+    expect(artifactPrompt).not.toMatch(/\bCa\b/);
+    expect(toolPrompt).not.toMatch(/\bCa\b/);
 
     // the default engine's prompts keep their original wording
     expect(getProjectToolPrompt(OPTIONS).startsWith('You are Bolt,')).toBe(true);

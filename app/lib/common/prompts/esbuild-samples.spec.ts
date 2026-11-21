@@ -8,7 +8,7 @@ import type { ActionCallbackData } from '~/lib/runtime/message-parser';
 import { buildProject, projectFilesFromFileSystem } from '~/lib/webcontainer/shim/preview/compiler';
 import { PREVIEW_PORT, WebContainerShim } from '~/lib/webcontainer/shim/shim';
 import type { WebContainer } from '~/lib/webcontainer/types';
-import type { BoltShell } from '~/utils/shell';
+import type { CaShell } from '~/utils/shell';
 
 /*
  * Hand-written model outputs in the artifact format the esbuild-preview prompt
@@ -48,7 +48,7 @@ async function applySample(name: string) {
   const shim = new WebContainerShim();
   const actions = parse(readSample(name));
 
-  const runner = new ActionRunner(Promise.resolve(shim as unknown as WebContainer), () => ({}) as BoltShell);
+  const runner = new ActionRunner(Promise.resolve(shim as unknown as WebContainer), () => ({}) as CaShell);
 
   for (const data of actions.filter((action) => action.action.type === 'file')) {
     runner.addAction(data);
