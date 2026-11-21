@@ -1,6 +1,7 @@
 import { isbot } from 'isbot';
 import { renderToReadableStream } from 'react-dom/server';
 import { ServerRouter, type EntryContext, type RouterContextProvider } from 'react-router';
+import { crossOriginIsolationHeaders } from '~/lib/webcontainer/engine';
 
 export default async function handleRequest(
   request: Request,
@@ -24,12 +25,13 @@ export default async function handleRequest(
   responseHeaders.set('Content-Type', 'text/html');
 
   /*
-   * WebContainer requires a cross-origin-isolated document.
-   * `credentialless` is used because the preview iframe and the
-   * COEP header would otherwise block every third-party subresource.
+   * COEP/COOP only for the WebContainer engine (it needs a cross-origin-isolated
+   * document). The esbuild engine sends neither. Decided at build time from
+   * VITE_PREVIEW_ENGINE; see app/lib/webcontainer/engine.ts.
    */
-  responseHeaders.set('Cross-Origin-Embedder-Policy', 'credentialless');
-  responseHeaders.set('Cross-Origin-Opener-Policy', 'same-origin');
+  for (const [name, value] of Object.entries(crossOriginIsolationHeaders())) {
+    responseHeaders.set(name, value);
+  }
 
   return new Response(body, {
     headers: responseHeaders,
