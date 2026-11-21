@@ -18,6 +18,7 @@ import { ExamplePrompts } from '~/components/chat/ExamplePrompts';
 import { ImportFolderButton } from '~/components/chat/ImportFolderButton';
 import { ImportZipButton } from '~/components/chat/ImportZipButton';
 import DeployChatAlert from '~/components/deploy/DeployAlert';
+import { OpenSourceFooterLink } from '~/components/open-source/OpenSourceFooterLink';
 import { Menu } from '~/components/sidebar/Menu.client';
 import type { ElementInfo } from '~/components/workbench/Inspector';
 import { WorkbenchReopenButton } from '~/components/workbench/WorkbenchReopenButton';
@@ -534,6 +535,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                     handleSendMessage?.(event, messageInput);
                   })}
                 {!chatStarted && <StarterTemplates />}
+                {!chatStarted && <OpenSourceFooterLink />}
               </div>
             </div>
           </div>

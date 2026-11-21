@@ -3,17 +3,18 @@ import { join } from 'node:path';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import OpenSourceRoute, { meta } from './open-source';
+import { OpenSourceFooterLink } from '~/components/open-source/OpenSourceFooterLink';
 
 // tests run from the repository root
 const LICENSE = readFileSync(join(process.cwd(), 'LICENSE'), 'utf-8').trim();
 
 describe('/open-source', () => {
-  it('names CodeWriterAI and credits bolt.diy with its copyright line', () => {
+  it('names CodeApp AI and credits bolt.diy with its copyright line', () => {
     const { container } = render(<OpenSourceRoute />);
     const text = container.textContent ?? '';
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Open source notices');
-    expect(text).toContain('CodeWriterAI is built on bolt.diy (MIT license)');
+    expect(text).toContain('CodeApp AI is built on bolt.diy (MIT license)');
     expect(text).toContain('Copyright (c) 2024 StackBlitz, Inc. and bolt.diy contributors');
     expect(text).toContain('Bolt and StackBlitz names and logos belong to their owners and are not used as our brand.');
   });
@@ -42,7 +43,15 @@ describe('/open-source', () => {
     expect(screen.getByTestId('license-bolt-diy').className).toContain('whitespace-pre-wrap');
   });
 
-  it('has a CodeWriterAI page title', () => {
-    expect(meta({} as never)).toEqual([{ title: 'Open source notices | CodeWriterAI' }]);
+  it('has a CodeApp AI page title', () => {
+    expect(meta({} as never)).toEqual([{ title: 'Open source notices | CodeApp AI' }]);
+  });
+
+  it('is linked from the start page footer', () => {
+    render(<OpenSourceFooterLink />);
+
+    const link = screen.getByTestId('open-source-footer-link');
+    expect(link.getAttribute('href')).toBe('/open-source');
+    expect(link.textContent).toBe('Open source notices');
   });
 });
