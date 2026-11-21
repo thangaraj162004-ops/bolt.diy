@@ -66,12 +66,12 @@ describe('reportPreviewUpdate', () => {
     const alert = atom<ActionAlert | undefined>(undefined);
 
     reportPreviewUpdate({ port: 5173, kind: 'build-error', error }, alert);
-    reportPreviewUpdate({ port: 5173, kind: 'rebuilt', version: 2 }, alert);
+    reportPreviewUpdate({ port: 5173, kind: 'rebuilt', version: 2, durationMs: 20 }, alert);
     expect(alert.get()).toBeUndefined();
 
     const other: ActionAlert = { type: 'error', title: 'Terminal error', description: '', content: '' };
     alert.set(other);
-    reportPreviewUpdate({ port: 5173, kind: 'ready', version: 1 }, alert);
+    reportPreviewUpdate({ port: 5173, kind: 'ready', version: 1, durationMs: 20 }, alert);
     expect(alert.get()).toBe(other);
   });
 });

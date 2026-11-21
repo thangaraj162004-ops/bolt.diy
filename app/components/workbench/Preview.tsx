@@ -1,6 +1,7 @@
 import { useStore } from '@nanostores/react';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import { EsbuildPreviewFrame, useEsbuildPreview } from './EsbuildPreviewFrame';
 import type { ElementInfo } from './Inspector';
 import { InspectorPanel } from './InspectorPanel';
 import { PortDropdown } from './PortDropdown';
@@ -9,10 +10,7 @@ import { IconButton } from '~/components/ui/IconButton';
 import { ExpoQrModal } from '~/components/workbench/ExpoQrModal';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import { workbenchStore } from '~/lib/stores/workbench';
-import { webcontainer } from '~/lib/webcontainer';
-import { ESBUILD_PREVIEW_SANDBOX, PREVIEW_ENGINE, parseEsbuildPreviewUrl } from '~/lib/webcontainer/engine';
-import { createPreviewBridgeListener } from '~/lib/webcontainer/shim/preview/bridge';
-import type { WebContainerShim } from '~/lib/webcontainer/shim/shim';
+import { PREVIEW_ENGINE, parseEsbuildPreviewUrl } from '~/lib/webcontainer/engine';
 
 type ResizeSide = 'left' | 'right' | null;
 
@@ -77,8 +75,7 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
    */
   const esbuildPort = PREVIEW_ENGINE === 'esbuild' ? parseEsbuildPreviewUrl(activePreview?.baseUrl) : undefined;
   const isEsbuildPreview = esbuildPort !== undefined;
-  const esbuildShimRef = useRef<WebContainerShim | undefined>(undefined);
-  const [esbuildSrcDoc, setEsbuildSrcDoc] = useState<string | undefined>();
+  const esbuildPreview = useEsbuildPreview(esbuildPort, iframeRef);
   const [displayPath, setDisplayPath] = useState('/');
   const [iframeUrl, setIframeUrl] = useState<string | undefined>();
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -125,62 +122,6 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
     setDisplayPath('/');
   }, [activePreview]);
 
-  // esbuild engine: show the shim's latest HTML and update it after every build (ready, rebuilt, build-error)
-  useEffect(() => {
-    if (esbuildPort === undefined) {
-      setEsbuildSrcDoc(undefined);
-      return undefined;
-    }
-
-    let cancelled = false;
-    let unsubscribe: (() => void) | undefined;
-
-    void webcontainer.then((instance) => {
-      const shim = instance as unknown as WebContainerShim;
-
-      if (cancelled || typeof shim.getPreviewHtml !== 'function') {
-        return;
-      }
-
-      esbuildShimRef.current = shim;
-
-      const refresh = () => setEsbuildSrcDoc(shim.getPreviewHtml(esbuildPort));
-      refresh();
-      unsubscribe = shim.onPreviewUpdate((update) => {
-        if (update.port === esbuildPort) {
-          refresh();
-        }
-      });
-    });
-
-    return () => {
-      cancelled = true;
-      unsubscribe?.();
-    };
-  }, [esbuildPort]);
-
-  /*
-   * esbuild engine: the one listener for the preview's error bridge. A message
-   * counts only if it comes from this iframe's window, carries the current
-   * build's token and has a valid shape; it then goes to the shim's
-   * `preview-message` event (handled in ~/lib/webcontainer).
-   */
-  useEffect(() => {
-    if (esbuildPort === undefined) {
-      return undefined;
-    }
-
-    const listener = createPreviewBridgeListener({
-      getFrameWindow: () => iframeRef.current?.contentWindow,
-      getToken: () => esbuildShimRef.current?.getPreviewBridgeToken(esbuildPort),
-      onMessage: (message) => esbuildShimRef.current?.events.emit('preview-message', message),
-    });
-
-    window.addEventListener('message', listener);
-
-    return () => window.removeEventListener('message', listener);
-  }, [esbuildPort]);
-
   const findMinPortIndex = useCallback(
     (minIndex: number, preview: { port: number }, index: number, array: { port: number }[]) => {
       return preview.port < array[minIndex].port ? index : minIndex;
@@ -197,8 +138,8 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
 
   const reloadPreview = () => {
     // esbuild engine: rebuild; the new HTML (new bridge token) reloads the iframe
-    if (esbuildPort !== undefined) {
-      void esbuildShimRef.current?.rebuildPreview(esbuildPort);
+    if (isEsbuildPreview) {
+      esbuildPreview.rebuild();
       return;
     }
 
@@ -1248,9 +1189,9 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                     />
 
                     {isEsbuildPreview ? (
-                      <iframe
+                      <EsbuildPreviewFrame
                         ref={iframeRef}
-                        title="preview"
+                        srcDoc={esbuildPreview.srcDoc}
                         style={{
                           border: 'none',
                           width: isLandscape ? `${selectedWindowSize.height}px` : `${selectedWindowSize.width}px`,
@@ -1258,8 +1199,6 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                           background: 'white',
                           display: 'block',
                         }}
-                        srcDoc={esbuildSrcDoc ?? ''}
-                        sandbox={ESBUILD_PREVIEW_SANDBOX}
                       />
                     ) : (
                       <iframe
@@ -1280,12 +1219,10 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                   </div>
                 </div>
               ) : isEsbuildPreview ? (
-                <iframe
+                <EsbuildPreviewFrame
                   ref={iframeRef}
-                  title="preview"
                   className="border-none w-full h-full bg-bolt-elements-background-depth-1"
-                  srcDoc={esbuildSrcDoc ?? ''}
-                  sandbox={ESBUILD_PREVIEW_SANDBOX}
+                  srcDoc={esbuildPreview.srcDoc}
                 />
               ) : (
                 <iframe

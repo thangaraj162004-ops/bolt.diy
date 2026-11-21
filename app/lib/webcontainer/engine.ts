@@ -16,6 +16,20 @@ export function getPreviewEngine(value: unknown = import.meta.env.VITE_PREVIEW_E
 
 export const PREVIEW_ENGINE: PreviewEngine = getPreviewEngine();
 
+/** The port the esbuild shim's dev server reports (`npm run dev`). */
+export const ESBUILD_DEV_PORT = 5173;
+
+/**
+ * The /preview-demo page: only with VITE_PREVIEW_ENGINE=esbuild AND
+ * VITE_PREVIEW_DEMO=1 (build time, like the engine). Keep it off for any public launch.
+ */
+export function isPreviewDemoEnabled(
+  engine: unknown = import.meta.env.VITE_PREVIEW_ENGINE,
+  demo: unknown = import.meta.env.VITE_PREVIEW_DEMO,
+): boolean {
+  return getPreviewEngine(engine) === 'esbuild' && String(demo) === '1';
+}
+
 /** Host of the marker URLs used by the esbuild shim. `.invalid` never resolves. */
 export const ESBUILD_PREVIEW_HOST = 'esbuild-preview.invalid';
 

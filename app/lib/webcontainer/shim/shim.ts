@@ -8,7 +8,7 @@ import { MemoryFileSystem } from './memory-fs';
 import type { BuildError } from './preview/compiler';
 import { PreviewRuntime, buildForProduction, defaultCompiler, type Compiler } from './preview/runtime';
 import { createCommandProcess, createShellProcess, type CommandHost, type DevServerHandle } from './shell-commands';
-import { esbuildPreviewUrl } from '~/lib/webcontainer/engine';
+import { ESBUILD_DEV_PORT, esbuildPreviewUrl } from '~/lib/webcontainer/engine';
 import type {
   PortListener,
   PreviewMessage,
@@ -23,7 +23,7 @@ import type {
 import { WORK_DIR } from '~/utils/constants';
 
 /** The port the fake dev server "listens" on. */
-export const PREVIEW_PORT = 5173;
+export const PREVIEW_PORT = ESBUILD_DEV_PORT;
 
 /**
  * Marker URL sent with `port` and `server-ready`. The `.invalid` top-level
@@ -34,7 +34,7 @@ export const PREVIEW_URL = esbuildPreviewUrl(PREVIEW_PORT);
 
 /** What changed in the preview of a port. */
 export type PreviewUpdate =
-  | { port: number; kind: 'ready' | 'rebuilt'; version: number }
+  | { port: number; kind: 'ready' | 'rebuilt'; version: number; durationMs: number }
   | { port: number; kind: 'build-error'; error: BuildError }
   | { port: number; kind: 'stopped' };
 
@@ -197,8 +197,12 @@ export class WebContainerShim implements WebContainer {
     });
     this.#runtime = runtime;
 
-    runtime.on('ready', ({ version }) => this.#notifyPreview({ port: PREVIEW_PORT, kind: 'ready', version }));
-    runtime.on('rebuilt', ({ version }) => this.#notifyPreview({ port: PREVIEW_PORT, kind: 'rebuilt', version }));
+    runtime.on('ready', ({ version, durationMs }) =>
+      this.#notifyPreview({ port: PREVIEW_PORT, kind: 'ready', version, durationMs }),
+    );
+    runtime.on('rebuilt', ({ version, durationMs }) =>
+      this.#notifyPreview({ port: PREVIEW_PORT, kind: 'rebuilt', version, durationMs }),
+    );
     runtime.on('build-error', ({ error }) => this.#notifyPreview({ port: PREVIEW_PORT, kind: 'build-error', error }));
 
     runtime.on('ready', ({ durationMs, warnings }) => {
