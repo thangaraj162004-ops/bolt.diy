@@ -42,6 +42,7 @@ const DOM_TESTS = [
   'app/components/workbench/Preview.spec.tsx',
   'app/components/preview-demo/PreviewDemo.spec.tsx',
   'app/components/header/Header.spec.tsx',
+  'app/routes/open-source.spec.tsx',
   'app/lib/hooks/useMessageParser.spec.ts',
   'app/lib/persistence/useChatHistory.spec.tsx',
 
