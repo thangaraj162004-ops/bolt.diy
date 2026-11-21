@@ -58,6 +58,15 @@ export interface BuildInput {
 
   /** Values for `import.meta.env.*`. Only keys starting with `VITE_` are exposed. */
   env?: Record<string, string>;
+
+  /** 'development' (default) or 'production' (`npm run build`): sets MODE/DEV/PROD. */
+  mode?: 'development' | 'production';
+
+  /** Minify the output. Default false. */
+  minify?: boolean;
+
+  /** Add an inline source map. Default true. */
+  sourcemap?: boolean;
 }
 
 export interface BuildMessage {
@@ -327,12 +336,13 @@ export async function buildProject(input: BuildInput): Promise<BuildResult> {
       write: false,
       format: 'esm',
       target: 'es2020',
-      sourcemap: 'inline',
+      sourcemap: input.sourcemap === false ? false : 'inline',
+      minify: input.minify === true,
       jsx: 'automatic',
       outdir: '/out',
       charset: 'utf8',
       logLevel: 'silent',
-      define: buildDefines(input.env),
+      define: buildDefines(input.env, input.mode),
       plugins: [plugin],
     });
   } catch (error) {
@@ -411,12 +421,15 @@ export function findModuleScriptSrc(html: string): string | undefined {
   return undefined;
 }
 
-function buildDefines(env: Record<string, string> = {}): Record<string, string> {
+function buildDefines(
+  env: Record<string, string> = {},
+  mode: 'development' | 'production' = 'development',
+): Record<string, string> {
   const values: Record<string, string | boolean> = {
     BASE_URL: '/',
-    MODE: 'development',
-    DEV: true,
-    PROD: false,
+    MODE: mode,
+    DEV: mode === 'development',
+    PROD: mode === 'production',
   };
 
   for (const [key, value] of Object.entries(env)) {
