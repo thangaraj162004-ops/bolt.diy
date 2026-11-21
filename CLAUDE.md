@@ -40,3 +40,6 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
 - Never set any `VITE_*_TOKEN` variables on a public deploy. Every `VITE_*`
   value is copied into the public JavaScript that anyone can read.
 - Never commit secrets.
+- The `/preview-demo` page and its `VITE_PREVIEW_DEMO` flag are for testing
+  only. Before any public launch, remove the page or keep the flag off (unset
+  or not `1`); with it off the route returns 404.
