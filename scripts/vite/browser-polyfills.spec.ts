@@ -67,7 +67,7 @@ describe('browser polyfills production build', () => {
       throw new Error('Missing regression entry chunk');
     }
 
-    const directory = await mkdtemp(join(tmpdir(), 'bolt-polyfill-regression-'));
+    const directory = await mkdtemp(join(tmpdir(), 'ca-polyfill-regression-'));
 
     try {
       await Promise.all(

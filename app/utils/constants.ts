@@ -38,7 +38,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Expo starter template for building cross-platform mobile apps',
     githubRepo: 'blueberry-llm/bolt-expo-template',
     tags: ['mobile', 'expo', 'mobile-app', 'android', 'iphone'],
-    icon: 'i-bolt:expo',
+    icon: 'i-ca:expo',
   },
   {
     name: 'Basic Astro',
@@ -46,7 +46,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Lightweight Astro starter template for building fast static websites',
     githubRepo: 'blueberry-llm/bolt-astro-basic-template',
     tags: ['astro', 'blog', 'performance'],
-    icon: 'i-bolt:astro',
+    icon: 'i-ca:astro',
   },
   {
     name: 'NextJS Shadcn',
@@ -54,7 +54,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Next.js starter fullstack template integrated with shadcn/ui components and styling system',
     githubRepo: 'blueberry-llm/bolt-nextjs-shadcn-template',
     tags: ['nextjs', 'react', 'typescript', 'shadcn', 'tailwind'],
-    icon: 'i-bolt:nextjs',
+    icon: 'i-ca:nextjs',
   },
   {
     name: 'Vite Shadcn',
@@ -62,7 +62,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Vite starter fullstack template integrated with shadcn/ui components and styling system',
     githubRepo: 'blueberry-llm/vite-shadcn',
     tags: ['vite', 'react', 'typescript', 'shadcn', 'tailwind'],
-    icon: 'i-bolt:shadcn',
+    icon: 'i-ca:shadcn',
   },
   {
     name: 'Qwik Typescript',
@@ -70,7 +70,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Qwik framework starter with TypeScript for building resumable applications',
     githubRepo: 'blueberry-llm/bolt-qwik-ts-template',
     tags: ['qwik', 'typescript', 'performance', 'resumable'],
-    icon: 'i-bolt:qwik',
+    icon: 'i-ca:qwik',
   },
   {
     name: 'Remix Typescript',
@@ -78,7 +78,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Remix framework starter with TypeScript for full-stack web applications',
     githubRepo: 'blueberry-llm/bolt-remix-ts-template',
     tags: ['remix', 'typescript', 'fullstack', 'react'],
-    icon: 'i-bolt:remix',
+    icon: 'i-ca:remix',
   },
   {
     name: 'Slidev',
@@ -86,7 +86,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Slidev starter template for creating developer-friendly presentations using Markdown',
     githubRepo: 'blueberry-llm/bolt-slidev-template',
     tags: ['slidev', 'presentation', 'markdown'],
-    icon: 'i-bolt:slidev',
+    icon: 'i-ca:slidev',
   },
   {
     name: 'Sveltekit',
@@ -94,7 +94,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'SvelteKit starter template for building fast, efficient web applications',
     githubRepo: 'blueberry-llm/bolt-sveltekit-template',
     tags: ['svelte', 'sveltekit', 'typescript'],
-    icon: 'i-bolt:svelte',
+    icon: 'i-ca:svelte',
   },
   {
     name: 'Vanilla Vite',
@@ -102,7 +102,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Minimal Vite starter template for vanilla JavaScript projects',
     githubRepo: 'blueberry-llm/vanilla-vite-template',
     tags: ['vite', 'vanilla-js', 'minimal'],
-    icon: 'i-bolt:vite',
+    icon: 'i-ca:vite',
   },
   {
     name: 'Vite React',
@@ -110,7 +110,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'React starter template powered by Vite for fast development experience',
     githubRepo: 'blueberry-llm/bolt-vite-react-ts-template',
     tags: ['react', 'vite', 'frontend', 'website', 'app'],
-    icon: 'i-bolt:react',
+    icon: 'i-ca:react',
   },
   {
     name: 'Vite Typescript',
@@ -118,7 +118,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Vite starter template with TypeScript configuration for type-safe development',
     githubRepo: 'blueberry-llm/bolt-vite-ts-template',
     tags: ['vite', 'typescript', 'minimal'],
-    icon: 'i-bolt:typescript',
+    icon: 'i-ca:typescript',
   },
   {
     name: 'Vue',
@@ -126,7 +126,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Vue.js starter template with modern tooling and best practices',
     githubRepo: 'blueberry-llm/bolt-vue-template',
     tags: ['vue', 'typescript', 'frontend'],
-    icon: 'i-bolt:vue',
+    icon: 'i-ca:vue',
   },
   {
     name: 'Angular',
@@ -134,7 +134,7 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'A modern Angular starter template with TypeScript support and best practices configuration',
     githubRepo: 'blueberry-llm/bolt-angular-template',
     tags: ['angular', 'typescript', 'frontend', 'spa'],
-    icon: 'i-bolt:angular',
+    icon: 'i-ca:angular',
   },
   {
     name: 'SolidJS',
@@ -142,6 +142,6 @@ export const STARTER_TEMPLATES: Template[] = [
     description: 'Lightweight SolidJS starter template for building fast static websites',
     githubRepo: 'blueberry-llm/solidjs-ts-tw',
     tags: ['solidjs'],
-    icon: 'i-bolt:solidjs',
+    icon: 'i-ca:solidjs',
   },
 ];

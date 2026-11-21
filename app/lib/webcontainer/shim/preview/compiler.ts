@@ -186,7 +186,7 @@ export async function buildProject(input: BuildInput): Promise<BuildResult> {
   };
 
   const plugin: esbuild.Plugin = {
-    name: 'bolt-preview-project',
+    name: 'ca-preview-project',
     setup(build) {
       build.onResolve({ filter: /.*/ }, async (args) => {
         const specifier = args.path;

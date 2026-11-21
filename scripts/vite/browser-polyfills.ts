@@ -46,7 +46,7 @@ export function browserPolyfills() {
   };
 
   return {
-    name: 'bolt-browser-polyfills',
+    name: 'ca-browser-polyfills',
     enforce: 'pre',
     applyToEnvironment(environment: { name: string }) {
       return environment.name === 'client';

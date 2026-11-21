@@ -12,9 +12,9 @@ import { getToolOutput } from '~/lib/persistence/messageMigration';
 import { TOOL_EXECUTION_APPROVAL } from '~/utils/constants';
 
 /*
- * `processToolInvocations` is the only place bolt turns a user-approved MCP tool
+ * `processToolInvocations` is the only place CodeApp AI turns a user-approved MCP tool
  * call into an executed tool call and forwards the result to the client. It also
- * emits one of the few wire parts bolt writes by hand, so it is pinned here
+ * emits one of the few wire parts CodeApp AI writes by hand, so it is pinned here
  * before the AI SDK upgrade changes the surrounding stream API.
  */
 
@@ -113,12 +113,12 @@ describe('MCPService.processToolInvocations', () => {
     const execute = vi.fn().mockResolvedValue('tool output');
     const service = serviceWithTools({ search: { execute } });
     const writer = createWriter();
-    const part = toolInvocationPart('search', 'result', TOOL_EXECUTION_APPROVAL.APPROVE, { query: 'bolt' });
+    const part = toolInvocationPart('search', 'result', TOOL_EXECUTION_APPROVAL.APPROVE, { query: 'ca' });
 
     const result = await service.processToolInvocations(messageWithParts([part]), writer);
 
     expect(execute).toHaveBeenCalledTimes(1);
-    expect(execute.mock.calls[0][0]).toEqual({ query: 'bolt' });
+    expect(execute.mock.calls[0][0]).toEqual({ query: 'ca' });
     expect(resultOf(result)).toBe('tool output');
     expect(writer.write).toHaveBeenCalledTimes(1);
 

@@ -22,7 +22,7 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.3 }}
-        className={`rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 p-4 mb-2`}
+        className={`rounded-lg border border-ca-elements-borderColor bg-ca-elements-background-depth-2 p-4 mb-2`}
       >
         <div className="flex items-start">
           {/* Icon */}
@@ -36,10 +36,10 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
               className={classNames(
                 'text-xl',
                 type === 'success'
-                  ? 'i-ph:check-circle-duotone text-bolt-elements-icon-success'
+                  ? 'i-ph:check-circle-duotone text-ca-elements-icon-success'
                   : type === 'error'
-                    ? 'i-ph:warning-duotone text-bolt-elements-button-danger-text'
-                    : 'i-ph:info-duotone text-bolt-elements-loader-progress',
+                    ? 'i-ph:warning-duotone text-ca-elements-button-danger-text'
+                    : 'i-ph:info-duotone text-ca-elements-loader-progress',
               )}
             ></div>
           </motion.div>
@@ -49,7 +49,7 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className={`text-sm font-medium text-bolt-elements-textPrimary`}
+              className={`text-sm font-medium text-ca-elements-textPrimary`}
             >
               {title}
             </motion.h3>
@@ -57,7 +57,7 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className={`mt-2 text-sm text-bolt-elements-textSecondary`}
+              className={`mt-2 text-sm text-ca-elements-textSecondary`}
             >
               <p>{description}</p>
 
@@ -71,12 +71,12 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
                         className={classNames(
                           'w-6 h-6 rounded-full flex items-center justify-center',
                           buildStatus === 'running'
-                            ? 'bg-bolt-elements-loader-progress'
+                            ? 'bg-ca-elements-loader-progress'
                             : buildStatus === 'complete'
-                              ? 'bg-bolt-elements-icon-success'
+                              ? 'bg-ca-elements-icon-success'
                               : buildStatus === 'failed'
-                                ? 'bg-bolt-elements-button-danger-background'
-                                : 'bg-bolt-elements-textTertiary',
+                                ? 'bg-ca-elements-button-danger-background'
+                                : 'bg-ca-elements-textTertiary',
                         )}
                       >
                         {buildStatus === 'running' ? (
@@ -96,7 +96,7 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
                     <div
                       className={classNames(
                         'h-0.5 w-8',
-                        buildStatus === 'complete' ? 'bg-bolt-elements-icon-success' : 'bg-bolt-elements-textTertiary',
+                        buildStatus === 'complete' ? 'bg-ca-elements-icon-success' : 'bg-ca-elements-textTertiary',
                       )}
                     ></div>
 
@@ -106,12 +106,12 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
                         className={classNames(
                           'w-6 h-6 rounded-full flex items-center justify-center',
                           deployStatus === 'running'
-                            ? 'bg-bolt-elements-loader-progress'
+                            ? 'bg-ca-elements-loader-progress'
                             : deployStatus === 'complete'
-                              ? 'bg-bolt-elements-icon-success'
+                              ? 'bg-ca-elements-icon-success'
                               : deployStatus === 'failed'
-                                ? 'bg-bolt-elements-button-danger-background'
-                                : 'bg-bolt-elements-textTertiary',
+                                ? 'bg-ca-elements-button-danger-background'
+                                : 'bg-ca-elements-textTertiary',
                         )}
                       >
                         {deployStatus === 'running' ? (
@@ -131,7 +131,7 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
               )}
 
               {content && (
-                <div className="text-xs text-bolt-elements-textSecondary p-2 bg-bolt-elements-background-depth-3 rounded mt-4 mb-4">
+                <div className="text-xs text-ca-elements-textSecondary p-2 bg-ca-elements-background-depth-3 rounded mt-4 mb-4">
                   {content}
                 </div>
               )}
@@ -141,7 +141,7 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
                     href={url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-bolt-elements-item-contentAccent hover:underline flex items-center"
+                    className="text-ca-elements-item-contentAccent hover:underline flex items-center"
                   >
                     <span className="mr-1">View deployed site</span>
                     <div className="i-ph:arrow-square-out"></div>
@@ -165,10 +165,10 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
                     }
                     className={classNames(
                       `px-2 py-1.5 rounded-md text-sm font-medium`,
-                      'bg-bolt-elements-button-primary-background',
-                      'hover:bg-bolt-elements-button-primary-backgroundHover',
-                      'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bolt-elements-button-danger-background',
-                      'text-bolt-elements-button-primary-text',
+                      'bg-ca-elements-button-primary-background',
+                      'hover:bg-ca-elements-button-primary-backgroundHover',
+                      'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ca-elements-button-danger-background',
+                      'text-ca-elements-button-primary-text',
                       'flex items-center gap-1.5',
                     )}
                   >
@@ -180,10 +180,10 @@ export default function DeployChatAlert({ alert, clearAlert, postMessage }: Depl
                   onClick={clearAlert}
                   className={classNames(
                     `px-2 py-1.5 rounded-md text-sm font-medium`,
-                    'bg-bolt-elements-button-secondary-background',
-                    'hover:bg-bolt-elements-button-secondary-backgroundHover',
-                    'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-bolt-elements-button-secondary-background',
-                    'text-bolt-elements-button-secondary-text',
+                    'bg-ca-elements-button-secondary-background',
+                    'hover:bg-ca-elements-button-secondary-backgroundHover',
+                    'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ca-elements-button-secondary-background',
+                    'text-ca-elements-button-secondary-text',
                   )}
                 >
                   Dismiss

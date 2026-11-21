@@ -390,7 +390,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
             : {}),
 
           abortSignal: request.signal,
-          telemetry: { functionId: 'bolt-chat' },
+          telemetry: { functionId: 'ca-chat' },
           onStepEnd: ({ toolCalls, finishReason }) => {
             if (finishReason !== 'error') {
               recovery.stepSucceeded();

@@ -11,7 +11,7 @@ import { setTheme, themeStore } from '~/lib/stores/theme';
 import { THEMES, type Theme } from '~/types/theme';
 import { PROVIDER_LIST } from '~/utils/constants';
 
-const COMPLETED_KEY = 'bolt_onboarding_completed';
+const COMPLETED_KEY = 'ca_onboarding_completed';
 const EMPTY_MCP_CONFIG = { mcpServers: {} };
 
 export function FirstRunOnboarding() {
@@ -26,7 +26,7 @@ export function FirstRunOnboarding() {
 
   const [interfaceOptions, setInterfaceOptions] = useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem('bolt_interface_options') || '{}');
+      const saved = JSON.parse(localStorage.getItem('ca_interface_options') || '{}');
       return {
         accentIntensity: typeof saved.accentIntensity === 'number' ? saved.accentIntensity : 50,
         cornerRadius: ['sharp', 'soft', 'round'].includes(saved.cornerRadius) ? saved.cornerRadius : 'soft',
@@ -55,14 +55,14 @@ export function FirstRunOnboarding() {
       }
 
       try {
-        const storedProfile = localStorage.getItem('bolt_profile');
+        const storedProfile = localStorage.getItem('ca_profile');
         const profile = storedProfile ? (JSON.parse(storedProfile) as { username?: string }) : undefined;
 
         const hasExistingSetup = Boolean(
           profile?.username ||
-          localStorage.getItem('bolt_theme') ||
+          localStorage.getItem('ca_theme') ||
           localStorage.getItem('provider_settings') ||
-          localStorage.getItem('bolt_user_profile') ||
+          localStorage.getItem('ca_user_profile') ||
           Cookies.get('apiKeys'),
         );
 
@@ -162,7 +162,7 @@ export function FirstRunOnboarding() {
 
     if (step === 3) {
       setTheme(selectedTheme);
-      localStorage.setItem('bolt_interface_options', JSON.stringify(interfaceOptions));
+      localStorage.setItem('ca_interface_options', JSON.stringify(interfaceOptions));
 
       const root = document.documentElement;
       root.dataset.accentIntensity = String(interfaceOptions.accentIntensity);

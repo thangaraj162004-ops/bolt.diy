@@ -124,7 +124,7 @@ describe('simplifyCaActions', () => {
 });
 
 describe('createFilesContext', () => {
-  it('wraps file contents in a bolt artifact', () => {
+  it('wraps file contents in a ca artifact', () => {
     const context = createFilesContext({
       [`${WORK_DIR}/index.html`]: { type: 'file', content: '<h1>hi</h1>', isBinary: false },
     });

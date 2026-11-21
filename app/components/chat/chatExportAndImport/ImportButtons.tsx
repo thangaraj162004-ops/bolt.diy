@@ -68,10 +68,10 @@ export function ImportButtons(importChat: ((description: string, messages: UIMes
             variant="default"
             size="lg"
             className={classNames(
-              'gap-2 bg-bolt-elements-background-depth-1',
-              'text-bolt-elements-textPrimary',
-              'hover:bg-bolt-elements-background-depth-2',
-              'border border-bolt-elements-borderColor',
+              'gap-2 bg-ca-elements-background-depth-1',
+              'text-ca-elements-textPrimary',
+              'hover:bg-ca-elements-background-depth-2',
+              'border border-ca-elements-borderColor',
               'h-10 px-4 py-2 min-w-[120px] justify-center',
               'transition-all duration-200 ease-in-out',
             )}
@@ -82,9 +82,9 @@ export function ImportButtons(importChat: ((description: string, messages: UIMes
           <ImportFolderButton
             importChat={importChat}
             className={classNames(
-              'gap-2 bg-bolt-elements-background-depth-1',
-              'text-bolt-elements-textPrimary',
-              'hover:bg-bolt-elements-background-depth-2',
+              'gap-2 bg-ca-elements-background-depth-1',
+              'text-ca-elements-textPrimary',
+              'hover:bg-ca-elements-background-depth-2',
               'border border-[rgba(0,0,0,0.08)] dark:border-[rgba(255,255,255,0.08)]',
               'h-10 px-4 py-2 min-w-[120px] justify-center',
               'transition-all duration-200 ease-in-out rounded-lg',
@@ -93,9 +93,9 @@ export function ImportButtons(importChat: ((description: string, messages: UIMes
           <ImportZipButton
             importChat={importChat}
             className={classNames(
-              'gap-2 bg-bolt-elements-background-depth-1',
-              'text-bolt-elements-textPrimary',
-              'hover:bg-bolt-elements-background-depth-2',
+              'gap-2 bg-ca-elements-background-depth-1',
+              'text-ca-elements-textPrimary',
+              'hover:bg-ca-elements-background-depth-2',
               'border border-[rgba(0,0,0,0.08)] dark:border-[rgba(255,255,255,0.08)]',
               'h-10 px-4 py-2 min-w-[120px] justify-center',
               'transition-all duration-200 ease-in-out rounded-lg',

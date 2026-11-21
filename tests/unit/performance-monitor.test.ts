@@ -34,7 +34,7 @@ describe('PerformanceMonitor', () => {
     it('should store events in localStorage', () => {
       PerformanceMonitor.trackJourney('test', 50);
 
-      const stored = localStorage.getItem('bolt_performance_events');
+      const stored = localStorage.getItem('ca_performance_events');
       expect(stored).toBeTruthy();
       
       const events = JSON.parse(stored!);
@@ -222,12 +222,12 @@ describe('PerformanceMonitor', () => {
       PerformanceMonitor.trackJourney('test', 10);
       
       // Verify data exists
-      expect(localStorage.getItem('bolt_performance_events')).toBeTruthy();
+      expect(localStorage.getItem('ca_performance_events')).toBeTruthy();
       
       PerformanceMonitor.clearEvents();
       
       // Verify data is removed
-      expect(localStorage.getItem('bolt_performance_events')).toBeNull();
+      expect(localStorage.getItem('ca_performance_events')).toBeNull();
     });
   });
 

@@ -4,7 +4,7 @@ import { getThemeMode, THEMES, type Theme } from '~/types/theme';
 
 export type { Theme } from '~/types/theme';
 
-export const kTheme = 'bolt_theme';
+export const kTheme = 'ca_theme';
 
 export function themeIsDark() {
   return getThemeMode(themeStore.get()) === 'dark';
@@ -33,7 +33,7 @@ function initStore() {
 export function toggleTheme() {
   const currentTheme = themeStore.get();
   const targetMode = getThemeMode(currentTheme) === 'dark' ? 'light' : 'dark';
-  const savedTheme = localStorage.getItem(`bolt_theme_${targetMode}`);
+  const savedTheme = localStorage.getItem(`ca_theme_${targetMode}`);
 
   const newTheme =
     isTheme(savedTheme) && getThemeMode(savedTheme) === targetMode
@@ -51,7 +51,7 @@ export function setTheme(newTheme: Theme | 'dark') {
 
   // Update localStorage
   localStorage.setItem(kTheme, newTheme);
-  localStorage.setItem(`bolt_theme_${getThemeMode(newTheme)}`, newTheme);
+  localStorage.setItem(`ca_theme_${getThemeMode(newTheme)}`, newTheme);
 
   // Update the HTML attribute
   const root = document.querySelector('html');
@@ -60,12 +60,12 @@ export function setTheme(newTheme: Theme | 'dark') {
 
   // Update user profile if it exists
   try {
-    const userProfile = localStorage.getItem('bolt_user_profile');
+    const userProfile = localStorage.getItem('ca_user_profile');
 
     if (userProfile) {
       const profile = JSON.parse(userProfile);
       profile.theme = newTheme;
-      localStorage.setItem('bolt_user_profile', JSON.stringify(profile));
+      localStorage.setItem('ca_user_profile', JSON.stringify(profile));
     }
   } catch (error) {
     console.error('Error updating user profile theme:', error);

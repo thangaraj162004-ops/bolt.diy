@@ -161,7 +161,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
   return (
     <div
       className={classNames(
-        'relative bg-bolt-elements-background-depth-2 backdrop-blur p-3 rounded-lg border border-bolt-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
+        'relative bg-ca-elements-background-depth-2 backdrop-blur p-3 rounded-lg border border-ca-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
 
         /*
          * {
@@ -245,7 +245,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
         )}
       </ClientOnly>
       {props.selectedElement && (
-        <div className="flex mx-1.5 gap-2 items-center justify-between rounded-lg rounded-b-none border border-b-none border-bolt-elements-borderColor text-bolt-elements-textPrimary flex py-1 px-2.5 font-medium text-xs">
+        <div className="flex mx-1.5 gap-2 items-center justify-between rounded-lg rounded-b-none border border-b-none border-ca-elements-borderColor text-ca-elements-textPrimary flex py-1 px-2.5 font-medium text-xs">
           <div className="flex gap-2 items-center lowercase">
             <code className="bg-accent-500 rounded-4px px-1.5 py-1 mr-0.5 text-white">
               {props?.selectedElement?.tagName}
@@ -260,15 +260,13 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
           </button>
         </div>
       )}
-      <div
-        className={classNames('relative shadow-xs border border-bolt-elements-borderColor backdrop-blur rounded-lg')}
-      >
+      <div className={classNames('relative shadow-xs border border-ca-elements-borderColor backdrop-blur rounded-lg')}>
         <textarea
           ref={props.textareaRef}
           className={classNames(
-            'w-full pl-4 pt-4 pr-16 outline-none resize-none text-bolt-elements-textPrimary placeholder-bolt-elements-textTertiary bg-transparent text-sm',
+            'w-full pl-4 pt-4 pr-16 outline-none resize-none text-ca-elements-textPrimary placeholder-ca-elements-textTertiary bg-transparent text-sm',
             'transition-all duration-200',
-            'hover:border-bolt-elements-focus',
+            'hover:border-ca-elements-focus',
           )}
           onDragEnter={(e) => {
             e.preventDefault();
@@ -280,11 +278,11 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
           }}
           onDragLeave={(e) => {
             e.preventDefault();
-            e.currentTarget.style.border = '1px solid var(--bolt-elements-borderColor)';
+            e.currentTarget.style.border = '1px solid var(--ca-elements-borderColor)';
           }}
           onDrop={(e) => {
             e.preventDefault();
-            e.currentTarget.style.border = '1px solid var(--bolt-elements-borderColor)';
+            e.currentTarget.style.border = '1px solid var(--ca-elements-borderColor)';
 
             const files = Array.from(e.dataTransfer.files);
             files.forEach((file) => {
@@ -395,10 +393,10 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
                   className={classNames(
                     'transition-all flex items-center gap-1 rounded-md px-1.5 py-1 text-xs',
                     props.chatMode === 'discuss'
-                      ? 'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent'
+                      ? 'bg-ca-elements-item-backgroundAccent text-ca-elements-item-contentAccent'
                       : props.agentMode
-                        ? 'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent'
-                        : 'bg-bolt-elements-item-backgroundDefault text-bolt-elements-item-contentDefault hover:bg-bolt-elements-item-backgroundActive',
+                        ? 'bg-ca-elements-item-backgroundAccent text-ca-elements-item-contentAccent'
+                        : 'bg-ca-elements-item-backgroundDefault text-ca-elements-item-contentDefault hover:bg-ca-elements-item-backgroundActive',
                   )}
                 >
                   {props.chatMode === 'discuss' ? (
@@ -419,8 +417,8 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
                 <DropdownMenu.Content
                   className={classNames(
                     'min-w-[160px] rounded-lg p-1',
-                    'bg-bolt-elements-background-depth-2',
-                    'border border-bolt-elements-borderColor',
+                    'bg-ca-elements-background-depth-2',
+                    'border border-ca-elements-borderColor',
                     'shadow-lg',
                     'z-50',
                   )}
@@ -430,10 +428,10 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
                   <DropdownMenu.Item
                     className={classNames(
                       'flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer',
-                      'text-bolt-elements-textPrimary',
-                      'hover:bg-bolt-elements-item-backgroundActive',
+                      'text-ca-elements-textPrimary',
+                      'hover:bg-ca-elements-item-backgroundActive',
                       'focus:outline-none',
-                      props.chatMode === 'build' && props.agentMode && 'bg-bolt-elements-item-backgroundAccent',
+                      props.chatMode === 'build' && props.agentMode && 'bg-ca-elements-item-backgroundAccent',
                     )}
                     onSelect={() => {
                       props.setChatMode?.('build');
@@ -443,16 +441,16 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
                     <div className="i-ph:robot text-lg" />
                     <div className="flex flex-col">
                       <span>Agent</span>
-                      <span className="text-xs text-bolt-elements-textSecondary">Plans & uses tools</span>
+                      <span className="text-xs text-ca-elements-textSecondary">Plans & uses tools</span>
                     </div>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item
                     className={classNames(
                       'flex items-center gap-2 px-3 py-2 rounded-md text-sm cursor-pointer',
-                      'text-bolt-elements-textPrimary',
-                      'hover:bg-bolt-elements-item-backgroundActive',
+                      'text-ca-elements-textPrimary',
+                      'hover:bg-ca-elements-item-backgroundActive',
                       'focus:outline-none',
-                      props.chatMode === 'discuss' && 'bg-bolt-elements-item-backgroundAccent',
+                      props.chatMode === 'discuss' && 'bg-ca-elements-item-backgroundAccent',
                     )}
                     onSelect={() => {
                       props.setChatMode?.('discuss');
@@ -462,7 +460,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
                     <div className="i-ph:chats text-lg" />
                     <div className="flex flex-col">
                       <span>Discuss</span>
-                      <span className="text-xs text-bolt-elements-textSecondary">Chat without tools</span>
+                      <span className="text-xs text-ca-elements-textSecondary">Chat without tools</span>
                     </div>
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
@@ -477,9 +475,9 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
             <IconButton
               title="Model Settings"
               className={classNames('transition-all flex items-center gap-1', {
-                'bg-bolt-elements-item-backgroundAccent text-bolt-elements-item-contentAccent':
+                'bg-ca-elements-item-backgroundAccent text-ca-elements-item-contentAccent':
                   props.isModelSettingsCollapsed,
-                'bg-bolt-elements-item-backgroundDefault text-bolt-elements-item-contentDefault':
+                'bg-ca-elements-item-backgroundDefault text-ca-elements-item-contentDefault':
                   !props.isModelSettingsCollapsed,
               })}
               onClick={() => props.setIsModelSettingsCollapsed(!props.isModelSettingsCollapsed)}

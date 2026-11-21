@@ -726,10 +726,10 @@ export const ChatImpl = memo(
         return;
       }
 
-      const autorun = localStorage.getItem('bolt_zip_autorun');
+      const autorun = localStorage.getItem('ca_zip_autorun');
 
       if (autorun) {
-        localStorage.removeItem('bolt_zip_autorun');
+        localStorage.removeItem('ca_zip_autorun');
         setInput(autorun);
       }
     }, []);

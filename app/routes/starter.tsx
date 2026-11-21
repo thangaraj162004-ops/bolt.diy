@@ -10,7 +10,7 @@ export const meta: MetaFunction = () => [{ title: pageTitle('Start a blank app')
 
 export default function Starter() {
   return (
-    <div className="flex flex-col h-full w-full bg-bolt-elements-background-depth-1">
+    <div className="flex flex-col h-full w-full bg-ca-elements-background-depth-1">
       <BackgroundRays />
       <Header />
       <ClientOnly fallback={<LoadingOverlay message="Loading starter template..." />}>

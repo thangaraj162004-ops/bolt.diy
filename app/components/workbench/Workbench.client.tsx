@@ -115,7 +115,7 @@ const FileModifiedDropdown = memo(
       <div className="flex items-center gap-2">
         <Popover.Root>
           <Popover.Trigger asChild>
-            <button className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-bolt-elements-background-depth-2 hover:bg-bolt-elements-background-depth-3 transition-colors text-bolt-elements-item-contentDefault">
+            <button className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-ca-elements-background-depth-2 hover:bg-ca-elements-background-depth-3 transition-colors text-ca-elements-item-contentDefault">
               <span>File Changes</span>
               {hasChanges && (
                 <span className="w-5 h-5 rounded-full bg-accent-500/20 text-accent-500 text-xs flex items-center justify-center border border-accent-500/30">
@@ -128,7 +128,7 @@ const FileModifiedDropdown = memo(
             <Popover.Content
               align="end"
               sideOffset={8}
-              className="z-50 w-80 rounded-xl bg-bolt-elements-background-depth-2 shadow-xl border border-bolt-elements-borderColor outline-none"
+              className="z-50 w-80 rounded-xl bg-ca-elements-background-depth-2 shadow-xl border border-ca-elements-borderColor outline-none"
             >
               <div className="p-2">
                 <div className="relative mx-2 mb-2">
@@ -137,9 +137,9 @@ const FileModifiedDropdown = memo(
                     placeholder="Search files..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-bolt-elements-background-depth-1 border border-bolt-elements-borderColor focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+                    className="w-full pl-8 pr-3 py-1.5 text-sm rounded-lg bg-ca-elements-background-depth-1 border border-ca-elements-borderColor focus:outline-none focus:ring-2 focus:ring-blue-500/50"
                   />
-                  <div className="absolute left-2 top-1/2 -translate-y-1/2 text-bolt-elements-textTertiary">
+                  <div className="absolute left-2 top-1/2 -translate-y-1/2 text-ca-elements-textTertiary">
                     <div className="i-ph:magnifying-glass" />
                   </div>
                 </div>
@@ -154,10 +154,10 @@ const FileModifiedDropdown = memo(
                         <button
                           key={filePath}
                           onClick={() => onSelectFile(filePath)}
-                          className="w-full px-3 py-2 text-left rounded-md hover:bg-bolt-elements-background-depth-1 transition-colors group bg-transparent"
+                          className="w-full px-3 py-2 text-left rounded-md hover:bg-ca-elements-background-depth-1 transition-colors group bg-transparent"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="shrink-0 w-5 h-5 text-bolt-elements-textTertiary">
+                            <div className="shrink-0 w-5 h-5 text-ca-elements-textTertiary">
                               {['typescript', 'javascript', 'jsx', 'tsx'].includes(language) && (
                                 <div className="i-ph:file-js" />
                               )}
@@ -192,10 +192,10 @@ const FileModifiedDropdown = memo(
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex flex-col min-w-0">
-                                  <span className="truncate text-sm font-medium text-bolt-elements-textPrimary">
+                                  <span className="truncate text-sm font-medium text-ca-elements-textPrimary">
                                     {filePath.split('/').pop()}
                                   </span>
-                                  <span className="truncate text-xs text-bolt-elements-textTertiary">{filePath}</span>
+                                  <span className="truncate text-xs text-ca-elements-textTertiary">{filePath}</span>
                                 </div>
                                 {(() => {
                                   // Calculate diff stats
@@ -254,13 +254,13 @@ const FileModifiedDropdown = memo(
                     })
                   ) : (
                     <div className="flex flex-col items-center justify-center p-4 text-center">
-                      <div className="w-12 h-12 mb-2 text-bolt-elements-textTertiary">
+                      <div className="w-12 h-12 mb-2 text-ca-elements-textTertiary">
                         <div className="i-ph:file-dashed" />
                       </div>
-                      <p className="text-sm font-medium text-bolt-elements-textPrimary">
+                      <p className="text-sm font-medium text-ca-elements-textPrimary">
                         {searchQuery ? 'No matching files' : 'No modified files'}
                       </p>
-                      <p className="text-xs text-bolt-elements-textTertiary mt-1">
+                      <p className="text-xs text-ca-elements-textTertiary mt-1">
                         {searchQuery ? 'Try another search' : 'Changes will appear here as you edit'}
                       </p>
                     </div>
@@ -269,7 +269,7 @@ const FileModifiedDropdown = memo(
               </div>
 
               {hasChanges && (
-                <div className="border-t border-bolt-elements-borderColor p-2">
+                <div className="border-t border-ca-elements-borderColor p-2">
                   <button
                     onClick={() => {
                       navigator.clipboard.writeText(filteredFiles.map(([filePath]) => filePath).join('\n'));
@@ -277,7 +277,7 @@ const FileModifiedDropdown = memo(
                         icon: <div className="i-ph:check-circle text-accent-500" />,
                       });
                     }}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-bolt-elements-background-depth-1 hover:bg-bolt-elements-background-depth-3 transition-colors text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary"
+                    className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-sm rounded-lg bg-ca-elements-background-depth-1 hover:bg-ca-elements-background-depth-3 transition-colors text-ca-elements-textTertiary hover:text-ca-elements-textPrimary"
                   >
                     Copy File List
                   </button>
@@ -428,7 +428,7 @@ export const Workbench = memo(
         >
           <div
             className={classNames(
-              'fixed top-[calc(var(--header-height)+1.2rem)] bottom-6 w-[var(--workbench-inner-width)] z-0 transition-[left,width] duration-200 bolt-ease-cubic-bezier',
+              'fixed top-[calc(var(--header-height)+1.2rem)] bottom-6 w-[var(--workbench-inner-width)] z-0 transition-[left,width] duration-200 ca-ease-cubic-bezier',
               {
                 'w-full': isSmallViewport,
                 'left-0': showWorkbench && isSmallViewport,
@@ -438,10 +438,10 @@ export const Workbench = memo(
             )}
           >
             <div className="absolute inset-0 px-2 lg:px-4">
-              <div className="h-full flex flex-col bg-bolt-elements-background-depth-2 border border-bolt-elements-borderColor shadow-sm rounded-lg overflow-hidden">
-                <div className="flex items-center px-3 py-2 border-b border-bolt-elements-borderColor gap-1.5">
+              <div className="h-full flex flex-col bg-ca-elements-background-depth-2 border border-ca-elements-borderColor shadow-sm rounded-lg overflow-hidden">
+                <div className="flex items-center px-3 py-2 border-b border-ca-elements-borderColor gap-1.5">
                   <button
-                    className={`${showChat ? 'i-ph:sidebar-simple-fill' : 'i-ph:sidebar-simple'} text-lg text-bolt-elements-textSecondary mr-1`}
+                    className={`${showChat ? 'i-ph:sidebar-simple-fill' : 'i-ph:sidebar-simple'} text-lg text-ca-elements-textSecondary mr-1`}
                     disabled={!canHideChat || isSmallViewport}
                     onClick={() => {
                       if (canHideChat) {
@@ -457,11 +457,11 @@ export const Workbench = memo(
                       <ExportChatButton exportChat={exportChat} />
 
                       {/* Sync Button */}
-                      <div className="flex border border-bolt-elements-borderColor rounded-md overflow-hidden ml-1">
+                      <div className="flex border border-ca-elements-borderColor rounded-md overflow-hidden ml-1">
                         <DropdownMenu.Root>
                           <DropdownMenu.Trigger
                             disabled={isSyncing || streaming}
-                            className="rounded-md items-center justify-center [&:is(:disabled,.disabled)]:cursor-not-allowed [&:is(:disabled,.disabled)]:opacity-60 px-3 py-1.5 text-xs bg-accent-500 text-white hover:text-bolt-elements-item-contentAccent [&:not(:disabled,.disabled)]:hover:bg-bolt-elements-button-primary-backgroundHover outline-accent-500 flex gap-1.7"
+                            className="rounded-md items-center justify-center [&:is(:disabled,.disabled)]:cursor-not-allowed [&:is(:disabled,.disabled)]:opacity-60 px-3 py-1.5 text-xs bg-accent-500 text-white hover:text-ca-elements-item-contentAccent [&:not(:disabled,.disabled)]:hover:bg-ca-elements-button-primary-backgroundHover outline-accent-500 flex gap-1.7"
                           >
                             {isSyncing ? 'Syncing...' : 'Sync'}
                             <span className={classNames('i-ph:caret-down transition-transform')} />
@@ -469,9 +469,9 @@ export const Workbench = memo(
                           <DropdownMenu.Content
                             className={classNames(
                               'min-w-[240px] z-[250]',
-                              'bg-bolt-elements-background-depth-1',
+                              'bg-ca-elements-background-depth-1',
                               'rounded-lg shadow-lg',
-                              'border border-bolt-elements-borderColor',
+                              'border border-ca-elements-borderColor',
                               'animate-in fade-in-0 zoom-in-95',
                               'py-1',
                             )}
@@ -480,7 +480,7 @@ export const Workbench = memo(
                           >
                             <DropdownMenu.Item
                               className={classNames(
-                                'cursor-pointer flex items-center w-full px-4 py-2 text-sm text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive gap-2 rounded-md group relative',
+                                'cursor-pointer flex items-center w-full px-4 py-2 text-sm text-ca-elements-textPrimary hover:bg-ca-elements-item-backgroundActive gap-2 rounded-md group relative',
                               )}
                               onClick={handleSyncFiles}
                               disabled={isSyncing}
@@ -538,7 +538,7 @@ export const Workbench = memo(
                           <Suspense
                             fallback={
                               <div className="flex items-center justify-center h-full">
-                                <div className="i-ph:spinner animate-spin text-2xl text-bolt-elements-textTertiary" />
+                                <div className="i-ph:spinner animate-spin text-2xl text-ca-elements-textTertiary" />
                               </div>
                             }
                           >
@@ -551,7 +551,7 @@ export const Workbench = memo(
                           <Suspense
                             fallback={
                               <div className="flex items-center justify-center h-full">
-                                <div className="i-ph:spinner animate-spin text-2xl text-bolt-elements-textTertiary" />
+                                <div className="i-ph:spinner animate-spin text-2xl text-ca-elements-textTertiary" />
                               </div>
                             }
                           >

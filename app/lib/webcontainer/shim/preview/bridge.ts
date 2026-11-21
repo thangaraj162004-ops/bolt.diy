@@ -10,7 +10,7 @@
  */
 import type { PreviewMessage } from '~/lib/webcontainer/types';
 
-export const BRIDGE_SOURCE = 'bolt-esbuild-preview';
+export const BRIDGE_SOURCE = 'ca-esbuild-preview';
 
 /** Longest string accepted from the preview (longer text is cut). */
 const MAX_TEXT = 10_000;

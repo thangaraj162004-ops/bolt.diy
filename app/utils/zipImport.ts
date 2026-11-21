@@ -59,7 +59,7 @@ export interface ZipImportResult {
 /**
  * Reads a ZIP file and converts its contents into the same caArtifact
  * chat-message structure that createChatFromFolder produces. This lets
- * bolt load the project correctly without writing directly to the
+ * CodeApp AI load the project correctly without writing directly to the
  * WebContainer filesystem (which can be wiped by navigation resets).
  */
 export const createChatFromZip = async (zipFile: File): Promise<ZipImportResult> => {
@@ -137,7 +137,7 @@ export const createChatFromZip = async (zipFile: File): Promise<ZipImportResult>
     });
 
   /*
-   * For Expo projects, strip the scripts from package.json so bolt has
+   * For Expo projects, strip the scripts from package.json so CodeApp AI has
    * nothing to execute even if it tries. The user will run the project
    * locally with Expo CLI. We preserve the rest of package.json intact.
    */

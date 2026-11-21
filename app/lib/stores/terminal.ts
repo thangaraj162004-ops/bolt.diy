@@ -53,7 +53,7 @@ export class TerminalStore {
 
       this.#caOutputReady = true;
     } catch (error: any) {
-      terminal.write(coloredText.red('Failed to spawn bolt shell\n\n') + error.message);
+      terminal.write(coloredText.red('Failed to spawn the CodeApp AI shell\n\n') + error.message);
       return;
     }
   }

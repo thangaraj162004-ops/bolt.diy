@@ -19,10 +19,10 @@ export default ({
         sideOffset={10}
         side={side}
         align={align}
-        className="bg-bolt-elements-background-depth-2 text-bolt-elements-item-contentAccent p-2 rounded-md shadow-xl z-workbench"
+        className="bg-ca-elements-background-depth-2 text-ca-elements-item-contentAccent p-2 rounded-md shadow-xl z-workbench"
       >
         {children}
-        <Popover.Arrow className="bg-bolt-elements-item-background-depth-2" />
+        <Popover.Arrow className="bg-ca-elements-item-background-depth-2" />
       </Popover.Content>
     </Popover.Portal>
   </Popover.Root>

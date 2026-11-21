@@ -228,7 +228,7 @@ export async function createProjectMcpBridge() {
     }
   };
 
-  const server = new McpServer({ name: 'bolt-project', version: '1.0.0' });
+  const server = new McpServer({ name: 'ca-project', version: '1.0.0' });
   const fileRevisionsReadByModel = new Map<string, string>();
 
   server.registerTool(
@@ -848,7 +848,7 @@ export async function createProjectMcpBridge() {
   );
 
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
-  const client = new Client({ name: 'bolt-project-client', version: '1.0.0' });
+  const client = new Client({ name: 'ca-project-client', version: '1.0.0' });
   await Promise.all([server.connect(serverTransport), client.connect(clientTransport)]);
 
   let closed = false;

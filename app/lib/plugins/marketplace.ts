@@ -45,7 +45,7 @@ function getMarketplaceError(error: unknown): Error {
   return error instanceof Error ? error : new Error('Could not load the plugin marketplace.');
 }
 
-const CACHE_KEY = 'bolt_marketplace_snapshot_v1';
+const CACHE_KEY = 'ca_marketplace_snapshot_v1';
 const encoder = new TextEncoder();
 
 async function readLimited(response: Response, maximumBytes: number): Promise<Uint8Array> {

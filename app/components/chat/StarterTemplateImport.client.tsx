@@ -127,20 +127,20 @@ export function StarterTemplateImport() {
   }
 
   return (
-    <div className="relative m-auto max-w-lg rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 p-6 text-bolt-elements-textPrimary">
+    <div className="relative m-auto max-w-lg rounded-lg border border-ca-elements-borderColor bg-ca-elements-background-depth-2 p-6 text-ca-elements-textPrimary">
       <h1 className="mb-2 text-lg font-semibold">Unable to start the app</h1>
-      <p role="alert" className="mb-4 text-sm text-bolt-elements-textSecondary">
+      <p role="alert" className="mb-4 text-sm text-ca-elements-textSecondary">
         {error}
       </p>
       <div className="flex items-center gap-4">
         <button
           type="button"
           onClick={() => setAttempt((value) => value + 1)}
-          className="rounded-md bg-bolt-elements-button-primary-background px-4 py-2 text-bolt-elements-button-primary-text hover:bg-bolt-elements-button-primary-backgroundHover"
+          className="rounded-md bg-ca-elements-button-primary-background px-4 py-2 text-ca-elements-button-primary-text hover:bg-ca-elements-button-primary-backgroundHover"
         >
           Try again
         </button>
-        <a href="/" className="text-sm text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary">
+        <a href="/" className="text-sm text-ca-elements-textSecondary hover:text-ca-elements-textPrimary">
           Back to homepage
         </a>
       </div>

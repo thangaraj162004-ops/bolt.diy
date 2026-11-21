@@ -370,7 +370,7 @@ describe('dev server', () => {
     const firstToken = shim.getPreviewBridgeToken(PREVIEW_PORT)!;
     expect(firstToken).toMatch(/^[0-9a-f]{32}$/);
     expect(shim.getPreviewHtml(PREVIEW_PORT)).toContain(`"token":"${firstToken}"`);
-    expect(shim.getPreviewHtml(PREVIEW_PORT)).toContain('data-bolt-preview-bridge');
+    expect(shim.getPreviewHtml(PREVIEW_PORT)).toContain('data-ca-preview-bridge');
 
     await shim.rebuildPreview(PREVIEW_PORT);
 

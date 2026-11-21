@@ -19,7 +19,7 @@ export function BrandWordmark({ className }: BrandWordmarkProps) {
       aria-label={PRODUCT_NAME}
       data-testid="brand-wordmark"
     >
-      <span aria-hidden="true" className="text-bolt-elements-textPrimary">
+      <span aria-hidden="true" className="text-ca-elements-textPrimary">
         CodeApp
       </span>{' '}
       <span aria-hidden="true" className="text-accent-600">

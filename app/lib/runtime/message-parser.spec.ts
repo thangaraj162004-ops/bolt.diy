@@ -825,11 +825,12 @@ describe('StreamingMessageParser thought-div handling', () => {
 
     let output = '';
 
-    for (const chunk of ['<div cla', 'ss="__bolt', 'Thought__">thin', 'king</div>']) {
+    for (const chunk of ['<div cla', 'ss="__ca', 'Thought__">thin', 'king</div>']) {
       output += parser.parse('msg', chunk);
     }
 
-    expect(output).toBe('<div clalt>thin');
+    // the exact garbling depends on the tag prefix (it was '<div clalt>thin' with the old bolt* tags)
+    expect(output).toBe('<div cla_">thin');
   });
 
   it('keeps artifact parsing intact when a thought div precedes an artifact', () => {

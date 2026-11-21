@@ -86,7 +86,7 @@ export function renderPreviewHtml({
 
   // first, so it also reports errors thrown by the other scripts
   if (bridge) {
-    head.push(`<script data-bolt-preview-bridge>\n${escapeScriptContent(renderBridgeScript(bridge))}\n</script>`);
+    head.push(`<script data-ca-preview-bridge>\n${escapeScriptContent(renderBridgeScript(bridge))}\n</script>`);
   }
 
   if (usesTailwind) {
@@ -95,14 +95,14 @@ export function renderPreviewHtml({
 
   // the Tailwind browser script compiles `text/tailwindcss` styles (handles @tailwind and @apply)
   head.push(
-    `<style data-bolt-preview${usesTailwind ? ' type="text/tailwindcss"' : ''}>\n${escapeStyleContent(css)}\n</style>`,
+    `<style data-ca-preview${usesTailwind ? ' type="text/tailwindcss"' : ''}>\n${escapeStyleContent(css)}\n</style>`,
   );
 
   if (previewScript) {
-    head.push(`<script data-bolt-preview-script>\n${escapeScriptContent(previewScript)}\n</script>`);
+    head.push(`<script data-ca-preview-script>\n${escapeScriptContent(previewScript)}\n</script>`);
   }
 
-  const bundle = `<script type="module" data-bolt-preview-bundle>\n${escapeScriptContent(js)}\n</script>`;
+  const bundle = `<script type="module" data-ca-preview-bundle>\n${escapeScriptContent(js)}\n</script>`;
 
   let html = insertBefore(base, /<\/head\s*>/i, `${head.join('\n')}\n`, (doc) =>
     /<body\b/i.test(doc)

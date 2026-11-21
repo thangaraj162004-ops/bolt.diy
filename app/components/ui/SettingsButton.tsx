@@ -12,7 +12,7 @@ export const SettingsButton = memo(({ onClick }: SettingsButtonProps) => {
       size="xl"
       title="Preferences"
       data-testid="settings-button"
-      className="text-[#666] hover:text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive/10 transition-colors"
+      className="text-[#666] hover:text-ca-elements-textPrimary hover:bg-ca-elements-item-backgroundActive/10 transition-colors"
     />
   );
 });
@@ -25,7 +25,7 @@ export const OpenSourceNoticesLink = memo(() => {
       title="Open source notices"
       aria-label="Open source notices"
       data-testid="open-source-link"
-      className="flex items-center justify-center rounded-md p-1 text-xl text-[#666] hover:text-bolt-elements-textPrimary hover:bg-bolt-elements-item-backgroundActive/10 transition-colors"
+      className="flex items-center justify-center rounded-md p-1 text-xl text-[#666] hover:text-ca-elements-textPrimary hover:bg-ca-elements-item-backgroundActive/10 transition-colors"
     >
       <span className="i-ph:scales" />
     </a>

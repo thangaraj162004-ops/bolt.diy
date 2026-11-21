@@ -33,10 +33,10 @@ export function ConnectorActionPermissions({ connector, actions }: ConnectorActi
   }, [initialize, isInitialized]);
 
   return (
-    <section className="rounded-xl border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 p-5">
+    <section className="rounded-xl border border-ca-elements-borderColor bg-ca-elements-background-depth-2 p-5">
       <div className="mb-4">
-        <h3 className="text-sm font-semibold text-bolt-elements-textPrimary">Action permissions</h3>
-        <p className="mt-1 text-xs text-bolt-elements-textSecondary">
+        <h3 className="text-sm font-semibold text-ca-elements-textPrimary">Action permissions</h3>
+        <p className="mt-1 text-xs text-ca-elements-textSecondary">
           Choose which {connector[0].toUpperCase() + connector.slice(1)} actions {PRODUCT_NAME} can access.
         </p>
       </div>
@@ -48,11 +48,11 @@ export function ConnectorActionPermissions({ connector, actions }: ConnectorActi
           return (
             <div
               key={action.id}
-              className="flex items-center gap-3 rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-1 px-3 py-2.5"
+              className="flex items-center gap-3 rounded-lg border border-ca-elements-borderColor bg-ca-elements-background-depth-1 px-3 py-2.5"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-bolt-elements-textPrimary">{action.name}</p>
-                <p className="text-xs text-bolt-elements-textSecondary">{action.description}</p>
+                <p className="text-sm font-medium text-ca-elements-textPrimary">{action.name}</p>
+                <p className="text-xs text-ca-elements-textSecondary">{action.description}</p>
               </div>
               <Switch
                 checked={enabled}

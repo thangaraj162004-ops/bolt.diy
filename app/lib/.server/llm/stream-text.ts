@@ -141,7 +141,7 @@ export async function streamText(props: {
      * `parts`. convertToModelMessages reads only `parts` and dereferences
      * `message.parts.some(...)` on its first statement, so a message left
      * without parts is an immediate TypeError rather than a soft degradation.
-     * `data-*` parts are preserved rather than flattened away, because bolt
+     * `data-*` parts are preserved rather than flattened away, because ca
      * reads annotations back off them.
      */
     const sanitizedParts = Array.isArray(message.parts)

@@ -179,18 +179,18 @@ export function PreviewDemo() {
 
   if (unavailable) {
     return (
-      <div className="p-4 text-bolt-elements-textPrimary">
+      <div className="p-4 text-ca-elements-textPrimary">
         The esbuild preview engine is not active in this build (VITE_PREVIEW_ENGINE=esbuild is required).
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen w-full overflow-y-auto bg-bolt-elements-background-depth-1 text-bolt-elements-textPrimary">
+    <div className="min-h-screen w-full overflow-y-auto bg-ca-elements-background-depth-1 text-ca-elements-textPrimary">
       <div className="mx-auto flex max-w-3xl flex-col gap-3 p-3">
         <header>
           <h1 className="text-xl font-semibold">Preview demo</h1>
-          <p className="text-sm text-bolt-elements-textSecondary">
+          <p className="text-sm text-ca-elements-textSecondary">
             Test projects for the in-browser esbuild preview. No AI, no keys. Not for public launch.
           </p>
         </header>
@@ -204,26 +204,26 @@ export function PreviewDemo() {
               onClick={() => void start(project)}
               className={`rounded-lg border px-3 py-3 text-left text-sm ${
                 current?.id === project.id
-                  ? 'border-bolt-elements-borderColorActive bg-bolt-elements-background-depth-3'
-                  : 'border-bolt-elements-borderColor bg-bolt-elements-background-depth-2'
+                  ? 'border-ca-elements-borderColorActive bg-ca-elements-background-depth-3'
+                  : 'border-ca-elements-borderColor bg-ca-elements-background-depth-2'
               }`}
             >
               <span className="block font-medium">{project.label}</span>
-              <span className="block text-xs text-bolt-elements-textSecondary">{project.description}</span>
+              <span className="block text-xs text-ca-elements-textSecondary">{project.description}</span>
             </button>
           ))}
           <button
             type="button"
             disabled={!current || busy}
             onClick={() => void editHeading()}
-            className="rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 px-3 py-3 text-left text-sm disabled:opacity-50"
+            className="rounded-lg border border-ca-elements-borderColor bg-ca-elements-background-depth-2 px-3 py-3 text-left text-sm disabled:opacity-50"
           >
             <span className="block font-medium">Edit heading</span>
-            <span className="block text-xs text-bolt-elements-textSecondary">Change the h1 and time the rebuild.</span>
+            <span className="block text-xs text-ca-elements-textSecondary">Change the h1 and time the rebuild.</span>
           </button>
         </div>
 
-        <div className="h-[60vh] min-h-[320px] overflow-hidden rounded-lg border border-bolt-elements-borderColor bg-white">
+        <div className="h-[60vh] min-h-[320px] overflow-hidden rounded-lg border border-ca-elements-borderColor bg-white">
           {port === undefined || !current ? (
             <div className="flex h-full items-center justify-center p-4 text-center text-sm text-gray-500">
               Pick a project to start the preview.
@@ -235,8 +235,8 @@ export function PreviewDemo() {
 
         <section aria-label="Build log">
           <h2 className="mb-1 text-sm font-semibold">Log</h2>
-          <ol className="max-h-60 overflow-y-auto rounded-lg border border-bolt-elements-borderColor bg-bolt-elements-background-depth-2 p-2 font-mono text-xs">
-            {log.length === 0 && <li className="text-bolt-elements-textSecondary">Nothing yet.</li>}
+          <ol className="max-h-60 overflow-y-auto rounded-lg border border-ca-elements-borderColor bg-ca-elements-background-depth-2 p-2 font-mono text-xs">
+            {log.length === 0 && <li className="text-ca-elements-textSecondary">Nothing yet.</li>}
             {log.map((entry) => (
               <li
                 key={entry.id}

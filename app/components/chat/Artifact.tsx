@@ -113,26 +113,24 @@ export const Artifact = memo(({ artifactId }: ArtifactProps) => {
 
   return (
     <>
-      <div className="artifact border border-bolt-elements-borderColor flex flex-col overflow-hidden rounded-lg w-full transition-border duration-150">
+      <div className="artifact border border-ca-elements-borderColor flex flex-col overflow-hidden rounded-lg w-full transition-border duration-150">
         <div className="flex">
           <button
-            className="flex items-stretch bg-bolt-elements-artifacts-background hover:bg-bolt-elements-artifacts-backgroundHover w-full overflow-hidden"
+            className="flex items-stretch bg-ca-elements-artifacts-background hover:bg-ca-elements-artifacts-backgroundHover w-full overflow-hidden"
             onClick={() => {
               const showWorkbench = workbenchStore.showWorkbench.get();
               workbenchStore.showWorkbench.set(!showWorkbench);
             }}
           >
             <div className="px-5 p-3.5 w-full text-left">
-              <div className="w-full text-bolt-elements-textPrimary font-medium leading-5 text-sm">
+              <div className="w-full text-ca-elements-textPrimary font-medium leading-5 text-sm">
                 {/* Use the dynamic title here */}
                 {dynamicTitle}
               </div>
-              <div className="w-full w-full text-bolt-elements-textSecondary text-xs mt-0.5">
-                Click to open Workbench
-              </div>
+              <div className="w-full w-full text-ca-elements-textSecondary text-xs mt-0.5">Click to open Workbench</div>
             </div>
           </button>
-          {artifact.type !== 'bundled' && <div className="bg-bolt-elements-artifacts-borderColor w-[1px]" />}
+          {artifact.type !== 'bundled' && <div className="bg-ca-elements-artifacts-borderColor w-[1px]" />}
           <AnimatePresence>
             {actions.length && artifact.type !== 'bundled' && (
               <motion.button
@@ -140,7 +138,7 @@ export const Artifact = memo(({ artifactId }: ArtifactProps) => {
                 animate={{ width: 'auto' }}
                 exit={{ width: 0 }}
                 transition={{ duration: 0.15, ease: cubicEasingFn }}
-                className="bg-bolt-elements-artifacts-background hover:bg-bolt-elements-artifacts-backgroundHover"
+                className="bg-ca-elements-artifacts-background hover:bg-ca-elements-artifacts-backgroundHover"
                 onClick={toggleActions}
               >
                 <div className="p-4">
@@ -151,7 +149,7 @@ export const Artifact = memo(({ artifactId }: ArtifactProps) => {
           </AnimatePresence>
         </div>
         {artifact.type === 'bundled' && (
-          <div className="flex items-center gap-1.5 p-5 bg-bolt-elements-actions-background border-t border-bolt-elements-artifacts-borderColor">
+          <div className="flex items-center gap-1.5 p-5 bg-ca-elements-actions-background border-t border-ca-elements-artifacts-borderColor">
             <div className={classNames('text-lg', getIconColor(setupStatus))}>
               {setupStatus === 'complete' ? (
                 <div className="i-ph:check"></div>
@@ -161,7 +159,7 @@ export const Artifact = memo(({ artifactId }: ArtifactProps) => {
                 <div className="i-svg-spinners:90-ring-with-bg"></div>
               )}
             </div>
-            <div className="text-bolt-elements-textPrimary font-medium leading-5 text-sm">{setupDescription}</div>
+            <div className="text-ca-elements-textPrimary font-medium leading-5 text-sm">{setupDescription}</div>
           </div>
         )}
         <AnimatePresence>
@@ -173,9 +171,9 @@ export const Artifact = memo(({ artifactId }: ArtifactProps) => {
               exit={{ height: '0px' }}
               transition={{ duration: 0.15 }}
             >
-              <div className="bg-bolt-elements-artifacts-borderColor h-[1px]" />
+              <div className="bg-ca-elements-artifacts-borderColor h-[1px]" />
 
-              <div className="p-5 text-left bg-bolt-elements-actions-background">
+              <div className="p-5 text-left bg-ca-elements-actions-background">
                 <ActionList actions={actions} />
               </div>
             </motion.div>
@@ -263,7 +261,7 @@ const ActionList = memo(({ actions }: ActionListProps) => {
                   <div>
                     Create{' '}
                     <code
-                      className="bg-bolt-elements-artifacts-inlineCode-background text-bolt-elements-artifacts-inlineCode-text px-1.5 py-1 rounded-md text-bolt-elements-item-contentAccent hover:underline cursor-pointer"
+                      className="bg-ca-elements-artifacts-inlineCode-background text-ca-elements-artifacts-inlineCode-text px-1.5 py-1 rounded-md text-ca-elements-item-contentAccent hover:underline cursor-pointer"
                       onClick={() => openArtifactInWorkbench(action.filePath)}
                     >
                       {action.filePath}
@@ -304,19 +302,19 @@ const ActionList = memo(({ actions }: ActionListProps) => {
 function getIconColor(status: ActionState['status']) {
   switch (status) {
     case 'pending': {
-      return 'text-bolt-elements-textTertiary';
+      return 'text-ca-elements-textTertiary';
     }
     case 'running': {
-      return 'text-bolt-elements-loader-progress';
+      return 'text-ca-elements-loader-progress';
     }
     case 'complete': {
-      return 'text-bolt-elements-icon-success';
+      return 'text-ca-elements-icon-success';
     }
     case 'aborted': {
-      return 'text-bolt-elements-textSecondary';
+      return 'text-ca-elements-textSecondary';
     }
     case 'failed': {
-      return 'text-bolt-elements-icon-error';
+      return 'text-ca-elements-icon-error';
     }
     default: {
       return undefined;

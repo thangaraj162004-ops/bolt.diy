@@ -132,7 +132,7 @@ export function withAgentToolCallRecovery(model: LanguageModel, onRetry: () => v
                         toolCallId: generateId(),
                         toolName: call.name,
                         input: JSON.stringify(call.input),
-                        providerMetadata: { bolt: { recoveredFromText: true } },
+                        providerMetadata: { ca: { recoveredFromText: true } },
                       });
                     }
                     controller.enqueue({

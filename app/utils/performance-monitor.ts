@@ -15,7 +15,7 @@ interface PerformanceEvent {
 }
 
 export class PerformanceMonitor {
-  private static readonly _storageKey = 'bolt_performance_events';
+  private static readonly _storageKey = 'ca_performance_events';
   private static readonly _maxEvents = 1000; // Keep last 1000 events
   private static _isEnabled = true;
 

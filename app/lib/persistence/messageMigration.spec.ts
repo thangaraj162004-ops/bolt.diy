@@ -224,10 +224,10 @@ describe('migrateLegacyMessage: annotations', () => {
 });
 
 describe('migrateLegacyMessage: misc', () => {
-  it('preserves Bolt-owned fields', () => {
-    const result = migrateLegacyMessage(v4({ content: 'x', name: 'bolt', function_call: { a: 1 }, timestamp: 42 }));
+  it('preserves app-owned fields', () => {
+    const result = migrateLegacyMessage(v4({ content: 'x', name: 'ca', function_call: { a: 1 }, timestamp: 42 }));
 
-    expect(result).toMatchObject({ name: 'bolt', function_call: { a: 1 }, timestamp: 42 });
+    expect(result).toMatchObject({ name: 'ca', function_call: { a: 1 }, timestamp: 42 });
   });
 
   it('maps the deprecated data role to assistant and keeps its payload', () => {

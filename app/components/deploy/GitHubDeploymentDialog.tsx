@@ -576,7 +576,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
               className="w-[90vw] md:w-[600px] max-h-[85vh] overflow-y-auto"
             >
               <Dialog.Content
-                className="bg-white dark:bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark shadow-xl"
+                className="bg-white dark:bg-ca-elements-background-depth-1 rounded-lg border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark shadow-xl"
                 aria-describedby="success-dialog-description"
               >
                 <Dialog.Title className="sr-only">Successfully pushed to GitHub</Dialog.Title>
@@ -587,12 +587,12 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                         <div className="i-ph:check-circle w-5 h-5" />
                       </div>
                       <div>
-                        <h3 className="text-lg font-medium text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark">
+                        <h3 className="text-lg font-medium text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark">
                           Successfully pushed to GitHub
                         </h3>
                         <p
                           id="success-dialog-description"
-                          className="text-sm text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark"
+                          className="text-sm text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark"
                         >
                           Your code is now available on GitHub
                         </p>
@@ -601,7 +601,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                     <Dialog.Close asChild>
                       <button
                         onClick={handleClose}
-                        className="p-2 rounded-lg transition-all duration-200 ease-in-out bg-transparent text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary dark:text-bolt-elements-textTertiary-dark dark:hover:text-bolt-elements-textPrimary-dark hover:bg-bolt-elements-background-depth-2 dark:hover:bg-bolt-elements-background-depth-3 focus:outline-none focus:ring-2 focus:ring-bolt-elements-borderColor dark:focus:ring-bolt-elements-borderColor-dark"
+                        className="p-2 rounded-lg transition-all duration-200 ease-in-out bg-transparent text-ca-elements-textTertiary hover:text-ca-elements-textPrimary dark:text-ca-elements-textTertiary-dark dark:hover:text-ca-elements-textPrimary-dark hover:bg-ca-elements-background-depth-2 dark:hover:bg-ca-elements-background-depth-3 focus:outline-none focus:ring-2 focus:ring-ca-elements-borderColor dark:focus:ring-ca-elements-borderColor-dark"
                       >
                         <span className="i-ph:x block w-5 h-5" aria-hidden="true" />
                         <span className="sr-only">Close dialog</span>
@@ -609,13 +609,13 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                     </Dialog.Close>
                   </div>
 
-                  <div className="bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 rounded-lg p-4 text-left border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark">
-                    <p className="text-sm font-medium text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark mb-2 flex items-center gap-2">
+                  <div className="bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 rounded-lg p-4 text-left border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark">
+                    <p className="text-sm font-medium text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark mb-2 flex items-center gap-2">
                       <span className="i-ph:github-logo w-4 h-4 text-purple-500" />
                       Repository URL
                     </p>
                     <div className="flex items-center gap-2">
-                      <code className="flex-1 text-sm bg-bolt-elements-background-depth-1 dark:bg-bolt-elements-background-depth-4 px-3 py-2 rounded border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark font-mono">
+                      <code className="flex-1 text-sm bg-ca-elements-background-depth-1 dark:bg-ca-elements-background-depth-4 px-3 py-2 rounded border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark font-mono">
                         {createdRepoUrl}
                       </code>
                       <motion.button
@@ -623,7 +623,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                           navigator.clipboard.writeText(createdRepoUrl);
                           toast.success('URL copied to clipboard');
                         }}
-                        className="p-2 text-bolt-elements-textSecondary hover:text-bolt-elements-textPrimary dark:text-bolt-elements-textSecondary-dark dark:hover:text-bolt-elements-textPrimary-dark bg-bolt-elements-background-depth-1 dark:bg-bolt-elements-background-depth-4 rounded-lg border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark"
+                        className="p-2 text-ca-elements-textSecondary hover:text-ca-elements-textPrimary dark:text-ca-elements-textSecondary-dark dark:hover:text-ca-elements-textPrimary-dark bg-ca-elements-background-depth-1 dark:bg-ca-elements-background-depth-4 rounded-lg border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -632,8 +632,8 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                     </div>
                   </div>
 
-                  <div className="bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 rounded-lg p-4 border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark">
-                    <p className="text-sm font-medium text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark mb-2 flex items-center gap-2">
+                  <div className="bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 rounded-lg p-4 border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark">
+                    <p className="text-sm font-medium text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark mb-2 flex items-center gap-2">
                       <span className="i-ph:files w-4 h-4 text-purple-500" />
                       Pushed Files ({pushedFiles.length})
                     </p>
@@ -641,16 +641,16 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                       {pushedFiles.slice(0, 100).map((file) => (
                         <div
                           key={file.path}
-                          className="flex items-center justify-between py-1.5 text-sm text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark border-b border-bolt-elements-borderColor/30 dark:border-bolt-elements-borderColor-dark/30 last:border-0"
+                          className="flex items-center justify-between py-1.5 text-sm text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark border-b border-ca-elements-borderColor/30 dark:border-ca-elements-borderColor-dark/30 last:border-0"
                         >
                           <span className="font-mono truncate flex-1 text-xs">{file.path}</span>
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-bolt-elements-background-depth-3 dark:bg-bolt-elements-background-depth-4 text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark ml-2">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-ca-elements-background-depth-3 dark:bg-ca-elements-background-depth-4 text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark ml-2">
                             {(file.size / 1024).toFixed(1)} KB
                           </span>
                         </div>
                       ))}
                       {pushedFiles.length > 100 && (
-                        <div className="py-2 text-center text-xs text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark">
+                        <div className="py-2 text-center text-xs text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark">
                           +{pushedFiles.length - 100} more files
                         </div>
                       )}
@@ -674,7 +674,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                         navigator.clipboard.writeText(createdRepoUrl);
                         toast.success('URL copied to clipboard');
                       }}
-                      className="px-4 py-2 rounded-lg bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark hover:bg-bolt-elements-background-depth-3 dark:hover:bg-bolt-elements-background-depth-4 text-sm inline-flex items-center gap-2 border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark"
+                      className="px-4 py-2 rounded-lg bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark hover:bg-ca-elements-background-depth-3 dark:hover:bg-ca-elements-background-depth-4 text-sm inline-flex items-center gap-2 border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -683,7 +683,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                     </motion.button>
                     <motion.button
                       onClick={handleClose}
-                      className="px-4 py-2 rounded-lg bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark hover:bg-bolt-elements-background-depth-3 dark:hover:bg-bolt-elements-background-depth-4 text-sm border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark"
+                      className="px-4 py-2 rounded-lg bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark hover:bg-ca-elements-background-depth-3 dark:hover:bg-ca-elements-background-depth-4 text-sm border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
@@ -713,7 +713,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
               className="w-[90vw] md:w-[500px]"
             >
               <Dialog.Content
-                className="bg-white dark:bg-bolt-elements-background-depth-1 rounded-lg p-6 border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark shadow-xl"
+                className="bg-white dark:bg-ca-elements-background-depth-1 rounded-lg p-6 border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark shadow-xl"
                 aria-describedby="connection-required-description"
               >
                 <Dialog.Title className="sr-only">GitHub Connection Required</Dialog.Title>
@@ -721,7 +721,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                   <Dialog.Close asChild>
                     <button
                       onClick={handleClose}
-                      className="absolute right-0 top-0 p-2 rounded-lg transition-all duration-200 ease-in-out bg-transparent text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary dark:text-bolt-elements-textTertiary-dark dark:hover:text-bolt-elements-textPrimary-dark hover:bg-bolt-elements-background-depth-2 dark:hover:bg-bolt-elements-background-depth-3 focus:outline-none focus:ring-2 focus:ring-bolt-elements-borderColor dark:focus:ring-bolt-elements-borderColor-dark"
+                      className="absolute right-0 top-0 p-2 rounded-lg transition-all duration-200 ease-in-out bg-transparent text-ca-elements-textTertiary hover:text-ca-elements-textPrimary dark:text-ca-elements-textTertiary-dark dark:hover:text-ca-elements-textPrimary-dark hover:bg-ca-elements-background-depth-2 dark:hover:bg-ca-elements-background-depth-3 focus:outline-none focus:ring-2 focus:ring-ca-elements-borderColor dark:focus:ring-ca-elements-borderColor-dark"
                     >
                       <span className="i-ph:x block w-5 h-5" aria-hidden="true" />
                       <span className="sr-only">Close dialog</span>
@@ -731,22 +731,22 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                     initial={{ scale: 0.8 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="mx-auto w-16 h-16 rounded-xl bg-bolt-elements-background-depth-3 flex items-center justify-center text-purple-500"
+                    className="mx-auto w-16 h-16 rounded-xl bg-ca-elements-background-depth-3 flex items-center justify-center text-purple-500"
                   >
                     <div className="i-ph:github-logo w-8 h-8" />
                   </motion.div>
-                  <h3 className="text-lg font-medium text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark">
+                  <h3 className="text-lg font-medium text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark">
                     GitHub Connection Required
                   </h3>
                   <p
                     id="connection-required-description"
-                    className="text-sm text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark max-w-md mx-auto"
+                    className="text-sm text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark max-w-md mx-auto"
                   >
                     To deploy your code to GitHub, you need to connect your GitHub account first.
                   </p>
                   <div className="pt-2 flex justify-center gap-3">
                     <motion.button
-                      className="px-4 py-2 rounded-lg bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark text-sm hover:bg-bolt-elements-background-depth-3 dark:hover:bg-bolt-elements-background-depth-4 border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark"
+                      className="px-4 py-2 rounded-lg bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark text-sm hover:bg-ca-elements-background-depth-3 dark:hover:bg-ca-elements-background-depth-4 border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={handleClose}
@@ -788,7 +788,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
             className="w-[90vw] md:w-[500px]"
           >
             <Dialog.Content
-              className="bg-white dark:bg-bolt-elements-background-depth-1 rounded-lg border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark shadow-xl"
+              className="bg-white dark:bg-ca-elements-background-depth-1 rounded-lg border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark shadow-xl"
               aria-describedby="push-dialog-description"
             >
               <div className="p-6">
@@ -797,17 +797,17 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                     initial={{ scale: 0.8 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="w-10 h-10 rounded-xl bg-bolt-elements-background-depth-3 flex items-center justify-center text-purple-500"
+                    className="w-10 h-10 rounded-xl bg-ca-elements-background-depth-3 flex items-center justify-center text-purple-500"
                   >
                     <div className="i-ph:github-logo w-5 h-5" />
                   </motion.div>
                   <div>
-                    <Dialog.Title className="text-lg font-medium text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark">
+                    <Dialog.Title className="text-lg font-medium text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark">
                       Deploy to GitHub
                     </Dialog.Title>
                     <p
                       id="push-dialog-description"
-                      className="text-sm text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark"
+                      className="text-sm text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark"
                     >
                       Deploy your code to a new or existing GitHub repository
                     </p>
@@ -815,7 +815,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                   <Dialog.Close asChild>
                     <button
                       onClick={handleClose}
-                      className="ml-auto p-2 rounded-lg transition-all duration-200 ease-in-out bg-transparent text-bolt-elements-textTertiary hover:text-bolt-elements-textPrimary dark:text-bolt-elements-textTertiary-dark dark:hover:text-bolt-elements-textPrimary-dark hover:bg-bolt-elements-background-depth-2 dark:hover:bg-bolt-elements-background-depth-3 focus:outline-none focus:ring-2 focus:ring-bolt-elements-borderColor dark:focus:ring-bolt-elements-borderColor-dark"
+                      className="ml-auto p-2 rounded-lg transition-all duration-200 ease-in-out bg-transparent text-ca-elements-textTertiary hover:text-ca-elements-textPrimary dark:text-ca-elements-textTertiary-dark dark:hover:text-ca-elements-textPrimary-dark hover:bg-ca-elements-background-depth-2 dark:hover:bg-ca-elements-background-depth-3 focus:outline-none focus:ring-2 focus:ring-ca-elements-borderColor dark:focus:ring-ca-elements-borderColor-dark"
                     >
                       <span className="i-ph:x block w-5 h-5" aria-hidden="true" />
                       <span className="sr-only">Close dialog</span>
@@ -823,7 +823,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                   </Dialog.Close>
                 </div>
 
-                <div className="flex items-center gap-3 mb-6 p-4 bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 rounded-lg border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark">
+                <div className="flex items-center gap-3 mb-6 p-4 bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 rounded-lg border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark">
                   <div className="relative">
                     <img src={user.avatar_url} alt={user.login} className="w-10 h-10 rounded-full" />
                     <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-purple-500 flex items-center justify-center text-white">
@@ -831,10 +831,10 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                     </div>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark">
+                    <p className="text-sm font-medium text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark">
                       {user.name || user.login}
                     </p>
-                    <p className="text-sm text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark">
+                    <p className="text-sm text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark">
                       @{user.login}
                     </p>
                   </div>
@@ -844,12 +844,12 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                   <div className="space-y-2">
                     <label
                       htmlFor="repoName"
-                      className="text-sm text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark"
+                      className="text-sm text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark"
                     >
                       Repository Name
                     </label>
                     <div className="relative">
-                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-bolt-elements-textTertiary dark:text-bolt-elements-textTertiary-dark">
+                      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-ca-elements-textTertiary dark:text-ca-elements-textTertiary-dark">
                         <span className="i-ph:git-branch w-4 h-4" />
                       </div>
                       <input
@@ -871,7 +871,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                           }
                         }}
                         placeholder="my-awesome-project"
-                        className="w-full pl-10 px-4 py-2 rounded-lg bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark placeholder-bolt-elements-textTertiary dark:placeholder-bolt-elements-textTertiary-dark focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full pl-10 px-4 py-2 rounded-lg bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark placeholder-ca-elements-textTertiary dark:placeholder-ca-elements-textTertiary-dark focus:outline-none focus:ring-2 focus:ring-purple-500"
                         required
                         maxLength={100}
                         pattern="[a-zA-Z0-9\-_\s]+"
@@ -879,7 +879,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                       />
                     </div>
                     {repoName && sanitizeRepoName(repoName) !== repoName && (
-                      <p className="text-xs text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark mt-1">
+                      <p className="text-xs text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark mt-1">
                         Will be created as:{' '}
                         <span className="font-mono text-purple-600 dark:text-purple-400">
                           {sanitizeRepoName(repoName)}
@@ -890,10 +890,10 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark">
+                      <label className="text-sm text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark">
                         Recent Repositories
                       </label>
-                      <span className="text-xs text-bolt-elements-textTertiary dark:text-bolt-elements-textTertiary-dark">
+                      <span className="text-xs text-ca-elements-textTertiary dark:text-ca-elements-textTertiary-dark">
                         {filteredRepos.length} of {recentRepos.length}
                       </span>
                     </div>
@@ -904,7 +904,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                         value={repoSearchQuery}
                         onChange={(e) => setRepoSearchQuery(e.target.value)}
                         onClear={() => setRepoSearchQuery('')}
-                        className="bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark text-sm"
+                        className="bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark text-sm"
                       />
                     </div>
 
@@ -930,14 +930,14 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                               key={repo.full_name}
                               type="button"
                               onClick={() => setRepoName(repo.name)}
-                              className="w-full p-3 text-left rounded-lg bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 hover:bg-bolt-elements-background-depth-3 dark:hover:bg-bolt-elements-background-depth-4 transition-colors group border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark hover:border-purple-500/30"
+                              className="w-full p-3 text-left rounded-lg bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 hover:bg-ca-elements-background-depth-3 dark:hover:bg-ca-elements-background-depth-4 transition-colors group border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark hover:border-purple-500/30"
                               whileHover={{ scale: 1.01 }}
                               whileTap={{ scale: 0.99 }}
                             >
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <div className="i-ph:git-branch w-4 h-4 text-purple-500" />
-                                  <span className="text-sm font-medium text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark group-hover:text-purple-500">
+                                  <span className="text-sm font-medium text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark group-hover:text-purple-500">
                                     {repo.name}
                                   </span>
                                 </div>
@@ -948,7 +948,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                                 )}
                               </div>
                               {repo.description && (
-                                <p className="mt-1 text-xs text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark line-clamp-2">
+                                <p className="mt-1 text-xs text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark line-clamp-2">
                                   {repo.description}
                                 </p>
                               )}
@@ -981,23 +981,23 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                     </div>
                   )}
 
-                  <div className="p-3 bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 rounded-lg border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark">
+                  <div className="p-3 bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 rounded-lg border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark">
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
                         id="private"
                         checked={isPrivate}
                         onChange={(e) => setIsPrivate(e.target.checked)}
-                        className="rounded border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark text-purple-500 focus:ring-purple-500 dark:bg-bolt-elements-background-depth-3"
+                        className="rounded border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark text-purple-500 focus:ring-purple-500 dark:bg-ca-elements-background-depth-3"
                       />
                       <label
                         htmlFor="private"
-                        className="text-sm text-bolt-elements-textPrimary dark:text-bolt-elements-textPrimary-dark"
+                        className="text-sm text-ca-elements-textPrimary dark:text-ca-elements-textPrimary-dark"
                       >
                         Make repository private
                       </label>
                     </div>
-                    <p className="text-xs text-bolt-elements-textTertiary dark:text-bolt-elements-textTertiary-dark mt-2 ml-6">
+                    <p className="text-xs text-ca-elements-textTertiary dark:text-ca-elements-textTertiary-dark mt-2 ml-6">
                       Private repositories are only visible to you and people you share them with
                     </p>
                   </div>
@@ -1006,7 +1006,7 @@ export function GitHubDeploymentDialog({ isOpen, onClose, projectName, files }: 
                     <motion.button
                       type="button"
                       onClick={handleClose}
-                      className="px-4 py-2 rounded-lg bg-bolt-elements-background-depth-2 dark:bg-bolt-elements-background-depth-3 text-bolt-elements-textSecondary dark:text-bolt-elements-textSecondary-dark hover:bg-bolt-elements-background-depth-3 dark:hover:bg-bolt-elements-background-depth-4 text-sm border border-bolt-elements-borderColor dark:border-bolt-elements-borderColor-dark"
+                      className="px-4 py-2 rounded-lg bg-ca-elements-background-depth-2 dark:bg-ca-elements-background-depth-3 text-ca-elements-textSecondary dark:text-ca-elements-textSecondary-dark hover:bg-ca-elements-background-depth-3 dark:hover:bg-ca-elements-background-depth-4 text-sm border border-ca-elements-borderColor dark:border-ca-elements-borderColor-dark"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >

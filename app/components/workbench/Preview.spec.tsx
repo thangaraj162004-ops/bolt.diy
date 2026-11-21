@@ -79,7 +79,7 @@ function createFakeShim() {
 
 function validEnvelope(token = TOKEN) {
   return {
-    source: 'bolt-esbuild-preview',
+    source: 'ca-esbuild-preview',
     token,
     message: {
       type: 'PREVIEW_UNCAUGHT_EXCEPTION',

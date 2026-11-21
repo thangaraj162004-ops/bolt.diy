@@ -44,9 +44,7 @@ export const UserMessage = memo(({ content, parts }: UserMessageProps) => {
                 loading="eager"
                 decoding="sync"
               />
-              <span className="text-bolt-elements-textPrimary text-sm">
-                {profile?.username ? profile.username : ''}
-              </span>
+              <span className="text-ca-elements-textPrimary text-sm">{profile?.username ? profile.username : ''}</span>
             </div>
           ) : (
             <div className="i-ph:user-fill text-accent-500 text-2xl" />
@@ -72,7 +70,7 @@ export const UserMessage = memo(({ content, parts }: UserMessageProps) => {
     <div className="flex flex-col bg-accent-500/10 backdrop-blur-sm px-5 p-3.5 w-auto rounded-lg ml-auto">
       <div className="flex gap-3.5 mb-4">
         {images.map((item, index) => (
-          <div key={index} className="relative flex rounded-lg border border-bolt-elements-borderColor overflow-hidden">
+          <div key={index} className="relative flex rounded-lg border border-ca-elements-borderColor overflow-hidden">
             <div className="h-16 w-16 bg-transparent outline-none">
               <img
                 src={getFileUrl(item)}

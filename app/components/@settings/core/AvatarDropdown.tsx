@@ -18,11 +18,11 @@ export const AvatarDropdown = ({ onSelectTab }: AvatarDropdownProps) => {
         <motion.button
           type="button"
           aria-label={`Open profile menu for ${profile?.username || 'Guest User'}`}
-          className="flex h-12 w-full min-w-0 items-center justify-start gap-3 rounded-lg bg-transparent px-2 text-left transition-colors hover:bg-bolt-elements-background-depth-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+          className="flex h-12 w-full min-w-0 items-center justify-start gap-3 rounded-lg bg-transparent px-2 text-left transition-colors hover:bg-ca-elements-background-depth-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-bolt-elements-background-depth-4 text-bolt-elements-textSecondary">
+          <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-ca-elements-background-depth-4 text-ca-elements-textSecondary">
             <img
               src={profile?.avatar || DEFAULT_AVATAR}
               alt=""
@@ -31,7 +31,7 @@ export const AvatarDropdown = ({ onSelectTab }: AvatarDropdownProps) => {
               decoding="sync"
             />
           </span>
-          <span className="min-w-0 truncate text-sm font-medium text-bolt-elements-textPrimary">
+          <span className="min-w-0 truncate text-sm font-medium text-ca-elements-textPrimary">
             {profile?.username?.trim() || 'Guest User'}
           </span>
         </motion.button>

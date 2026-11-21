@@ -108,15 +108,15 @@ describe('renderPreviewHtml with the bridge', () => {
   it('injects the bridge before every other script, and the bundle last', () => {
     const html = renderPreviewHtml({ js: 'app()', css: '', previewScript: 'inspector()', bridge: CONFIG });
 
-    const bridge = html.indexOf('data-bolt-preview-bridge');
+    const bridge = html.indexOf('data-ca-preview-bridge');
     expect(bridge).toBeGreaterThan(-1);
-    expect(bridge).toBeLessThan(html.indexOf('data-bolt-preview-script'));
-    expect(bridge).toBeLessThan(html.indexOf('data-bolt-preview-bundle'));
+    expect(bridge).toBeLessThan(html.indexOf('data-ca-preview-script'));
+    expect(bridge).toBeLessThan(html.indexOf('data-ca-preview-bundle'));
     expect(html).toContain('"token":"abc123"');
   });
 
   it('has no bridge when none is configured', () => {
-    expect(renderPreviewHtml({ js: '', css: '' })).not.toContain('data-bolt-preview-bridge');
+    expect(renderPreviewHtml({ js: '', css: '' })).not.toContain('data-ca-preview-bridge');
   });
 });
 
