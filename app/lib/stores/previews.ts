@@ -1,4 +1,5 @@
 import { atom } from 'nanostores';
+import { parseEsbuildPreviewUrl } from '~/lib/webcontainer/engine';
 import type { WebContainer } from '~/lib/webcontainer/types';
 
 // Extend Window interface to include our custom property
@@ -211,7 +212,15 @@ export class PreviewsStore {
   // Helper to extract preview ID from URL
   getPreviewId(url: string): string | null {
     const match = url.match(/^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/);
-    return match ? match[1] : null;
+
+    if (match) {
+      return match[1];
+    }
+
+    // esbuild engine marker URL: https://esbuild-preview.invalid/<port>/ → the port is the id
+    const esbuildPort = parseEsbuildPreviewUrl(url);
+
+    return esbuildPort === undefined ? null : String(esbuildPort);
   }
 
   // Broadcast state change to all tabs
