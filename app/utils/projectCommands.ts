@@ -89,12 +89,12 @@ export function createCommandsMessage(commands: ProjectCommands): UIMessage | nu
 
   if (commands.setupCommand) {
     commandString += `
-<boltAction type="shell">${commands.setupCommand}</boltAction>`;
+<caAction type="shell">${commands.setupCommand}</caAction>`;
   }
 
   if (commands.startCommand) {
     commandString += `
-<boltAction type="start">${commands.startCommand}</boltAction>
+<caAction type="start">${commands.startCommand}</caAction>
 `;
   }
 
@@ -103,15 +103,15 @@ export function createCommandsMessage(commands: ProjectCommands): UIMessage | nu
     id: generateId(),
     text: `
 ${commands.followupMessage ? `\n\n${commands.followupMessage}` : ''}
-<boltArtifact id="project-setup" title="Project Setup">
+<caArtifact id="project-setup" title="Project Setup">
 ${commandString}
-</boltArtifact>`,
+</caArtifact>`,
   }) as UIMessage;
 }
 
 export function escapeCaArtifactTags(input: string) {
-  // Regular expression to match boltArtifact tags and their content
-  const regex = /(<boltArtifact[^>]*>)([\s\S]*?)(<\/boltArtifact>)/g;
+  // Regular expression to match caArtifact tags and their content
+  const regex = /(<caArtifact[^>]*>)([\s\S]*?)(<\/caArtifact>)/g;
 
   return input.replace(regex, (match, openTag, content, closeTag) => {
     // Escape the opening tag
@@ -126,8 +126,8 @@ export function escapeCaArtifactTags(input: string) {
 }
 
 export function escapeCaAActionTags(input: string) {
-  // Regular expression to match boltArtifact tags and their content
-  const regex = /(<boltAction[^>]*>)([\s\S]*?)(<\/boltAction>)/g;
+  // Regular expression to match caArtifact tags and their content
+  const regex = /(<caAction[^>]*>)([\s\S]*?)(<\/caAction>)/g;
 
   return input.replace(regex, (match, openTag, content, closeTag) => {
     // Escape the opening tag
@@ -156,12 +156,12 @@ export function createCommandActionsString(commands: ProjectCommands): string {
 
   if (commands.setupCommand) {
     commandString += `
-<boltAction type="shell">${commands.setupCommand}</boltAction>`;
+<caAction type="shell">${commands.setupCommand}</caAction>`;
   }
 
   if (commands.startCommand) {
     commandString += `
-<boltAction type="start">${commands.startCommand}</boltAction>
+<caAction type="start">${commands.startCommand}</caAction>
 `;
   }
 

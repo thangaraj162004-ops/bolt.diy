@@ -19,11 +19,11 @@ vi.mock('~/lib/stores/workbench', () => ({
 }));
 
 const artifactText = (id: string, filePath: string) =>
-  `<boltArtifact id="${id}" title="${id}" type="bundled">
-  <boltAction type="file" filePath="${filePath}">
+  `<caArtifact id="${id}" title="${id}" type="bundled">
+  <caAction type="file" filePath="${filePath}">
 const value = 1;
-  </boltAction>
-</boltArtifact>`;
+  </caAction>
+</caArtifact>`;
 
 describe('useMessageParser.resetParsedMessages', () => {
   beforeEach(() => {

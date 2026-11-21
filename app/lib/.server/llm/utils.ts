@@ -59,8 +59,8 @@ export function extractPropertiesFromMessage(message: AnyMessage): {
 }
 
 export function simplifyCaActions(input: string): string {
-  // Using regex to match boltAction tags that have type="file"
-  const regex = /(<boltAction[^>]*type="file"[^>]*>)([\s\S]*?)(<\/boltAction>)/g;
+  // Using regex to match caAction tags that have type="file"
+  const regex = /(<caAction[^>]*type="file"[^>]*>)([\s\S]*?)(<\/caAction>)/g;
 
   // Replace each matching occurrence
   return input.replace(regex, (_0, openingTag, _2, closingTag) => {
@@ -97,10 +97,10 @@ export function createFilesContext(files: FileMap, useRelativePath?: boolean) {
         filePath = path.replace('/home/project/', '');
       }
 
-      return `<boltAction type="file" filePath="${filePath}">${codeWithLinesNumbers}</boltAction>`;
+      return `<caAction type="file" filePath="${filePath}">${codeWithLinesNumbers}</caAction>`;
     });
 
-  return `<boltArtifact id="code-content" title="Code Content" >\n${fileContexts.join('\n')}\n</boltArtifact>`;
+  return `<caArtifact id="code-content" title="Code Content" >\n${fileContexts.join('\n')}\n</caArtifact>`;
 }
 
 export function extractCurrentContext(

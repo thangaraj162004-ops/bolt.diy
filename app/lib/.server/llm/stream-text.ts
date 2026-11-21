@@ -66,7 +66,7 @@ function getCompletionTokenLimit(modelDetails: any): number {
 function sanitizeText(text: string): string {
   let sanitized = text.replace(/<div class=\\"__caThought__\\">.*?<\/div>/s, '');
   sanitized = sanitized.replace(/<think>.*?<\/think>/s, '');
-  sanitized = sanitized.replace(/<boltAction type="file" filePath="package-lock\.json">[\s\S]*?<\/boltAction>/g, '');
+  sanitized = sanitized.replace(/<caAction type="file" filePath="package-lock\.json">[\s\S]*?<\/caAction>/g, '');
 
   return sanitized.trim();
 }

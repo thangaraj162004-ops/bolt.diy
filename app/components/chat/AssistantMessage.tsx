@@ -80,7 +80,7 @@ export const AssistantMessage = memo(
      * Chat.client.tsx:649 deliberately replaces assistant `content` with the
      * parsed stream, where artifacts and actions have already been extracted.
      * So `content` wins when present and parts are only the fallback; swapping
-     * the order would render raw <boltArtifact> tags into the bubble.
+     * the order would render raw <caArtifact> tags into the bubble.
      */
     const messageText = typeof content === 'string' ? content : getMessageText({ parts });
     const reasoningText = getReasoningText({ parts } as AnyMessage);

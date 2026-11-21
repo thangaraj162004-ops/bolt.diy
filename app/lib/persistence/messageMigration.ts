@@ -1,3 +1,5 @@
+import { upgradeLegacyMessageTags } from './legacyTags';
+
 /**
  * Converts AI SDK v4 messages to the v5+ `UIMessage` shape.
  *
@@ -377,8 +379,12 @@ export function migrateLegacyMessages(messages: unknown): CaUIMessage[] {
     return [];
   }
 
+  /*
+   * Chats saved before the Bolt -> Ca rename still contain <boltArtifact>,
+   * <boltAction> and related markers; rewrite them to the current names.
+   */
   return messages.map((message) =>
-    isLegacyV4Message(message) ? migrateLegacyMessage(message) : (message as CaUIMessage),
+    upgradeLegacyMessageTags(isLegacyV4Message(message) ? migrateLegacyMessage(message) : (message as CaUIMessage)),
   );
 }
 

@@ -313,7 +313,7 @@ export const ChatImpl = memo(
           userMessages.length === 1 &&
           !agentMode &&
           !hasNativeProjectTools &&
-          !/<boltAction\s+type=["'](?:shell|start)["']/.test(getMessageText(message))
+          !/<caAction\s+type=["'](?:shell|start)["']/.test(getMessageText(message))
         ) {
           void (async () => {
             const completedMessages = messagesRef.current.some((item) => item.id === message.id)
@@ -589,7 +589,7 @@ export const ChatImpl = memo(
 
       if (
         !pendingMessage ||
-        !messages.some((message) => getMessageText(message).includes('<boltArtifact id="imported-files"'))
+        !messages.some((message) => getMessageText(message).includes('<caArtifact id="imported-files"'))
       ) {
         return;
       }
@@ -691,13 +691,13 @@ export const ChatImpl = memo(
 
     useEffect(() => {
       const starterSetupMessage = initialMessages.find((message) =>
-        getMessageText(message).includes('<boltArtifact id="project-setup"'),
+        getMessageText(message).includes('<caArtifact id="project-setup"'),
       );
 
       if (
         !starterSetupMessage?.id ||
         parsedStarterSetupMessagesRef.current.has(starterSetupMessage.id) ||
-        !initialMessages.some((message) => getMessageText(message).includes('<boltArtifact id="imported-files"'))
+        !initialMessages.some((message) => getMessageText(message).includes('<caArtifact id="imported-files"'))
       ) {
         return undefined;
       }

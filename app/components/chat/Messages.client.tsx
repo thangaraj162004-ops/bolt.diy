@@ -16,7 +16,7 @@ import { classNames } from '~/utils/classNames';
 /*
  * v5 removed UIMessage.content, but Chat.client still needs to hand the parsed
  * artifact/action stream to the renderer. useMessageParser turns the raw model
- * text (which contains <boltArtifact>/<boltAction> tags) into the display text,
+ * text (which contains <caArtifact>/<caAction> tags) into the display text,
  * so it travels on this side channel instead of overwriting `content`.
  */
 export type DisplayMessage = UIMessage & { parsedContent?: string };
@@ -75,7 +75,7 @@ export const Messages = forwardRef<HTMLDivElement, MessagesProps>(
 
               /*
                * Assistant bubbles render useMessageParser's output, which has
-               * already stripped boltArtifact/boltAction tags. Falling back to
+               * already stripped caArtifact/caAction tags. Falling back to
                * the raw parts would leak that markup into the UI.
                */
               return (

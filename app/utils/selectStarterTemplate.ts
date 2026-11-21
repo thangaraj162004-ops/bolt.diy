@@ -127,22 +127,22 @@ export async function getTemplates(templateName: string, title?: string, signal?
 
   const assistantMessage = `
 ${PRODUCT_NAME} is initializing your project with the required files using the ${template.name} template.
-<boltArtifact id="imported-files" title="${title || 'Create initial files'}" type="bundled">
+<caArtifact id="imported-files" title="${title || 'Create initial files'}" type="bundled">
 ${filesToImport.files
   .map(
     (file) =>
-      `<boltAction type="file" filePath="${file.path}">
+      `<caAction type="file" filePath="${file.path}">
 ${file.content}
-</boltAction>`,
+</caAction>`,
   )
   .join('\n')}
-</boltArtifact>
+</caArtifact>
 `;
 
   const commandActions = createCommandActionsString(await detectProjectCommands(filesToImport.files));
 
   const setupMessage = commandActions
-    ? `<boltArtifact id="project-setup" title="Project Setup" type="bundled">${commandActions}\n</boltArtifact>`
+    ? `<caArtifact id="project-setup" title="Project Setup" type="bundled">${commandActions}\n</caArtifact>`
     : '';
 
   let userMessage = ``;

@@ -58,8 +58,8 @@ Environment:
   VITE_SUPABASE_ANON_KEY=${supabase.credentials.anonKey}
 
 For EVERY database change, provide TWO actions:
-1. <boltAction type="supabase" operation="migration" filePath="/supabase/migrations/name.sql">
-2. <boltAction type="supabase" operation="query" projectId="\${projectId}">
+1. <caAction type="supabase" operation="migration" filePath="/supabase/migrations/name.sql">
+2. <caAction type="supabase" operation="query" projectId="\${projectId}">
 
 Write migrations that:
 - Enable RLS on all tables
@@ -142,8 +142,8 @@ ${designScheme ? `\nUser preferences: ${JSON.stringify(designScheme)}` : ''}
 User: Create a todo app with React and Tailwind
 
 Response:
-<boltArtifact id="react-todo" title="Todo App">
-<boltAction type="file" filePath="package.json">
+<caArtifact id="react-todo" title="Todo App">
+<caAction type="file" filePath="package.json">
 {
   "name": "todo",
   "type": "module",
@@ -160,23 +160,23 @@ Response:
     "vite": "^6.0.3"
   }
 }
-</boltAction>
-<boltAction type="file" filePath="index.html">
+</caAction>
+<caAction type="file" filePath="index.html">
 <!DOCTYPE html>
 <html lang="en">
 <head><meta charset="UTF-8"/><title>Todo</title></head>
 <body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body>
 </html>
-</boltAction>
-<boltAction type="file" filePath="src/main.jsx">
+</caAction>
+<caAction type="file" filePath="src/main.jsx">
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-</boltAction>
-<boltAction type="file" filePath="src/App.jsx">
+</caAction>
+<caAction type="file" filePath="src/App.jsx">
 import { useState } from 'react';
 
 export default function App() {
@@ -222,15 +222,15 @@ export default function App() {
     </div>
   );
 }
-</boltAction>
-<boltAction type="file" filePath="src/index.css">
+</caAction>
+<caAction type="file" filePath="src/index.css">
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-</boltAction>
-<boltAction type="shell">npm install</boltAction>
-<boltAction type="start">npm run dev</boltAction>
-</boltArtifact>
+</caAction>
+<caAction type="shell">npm install</caAction>
+<caAction type="start">npm run dev</caAction>
+</caArtifact>
 
 Done.
 </example>

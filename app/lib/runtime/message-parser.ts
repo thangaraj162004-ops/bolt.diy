@@ -3,12 +3,12 @@ import type { CaArtifactData } from '~/types/artifact';
 import { createScopedLogger } from '~/utils/logger';
 import { unreachable } from '~/utils/unreachable';
 
-const ARTIFACT_TAG_OPEN = '<boltArtifact';
-const ARTIFACT_TAG_CLOSE = '</boltArtifact>';
-const ARTIFACT_ACTION_TAG_OPEN = '<boltAction';
-const ARTIFACT_ACTION_TAG_CLOSE = '</boltAction>';
-const CA_QUICK_ACTIONS_OPEN = '<bolt-quick-actions>';
-const CA_QUICK_ACTIONS_CLOSE = '</bolt-quick-actions>';
+const ARTIFACT_TAG_OPEN = '<caArtifact';
+const ARTIFACT_TAG_CLOSE = '</caArtifact>';
+const ARTIFACT_ACTION_TAG_OPEN = '<caAction';
+const ARTIFACT_ACTION_TAG_CLOSE = '</caAction>';
+const CA_QUICK_ACTIONS_OPEN = '<ca-quick-actions>';
+const CA_QUICK_ACTIONS_CLOSE = '</ca-quick-actions>';
 
 const logger = createScopedLogger('MessageParser');
 
@@ -106,8 +106,8 @@ export class StreamingMessageParser {
         if (actionsBlockEnd !== -1) {
           const actionsBlockContent = input.slice(i + CA_QUICK_ACTIONS_OPEN.length, actionsBlockEnd);
 
-          // Find all <bolt-quick-action ...>label</bolt-quick-action> inside
-          const quickActionRegex = /<bolt-quick-action([^>]*)>([\s\S]*?)<\/bolt-quick-action>/g;
+          // Find all <ca-quick-action ...>label</ca-quick-action> inside
+          const quickActionRegex = /<ca-quick-action([^>]*)>([\s\S]*?)<\/ca-quick-action>/g;
 
           let match;
 
@@ -188,7 +188,7 @@ export class StreamingMessageParser {
               let content = input.slice(i);
 
               /*
-               * `filePath` is optional: a `<boltAction type="file">` emitted without
+               * `filePath` is optional: a `<caAction type="file">` emitted without
                * one only logs a warning (see #parseActionTag) and is still streamed.
                * Dereferencing it here threw `Cannot read properties of undefined` and
                * took down the whole React tree via the error boundary.
@@ -406,7 +406,7 @@ export class StreamingMessageParser {
 
 const createArtifactElement: ElementFactory = (props) => {
   const elementProps = [
-    'class="__boltArtifact__"',
+    'class="__caArtifact__"',
     ...Object.entries(props).map(([key, value]) => {
       return `data-${camelToDashCase(key)}=${JSON.stringify(value)}`;
     }),
@@ -422,7 +422,7 @@ function camelToDashCase(input: string) {
 function createQuickActionElement(props: Record<string, string>, label: string) {
   const elementProps = [
     'class="__caQuickAction__"',
-    'data-bolt-quick-action="true"',
+    'data-ca-quick-action="true"',
     ...Object.entries(props).map(([key, value]) => `data-${camelToDashCase(key)}=${JSON.stringify(value)}`),
   ];
 
@@ -430,5 +430,5 @@ function createQuickActionElement(props: Record<string, string>, label: string) 
 }
 
 function createQuickActionGroup(buttons: string[]) {
-  return `<div class=\"__caQuickAction__\" data-bolt-quick-action=\"true\">${buttons.join('')}</div>`;
+  return `<div class=\"__caQuickAction__\" data-ca-quick-action=\"true\">${buttons.join('')}</div>`;
 }

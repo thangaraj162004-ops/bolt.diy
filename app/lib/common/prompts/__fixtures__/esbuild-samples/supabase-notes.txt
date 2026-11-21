@@ -1,7 +1,7 @@
 I'll build a notes app that uses Supabase when it is configured and demo data otherwise.
 
-<boltArtifact id="supabase-notes" title="Notes app with Supabase">
-<boltAction type="file" filePath="package.json">{
+<caArtifact id="supabase-notes" title="Notes app with Supabase">
+<caAction type="file" filePath="package.json">{
   "name": "supabase-notes",
   "private": true,
   "type": "module",
@@ -13,8 +13,8 @@ I'll build a notes app that uses Supabase when it is configured and demo data ot
     "react-dom": "18.3.1"
   },
   "devDependencies": { "tailwindcss": "3.4.17" }
-}</boltAction>
-<boltAction type="file" filePath="index.html"><!doctype html>
+}</caAction>
+<caAction type="file" filePath="index.html"><!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -25,23 +25,23 @@ I'll build a notes app that uses Supabase when it is configured and demo data ot
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
-</html></boltAction>
-<boltAction type="file" filePath="src/index.css">@tailwind base;
+</html></caAction>
+<caAction type="file" filePath="src/index.css">@tailwind base;
 @tailwind components;
-@tailwind utilities;</boltAction>
-<boltAction type="file" filePath="src/main.tsx">import { createRoot } from 'react-dom/client';
+@tailwind utilities;</caAction>
+<caAction type="file" filePath="src/main.tsx">import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(<App />);</boltAction>
-<boltAction type="file" filePath="src/lib/supabase.ts">import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+createRoot(document.getElementById('root')!).render(<App />);</caAction>
+<caAction type="file" filePath="src/lib/supabase.ts">import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
 /** Null when the project has no Supabase settings; the app then uses demo data. */
-export const supabase: SupabaseClient | null = url && anonKey ? createClient(url, anonKey) : null;</boltAction>
-<boltAction type="file" filePath="src/lib/notes.ts">import { supabase } from './supabase';
+export const supabase: SupabaseClient | null = url && anonKey ? createClient(url, anonKey) : null;</caAction>
+<caAction type="file" filePath="src/lib/notes.ts">import { supabase } from './supabase';
 
 export interface Note {
   id: string;
@@ -82,8 +82,8 @@ export async function addNote(text: string): Promise<Note> {
   }
 
   return data;
-}</boltAction>
-<boltAction type="file" filePath="src/App.tsx">import { useEffect, useState, type FormEvent } from 'react';
+}</caAction>
+<caAction type="file" filePath="src/App.tsx">import { useEffect, useState, type FormEvent } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { addNote, listNotes, usingDemoData, type Note } from './lib/notes';
 
@@ -137,9 +137,9 @@ export default function App() {
       </ul>
     </main>
   );
-}</boltAction>
-<boltAction type="shell">npm install</boltAction>
-<boltAction type="start">npm run dev</boltAction>
-</boltArtifact>
+}</caAction>
+<caAction type="shell">npm install</caAction>
+<caAction type="start">npm run dev</caAction>
+</caArtifact>
 
 A notes app that uses Supabase when VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set and shows demo notes otherwise.

@@ -1,15 +1,15 @@
 I'll build a simple counter with increment, decrement and reset.
 
-<boltArtifact id="counter-app" title="Counter app">
-<boltAction type="file" filePath="package.json">{
+<caArtifact id="counter-app" title="Counter app">
+<caAction type="file" filePath="package.json">{
   "name": "counter-app",
   "private": true,
   "type": "module",
   "scripts": { "dev": "vite" },
   "dependencies": { "react": "18.3.1", "react-dom": "18.3.1" },
   "devDependencies": { "tailwindcss": "3.4.17" }
-}</boltAction>
-<boltAction type="file" filePath="index.html"><!doctype html>
+}</caAction>
+<caAction type="file" filePath="index.html"><!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -20,16 +20,16 @@ I'll build a simple counter with increment, decrement and reset.
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
-</html></boltAction>
-<boltAction type="file" filePath="src/index.css">@tailwind base;
+</html></caAction>
+<caAction type="file" filePath="src/index.css">@tailwind base;
 @tailwind components;
-@tailwind utilities;</boltAction>
-<boltAction type="file" filePath="src/main.tsx">import { createRoot } from 'react-dom/client';
+@tailwind utilities;</caAction>
+<caAction type="file" filePath="src/main.tsx">import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(<App />);</boltAction>
-<boltAction type="file" filePath="src/components/CounterButton.tsx">interface CounterButtonProps {
+createRoot(document.getElementById('root')!).render(<App />);</caAction>
+<caAction type="file" filePath="src/components/CounterButton.tsx">interface CounterButtonProps {
   label: string;
   onClick: () => void;
 }
@@ -40,8 +40,8 @@ export function CounterButton({ label, onClick }: CounterButtonProps) {
       {label}
     </button>
   );
-}</boltAction>
-<boltAction type="file" filePath="src/App.tsx">import { useState } from 'react';
+}</caAction>
+<caAction type="file" filePath="src/App.tsx">import { useState } from 'react';
 import { CounterButton } from './components/CounterButton';
 
 export default function App() {
@@ -58,9 +58,9 @@ export default function App() {
       </div>
     </main>
   );
-}</boltAction>
-<boltAction type="shell">npm install</boltAction>
-<boltAction type="start">npm run dev</boltAction>
-</boltArtifact>
+}</caAction>
+<caAction type="shell">npm install</caAction>
+<caAction type="start">npm run dev</caAction>
+</caArtifact>
 
 A counter with increment, decrement and reset buttons, styled with Tailwind.

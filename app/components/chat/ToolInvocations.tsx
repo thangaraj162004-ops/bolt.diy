@@ -621,9 +621,9 @@ function summarizeExploration(parts: AnyPart[]): string {
 
 function cleanTimelineText(text: string): string {
   return text
-    .replace(/<boltAction\b[^>]*>[\s\S]*?(?:<\/boltAction>|$)/g, '')
-    .replace(/<\/?boltArtifact\b[^>]*>/g, '')
-    .replace(/<\/?boltAction\b[^>]*>/g, '');
+    .replace(/<caAction\b[^>]*>[\s\S]*?(?:<\/caAction>|$)/g, '')
+    .replace(/<\/?caArtifact\b[^>]*>/g, '')
+    .replace(/<\/?caAction\b[^>]*>/g, '');
 }
 
 function ToolActivityRow({

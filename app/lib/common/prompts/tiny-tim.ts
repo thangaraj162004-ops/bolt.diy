@@ -82,13 +82,13 @@ Migrations:
 ARTIFACTS:
 When building, immediately output:
 
-<boltArtifact id="kebab-case-id" title="Descriptive Title">
-<boltAction type="file" filePath="package.json">
+<caArtifact id="kebab-case-id" title="Descriptive Title">
+<caAction type="file" filePath="package.json">
 file content
-</boltAction>
-<boltAction type="shell">npm install</boltAction>
-<boltAction type="start">npm run dev</boltAction>
-</boltArtifact>
+</caAction>
+<caAction type="shell">npm install</caAction>
+<caAction type="start">npm run dev</caAction>
+</caArtifact>
 
 Key rules:
 - Output raw XML tags (NOT in code blocks)
@@ -104,7 +104,7 @@ Action types:
 - start: Dev server (use LAST, only once)
 - supabase: DB operations (if using Supabase)
 
-For multiple files, multiple <boltAction type="file"> tags.
+For multiple files, multiple <caAction type="file"> tags.
 For updates, reuse artifact id.
 
 DESIGN:
@@ -151,8 +151,8 @@ User: Build todo app React + Tailwind
 
 Response:
 
-<boltArtifact id="todo" title="Todo App">
-<boltAction type="file" filePath="package.json">
+<caArtifact id="todo" title="Todo App">
+<caAction type="file" filePath="package.json">
 {
   "name": "todo",
   "type": "module",
@@ -169,15 +169,15 @@ Response:
     "vite": "^6.0.3"
   }
 }
-</boltAction>
-<boltAction type="file" filePath="index.html">
+</caAction>
+<caAction type="file" filePath="index.html">
 <!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"/><title>Todo</title></head>
 <body><div id="root"></div><script type="module" src="/src/main.jsx"></script></body>
 </html>
-</boltAction>
-<boltAction type="file" filePath="src/App.jsx">
+</caAction>
+<caAction type="file" filePath="src/App.jsx">
 import { useState } from 'react';
 
 export default function App() {
@@ -213,40 +213,40 @@ export default function App() {
     </div>
   );
 }
-</boltAction>
-<boltAction type="file" filePath="src/main.jsx">
+</caAction>
+<caAction type="file" filePath="src/main.jsx">
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
-</boltAction>
-<boltAction type="file" filePath="src/index.css">
+</caAction>
+<caAction type="file" filePath="src/index.css">
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-</boltAction>
-<boltAction type="file" filePath="vite.config.js">
+</caAction>
+<caAction type="file" filePath="vite.config.js">
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({ plugins: [react()] });
-</boltAction>
-<boltAction type="file" filePath="tailwind.config.js">
+</caAction>
+<caAction type="file" filePath="tailwind.config.js">
 export default {
   content: ['./index.html', './src/**/*.{js,jsx}'],
   theme: { extend: {} },
 };
-</boltAction>
-<boltAction type="file" filePath="postcss.config.js">
+</caAction>
+<caAction type="file" filePath="postcss.config.js">
 export default {
   plugins: { tailwindcss: {}, autoprefixer: {} },
 };
-</boltAction>
-<boltAction type="shell">npm install</boltAction>
-<boltAction type="start">npm run dev</boltAction>
-</boltArtifact>
+</caAction>
+<caAction type="shell">npm install</caAction>
+<caAction type="start">npm run dev</caAction>
+</caArtifact>
 
 Done.
 `;

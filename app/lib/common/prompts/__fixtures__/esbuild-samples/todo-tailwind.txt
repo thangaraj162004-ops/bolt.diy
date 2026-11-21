@@ -1,7 +1,7 @@
 Here is a todo app that saves to localStorage.
 
-<boltArtifact id="todo-app" title="Todo app with Tailwind">
-<boltAction type="file" filePath="package.json">{
+<caArtifact id="todo-app" title="Todo app with Tailwind">
+<caAction type="file" filePath="package.json">{
   "name": "todo-app",
   "private": true,
   "type": "module",
@@ -13,8 +13,8 @@ Here is a todo app that saves to localStorage.
     "react-dom": "18.3.1"
   },
   "devDependencies": { "tailwindcss": "3.4.17" }
-}</boltAction>
-<boltAction type="file" filePath="index.html"><!doctype html>
+}</caAction>
+<caAction type="file" filePath="index.html"><!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -25,25 +25,25 @@ Here is a todo app that saves to localStorage.
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
-</html></boltAction>
-<boltAction type="file" filePath="src/index.css">@tailwind base;
+</html></caAction>
+<caAction type="file" filePath="src/index.css">@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 body {
   @apply bg-slate-100 text-slate-900;
-}</boltAction>
-<boltAction type="file" filePath="src/main.tsx">import { createRoot } from 'react-dom/client';
+}</caAction>
+<caAction type="file" filePath="src/main.tsx">import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(<App />);</boltAction>
-<boltAction type="file" filePath="src/types.ts">export interface Todo {
+createRoot(document.getElementById('root')!).render(<App />);</caAction>
+<caAction type="file" filePath="src/types.ts">export interface Todo {
   id: string;
   title: string;
   done: boolean;
-}</boltAction>
-<boltAction type="file" filePath="src/hooks/useTodos.ts">import { useEffect, useState } from 'react';
+}</caAction>
+<caAction type="file" filePath="src/hooks/useTodos.ts">import { useEffect, useState } from 'react';
 import type { Todo } from '../types';
 
 const STORAGE_KEY = 'todos';
@@ -73,8 +73,8 @@ export function useTodos() {
     toggle: (id: string) => setTodos((list) => list.map((t) => (t.id === id ? { ...t, done: !t.done } : t))),
     remove: (id: string) => setTodos((list) => list.filter((t) => t.id !== id)),
   };
-}</boltAction>
-<boltAction type="file" filePath="src/components/TodoItem.tsx">import clsx from 'clsx';
+}</caAction>
+<caAction type="file" filePath="src/components/TodoItem.tsx">import clsx from 'clsx';
 import { Trash2 } from 'lucide-react';
 import type { Todo } from '../types';
 
@@ -94,8 +94,8 @@ export function TodoItem({ todo, onToggle, onRemove }: TodoItemProps) {
       </button>
     </li>
   );
-}</boltAction>
-<boltAction type="file" filePath="src/App.tsx">import { useState, type FormEvent } from 'react';
+}</caAction>
+<caAction type="file" filePath="src/App.tsx">import { useState, type FormEvent } from 'react';
 import { Plus } from 'lucide-react';
 import { TodoItem } from './components/TodoItem';
 import { useTodos } from './hooks/useTodos';
@@ -135,9 +135,9 @@ export default function App() {
       <p className="mt-4 text-sm text-slate-500">{todos.filter((todo) => !todo.done).length} left</p>
     </main>
   );
-}</boltAction>
-<boltAction type="shell">npm install</boltAction>
-<boltAction type="start">npm run dev</boltAction>
-</boltArtifact>
+}</caAction>
+<caAction type="shell">npm install</caAction>
+<caAction type="start">npm run dev</caAction>
+</caArtifact>
 
 A todo list with add, complete and delete, saved in localStorage and styled with Tailwind.

@@ -77,16 +77,16 @@ export function GitUrlImport() {
             role: 'assistant',
             id: generateId(),
             text: `Cloning the repo ${repoUrl} into ${workdir}
-<boltArtifact id="imported-files" title="Git Cloned Files"  type="bundled">
+<caArtifact id="imported-files" title="Git Cloned Files"  type="bundled">
 ${fileContents
   .map(
     (file) =>
-      `<boltAction type="file" filePath="${file.path}">
+      `<caAction type="file" filePath="${file.path}">
 ${escapeCaTags(file.content)}
-</boltAction>`,
+</caAction>`,
   )
   .join('\n')}
-</boltArtifact>`,
+</caArtifact>`,
           }) as UIMessage;
 
           const messages: UIMessage[] = [filesMessage];

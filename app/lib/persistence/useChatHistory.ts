@@ -247,14 +247,14 @@ export function useChatHistory({ loadHistory = true }: { loadHistory?: boolean }
               const commandActionsString = createCommandActionsString(projectCommands);
 
               const restoredAssistantText = `${PRODUCT_NAME} restored your chat from a snapshot. You can revert this message to load the full chat history.
-                  <boltArtifact id="restored-project-setup" title="Restored Project & Setup" type="bundled">
+                  <caArtifact id="restored-project-setup" title="Restored Project & Setup" type="bundled">
                   ${Object.entries(snapshot?.files || {})
                     .map(([key, value]) => {
                       if (value?.type === 'file') {
                         return `
-                      <boltAction type="file" filePath="${key}">
+                      <caAction type="file" filePath="${key}">
 ${value.content}
-                      </boltAction>
+                      </caAction>
                       `;
                       } else {
                         return ``;
@@ -262,7 +262,7 @@ ${value.content}
                     })
                     .join('\n')}
                   ${commandActionsString}
-                  </boltArtifact>
+                  </caArtifact>
                   `;
 
               const restoredSummary = summary

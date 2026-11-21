@@ -1,5 +1,5 @@
 /**
- * The product's visible name. Internal names (boltArtifact/boltAction tags,
+ * The product's visible name. Internal names (caArtifact/caAction tags,
  * CaShell, CSS classes, storage keys, API routes, package and Worker names)
  * intentionally stay as they are.
  */

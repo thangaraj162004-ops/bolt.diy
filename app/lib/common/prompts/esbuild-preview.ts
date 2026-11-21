@@ -8,7 +8,7 @@ import { getProjectToolPrompt } from '~/lib/common/prompts/project-tools';
  * The app is compiled in the browser with esbuild-wasm and shown in a
  * sandboxed iframe; packages come from esm.sh. The model gets the rules of
  * that environment plus the same output format the app already parses:
- * <boltArtifact> with file, shell and start actions. When the request uses
+ * <caArtifact> with file, shell and start actions. When the request uses
  * the native project tools (agent loop), the same rules are given with the
  * tool protocol instead.
  */
@@ -96,12 +96,12 @@ function environmentRules({ designScheme }: PromptOptions) {
 
 function artifactFormat({ modificationTagName }: PromptOptions) {
   return `<output_format>
-  Make changes with ONE <boltArtifact> per response:
-  <boltArtifact id="kebab-case-id" title="Short title">
-    <boltAction type="file" filePath="src/App.tsx">complete file content</boltAction>
-    <boltAction type="shell">npm install</boltAction>
-    <boltAction type="start">npm run dev</boltAction>
-  </boltArtifact>
+  Make changes with ONE <caArtifact> per response:
+  <caArtifact id="kebab-case-id" title="Short title">
+    <caAction type="file" filePath="src/App.tsx">complete file content</caAction>
+    <caAction type="shell">npm install</caAction>
+    <caAction type="start">npm run dev</caAction>
+  </caArtifact>
 
   - file: the body is the COMPLETE file content. filePath is relative to the project root (src/App.tsx,
     package.json); never an absolute path. Never send diffs or partial files.
@@ -109,36 +109,36 @@ function artifactFormat({ modificationTagName }: PromptOptions) {
     appear in <${modificationTagName}> and are the current state.
   - Order: package.json first, then the other files, then shell, then start.
   - shell: only "npm install", and only when package.json changed.
-  - start: always end the artifact with exactly one <boltAction type="start">npm run dev</boltAction>.
+  - start: always end the artifact with exactly one <caAction type="start">npm run dev</caAction>.
   - Never print tool-call syntax or control tokens as text.
 </output_format>
 
 <example>
   <user>Make a counter</user>
   <assistant>
-  <boltArtifact id="counter-app" title="Counter app">
-  <boltAction type="file" filePath="package.json">{
+  <caArtifact id="counter-app" title="Counter app">
+  <caAction type="file" filePath="package.json">{
   "name": "counter-app",
   "private": true,
   "type": "module",
   "scripts": { "dev": "vite" },
   "dependencies": { "react": "18.3.1", "react-dom": "18.3.1" },
   "devDependencies": { "tailwindcss": "3.4.17" }
-}</boltAction>
-  <boltAction type="file" filePath="index.html"><!doctype html>
+}</caAction>
+  <caAction type="file" filePath="index.html"><!doctype html>
 <html lang="en">
   <head><meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /><title>Counter</title></head>
   <body><div id="root"></div><script type="module" src="/src/main.tsx"></script></body>
-</html></boltAction>
-  <boltAction type="file" filePath="src/index.css">@tailwind base;
+</html></caAction>
+  <caAction type="file" filePath="src/index.css">@tailwind base;
 @tailwind components;
-@tailwind utilities;</boltAction>
-  <boltAction type="file" filePath="src/main.tsx">import { createRoot } from 'react-dom/client';
+@tailwind utilities;</caAction>
+  <caAction type="file" filePath="src/main.tsx">import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(<App />);</boltAction>
-  <boltAction type="file" filePath="src/App.tsx">import { useState } from 'react';
+createRoot(document.getElementById('root')!).render(<App />);</caAction>
+  <caAction type="file" filePath="src/App.tsx">import { useState } from 'react';
 
 export default function App() {
   const [count, setCount] = useState(0);
@@ -150,10 +150,10 @@ export default function App() {
       </button>
     </main>
   );
-}</boltAction>
-  <boltAction type="shell">npm install</boltAction>
-  <boltAction type="start">npm run dev</boltAction>
-  </boltArtifact>
+}</caAction>
+  <caAction type="shell">npm install</caAction>
+  <caAction type="start">npm run dev</caAction>
+  </caArtifact>
 
   A counter button styled with Tailwind.
   </assistant>

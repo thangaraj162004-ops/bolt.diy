@@ -139,7 +139,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
         const isInitialTemplateRequest = messages.some(
           (message) =>
             message.role === 'assistant' &&
-            /<boltArtifact\b[^>]*\bid=["']imported-files["']/i.test(getMessageText(message)),
+            /<caArtifact\b[^>]*\bid=["']imported-files["']/i.test(getMessageText(message)),
         );
 
         const processedMessages = await mcpService.processToolInvocations(messages, writer, {

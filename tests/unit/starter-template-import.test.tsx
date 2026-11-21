@@ -38,7 +38,7 @@ describe('homepage starter project import', () => {
     mocks.setSnapshot.mockResolvedValue(undefined);
     mocks.getTemplates.mockResolvedValue({
       assistantMessage:
-        '<boltArtifact id="imported-files"><boltAction type="file" filePath="package.json">{}</boltAction><boltAction type="start">npm run dev</boltAction></boltArtifact>',
+        '<caArtifact id="imported-files"><caAction type="file" filePath="package.json">{}</caAction><caAction type="start">npm run dev</caAction></caArtifact>',
       files: [{ path: 'package.json', content: '{}' }],
     });
   });

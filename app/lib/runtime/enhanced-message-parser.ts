@@ -441,13 +441,13 @@ export class EnhancedStreamingMessageParser extends StreamingMessageParser {
   private _writeCallAsArtifact(messageId: string, write: TextFileWrite): string {
     const artifactId = `tool-write-${messageId}-${this._artifactCounter++}`;
     const title = write.filePath.split('/').pop() || 'File';
-    const safeContent = write.content.replace(/<\/(boltAction|boltArtifact)\b/gi, '&lt;/$1');
+    const safeContent = write.content.replace(/<\/(caAction|caArtifact)\b/gi, '&lt;/$1');
 
-    return `<boltArtifact id="${artifactId}" title="${title}" type="bundled"><boltAction type="file" filePath="${write.filePath}">${safeContent}</boltAction></boltArtifact>`;
+    return `<caArtifact id="${artifactId}" title="${title}" type="bundled"><caAction type="file" filePath="${write.filePath}">${safeContent}</caAction></caArtifact>`;
   }
 
   private _hasDetectedArtifacts(input: string): boolean {
-    return input.includes('<boltArtifact') || input.includes('</boltArtifact>');
+    return input.includes('<caArtifact') || input.includes('</caArtifact>');
   }
 
   private _detectAndWrapCodeBlocks(messageId: string, input: string): string {
@@ -600,21 +600,21 @@ export class EnhancedStreamingMessageParser extends StreamingMessageParser {
   private _wrapInArtifact(artifactId: string, filePath: string, content: string): string {
     const title = filePath.split('/').pop() || 'File';
 
-    return `<boltArtifact id="${artifactId}" title="${title}" type="bundled">
-<boltAction type="file" filePath="${filePath}">
+    return `<caArtifact id="${artifactId}" title="${title}" type="bundled">
+<caAction type="file" filePath="${filePath}">
 ${content}
-</boltAction>
-</boltArtifact>`;
+</caAction>
+</caArtifact>`;
   }
 
   private _wrapInShellAction(content: string, messageId: string): string {
     const artifactId = `artifact-${messageId}-${this._artifactCounter++}`;
 
-    return `<boltArtifact id="${artifactId}" title="Shell Command" type="shell">
-<boltAction type="shell">
+    return `<caArtifact id="${artifactId}" title="Shell Command" type="shell">
+<caAction type="shell">
 ${content.trim()}
-</boltAction>
-</boltArtifact>`;
+</caAction>
+</caArtifact>`;
   }
 
   private _normalizeFilePath(filePath: string): string {

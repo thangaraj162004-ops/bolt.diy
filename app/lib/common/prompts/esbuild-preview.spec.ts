@@ -26,7 +26,7 @@ const BANNED_WORDS = [/WebContainer/i, /StackBlitz/i, /\bNode(\.js)?\b/i];
 
 /** Bodies of every shell and start action in a prompt's examples. */
 function commandsIn(text: string) {
-  return [...text.matchAll(/<boltAction type="(?:shell|start)">([\s\S]*?)<\/boltAction>/g)].map((m) => m[1].trim());
+  return [...text.matchAll(/<caAction type="(?:shell|start)">([\s\S]*?)<\/caAction>/g)].map((m) => m[1].trim());
 }
 
 describe('prompt selection', () => {
@@ -82,10 +82,10 @@ describe('esbuild-preview prompt', () => {
   const toolPrompt = PromptLibrary.getPropmtFromLibrary(ESBUILD_PREVIEW_PROMPT_ID, { ...OPTIONS, projectTools: true });
 
   it('keeps the artifact format the app parses: file, shell and start actions', () => {
-    expect(artifactPrompt).toContain('<boltArtifact id="kebab-case-id" title="Short title">');
-    expect(artifactPrompt).toContain('<boltAction type="file" filePath="src/App.tsx">');
-    expect(artifactPrompt).toContain('<boltAction type="shell">npm install</boltAction>');
-    expect(artifactPrompt).toContain('<boltAction type="start">npm run dev</boltAction>');
+    expect(artifactPrompt).toContain('<caArtifact id="kebab-case-id" title="Short title">');
+    expect(artifactPrompt).toContain('<caAction type="file" filePath="src/App.tsx">');
+    expect(artifactPrompt).toContain('<caAction type="shell">npm install</caAction>');
+    expect(artifactPrompt).toContain('<caAction type="start">npm run dev</caAction>');
   });
 
   it('names the assistant CodeApp AI in both versions, never Bolt', () => {

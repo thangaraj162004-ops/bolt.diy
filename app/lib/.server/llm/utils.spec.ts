@@ -110,14 +110,14 @@ describe('extractPropertiesFromMessage', () => {
 
 describe('simplifyCaActions', () => {
   it('elides the body of file actions', () => {
-    const input = '<boltAction type="file" filePath="a.ts">const a = 1;</boltAction>';
+    const input = '<caAction type="file" filePath="a.ts">const a = 1;</caAction>';
 
     expect(simplifyCaActions(input)).toContain('...');
     expect(simplifyCaActions(input)).not.toContain('const a = 1;');
   });
 
   it('leaves non-file actions untouched', () => {
-    const input = '<boltAction type="start">npm run dev</boltAction>';
+    const input = '<caAction type="start">npm run dev</caAction>';
 
     expect(simplifyCaActions(input)).toBe(input);
   });
@@ -129,7 +129,7 @@ describe('createFilesContext', () => {
       [`${WORK_DIR}/index.html`]: { type: 'file', content: '<h1>hi</h1>', isBinary: false },
     });
 
-    expect(context).toContain('<boltArtifact id="code-content" title="Code Content"');
+    expect(context).toContain('<caArtifact id="code-content" title="Code Content"');
     expect(context).toContain('filePath="/home/project/index.html"');
     expect(context).toContain('<h1>hi</h1>');
   });

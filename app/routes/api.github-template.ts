@@ -2,7 +2,7 @@ import JSZip from 'jszip';
 
 function decodeTextFile(bytes: Uint8Array): string | null {
   /*
-   * Starter templates are injected through text-based boltAction tags, so binary
+   * Starter templates are injected through text-based caAction tags, so binary
    * assets cannot be represented safely in this response format.
    */
   if (bytes.includes(0)) {

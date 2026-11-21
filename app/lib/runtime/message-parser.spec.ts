@@ -29,23 +29,22 @@ describe('StreamingMessageParser', () => {
       ['Foo bar <', 'Foo bar '],
       ['Foo bar <p', 'Foo bar <p'],
       [['Foo bar <', 's', 'p', 'an>some text</span>'], 'Foo bar <span>some text</span>'],
-    ])('should correctly parse chunks and strip out bolt artifacts (%#)', (input, expected) => {
+    ])('should correctly parse chunks and strip out ca artifacts (%#)', (input, expected) => {
       runTest(input, expected);
     });
   });
 
   describe('invalid or incomplete artifacts', () => {
     it.each<[string | string[], ExpectedResult | string]>([
-      ['Foo bar <b', 'Foo bar '],
-      ['Foo bar <ba', 'Foo bar <ba'],
-      ['Foo bar <bol', 'Foo bar '],
-      ['Foo bar <bolt', 'Foo bar '],
-      ['Foo bar <bolta', 'Foo bar <bolta'],
-      ['Foo bar <boltA', 'Foo bar '],
-      ['Foo bar <boltArtifacs></boltArtifact>', 'Foo bar <boltArtifacs></boltArtifact>'],
-      ['Before <oltArtfiact>foo</boltArtifact> After', 'Before <oltArtfiact>foo</boltArtifact> After'],
-      ['Before <boltArtifactt>foo</boltArtifact> After', 'Before <boltArtifactt>foo</boltArtifact> After'],
-    ])('should correctly parse chunks and strip out bolt artifacts (%#)', (input, expected) => {
+      ['Foo bar <c', 'Foo bar '],
+      ['Foo bar <cb', 'Foo bar <cb'],
+      ['Foo bar <ca', 'Foo bar '],
+      ['Foo bar <caa', 'Foo bar <caa'],
+      ['Foo bar <caA', 'Foo bar '],
+      ['Foo bar <caArtifacs></caArtifact>', 'Foo bar <caArtifacs></caArtifact>'],
+      ['Before <oltArtfiact>foo</caArtifact> After', 'Before <oltArtfiact>foo</caArtifact> After'],
+      ['Before <caArtifactt>foo</caArtifact> After', 'Before <caArtifactt>foo</caArtifact> After'],
+    ])('should correctly parse chunks and strip out ca artifacts (%#)', (input, expected) => {
       runTest(input, expected);
     });
   });
@@ -53,7 +52,7 @@ describe('StreamingMessageParser', () => {
   describe('valid artifacts without actions', () => {
     it.each<[string | string[], ExpectedResult | string]>([
       [
-        'Some text before <boltArtifact title="Some title" id="artifact_1">foo bar</boltArtifact> Some more text',
+        'Some text before <caArtifact title="Some title" id="artifact_1">foo bar</caArtifact> Some more text',
         {
           output: 'Some text before  Some more text',
           callbacks: { onArtifactOpen: 1, onArtifactClose: 1, onActionOpen: 0, onActionClose: 0 },
@@ -61,9 +60,9 @@ describe('StreamingMessageParser', () => {
       ],
       [
         [
-          'Some text before <boltArti',
+          'Some text before <caArti',
           'fact',
-          ' title="Some title" id="artifact_1" type="bundled" >foo</boltArtifact> Some more text',
+          ' title="Some title" id="artifact_1" type="bundled" >foo</caArtifact> Some more text',
         ],
         {
           output: 'Some text before  Some more text',
@@ -72,12 +71,12 @@ describe('StreamingMessageParser', () => {
       ],
       [
         [
-          'Some text before <boltArti',
+          'Some text before <caArti',
           'fac',
           't title="Some title" id="artifact_1"',
           ' ',
           '>',
-          'foo</boltArtifact> Some more text',
+          'foo</caArtifact> Some more text',
         ],
         {
           output: 'Some text before  Some more text',
@@ -86,11 +85,11 @@ describe('StreamingMessageParser', () => {
       ],
       [
         [
-          'Some text before <boltArti',
+          'Some text before <caArti',
           'fact',
           ' title="Some title" id="artifact_1"',
           ' >fo',
-          'o</boltArtifact> Some more text',
+          'o</caArtifact> Some more text',
         ],
         {
           output: 'Some text before  Some more text',
@@ -99,13 +98,13 @@ describe('StreamingMessageParser', () => {
       ],
       [
         [
-          'Some text before <boltArti',
+          'Some text before <caArti',
           'fact tit',
           'le="Some ',
           'title" id="artifact_1">fo',
           'o',
           '<',
-          '/boltArtifact> Some more text',
+          '/caArtifact> Some more text',
         ],
         {
           output: 'Some text before  Some more text',
@@ -114,11 +113,11 @@ describe('StreamingMessageParser', () => {
       ],
       [
         [
-          'Some text before <boltArti',
+          'Some text before <caArti',
           'fact title="Some title" id="artif',
           'act_1">fo',
           'o<',
-          '/boltArtifact> Some more text',
+          '/caArtifact> Some more text',
         ],
         {
           output: 'Some text before  Some more text',
@@ -126,13 +125,13 @@ describe('StreamingMessageParser', () => {
         },
       ],
       [
-        'Before <boltArtifact title="Some title" id="artifact_1">foo</boltArtifact> After',
+        'Before <caArtifact title="Some title" id="artifact_1">foo</caArtifact> After',
         {
           output: 'Before  After',
           callbacks: { onArtifactOpen: 1, onArtifactClose: 1, onActionOpen: 0, onActionClose: 0 },
         },
       ],
-    ])('should correctly parse chunks and strip out bolt artifacts (%#)', (input, expected) => {
+    ])('should correctly parse chunks and strip out ca artifacts (%#)', (input, expected) => {
       runTest(input, expected);
     });
   });
@@ -140,20 +139,20 @@ describe('StreamingMessageParser', () => {
   describe('valid artifacts with actions', () => {
     it.each<[string | string[], ExpectedResult | string]>([
       [
-        'Before <boltArtifact title="Some title" id="artifact_1"><boltAction type="shell">npm install</boltAction></boltArtifact> After',
+        'Before <caArtifact title="Some title" id="artifact_1"><caAction type="shell">npm install</caAction></caArtifact> After',
         {
           output: 'Before  After',
           callbacks: { onArtifactOpen: 1, onArtifactClose: 1, onActionOpen: 1, onActionClose: 1 },
         },
       ],
       [
-        'Before <boltArtifact title="Some title" id="artifact_1"><boltAction type="shell">npm install</boltAction><boltAction type="file" filePath="index.js">some content</boltAction></boltArtifact> After',
+        'Before <caArtifact title="Some title" id="artifact_1"><caAction type="shell">npm install</caAction><caAction type="file" filePath="index.js">some content</caAction></caArtifact> After',
         {
           output: 'Before  After',
           callbacks: { onArtifactOpen: 1, onArtifactClose: 1, onActionOpen: 2, onActionClose: 2 },
         },
       ],
-    ])('should correctly parse chunks and strip out bolt artifacts (%#)', (input, expected) => {
+    ])('should correctly parse chunks and strip out ca artifacts (%#)', (input, expected) => {
       runTest(input, expected);
     });
   });
@@ -162,7 +161,7 @@ describe('StreamingMessageParser', () => {
 describe('malformed actions', () => {
   it('should not throw when a file action omits filePath', () => {
     /*
-     * Regression: a `<boltAction type="file">` with no `filePath` is tolerated so
+     * Regression: a `<caAction type="file">` with no `filePath` is tolerated so
      * the model's text is not swallowed, but the streaming path used to dereference
      * the missing path (`currentAction.filePath.endsWith('.md')`). That threw
      * `Cannot read properties of undefined`, which propagated out of the streaming
@@ -179,11 +178,11 @@ describe('malformed actions', () => {
     });
 
     const input = [
-      '<boltArtifact id="artifact_1" title="t">',
-      '<boltAction type="file">',
+      '<caArtifact id="artifact_1" title="t">',
+      '<caAction type="file">',
       'some content',
-      '</boltAction>',
-      '</boltArtifact>',
+      '</caAction>',
+      '</caArtifact>',
     ].join('\n');
 
     expect(() => parser.parse('message_1', input)).not.toThrow();
@@ -195,7 +194,7 @@ describe('malformed actions', () => {
 
     parser.parse(
       'message_1',
-      '<boltArtifact id="artifact_1" title="t"><boltAction type="file">content</boltAction></boltArtifact>',
+      '<caArtifact id="artifact_1" title="t"><caAction type="file">content</caAction></caArtifact>',
     );
 
     /*
@@ -838,7 +837,7 @@ describe('StreamingMessageParser thought-div handling', () => {
 
     const input =
       '<div class="__caThought__">let me think</div>' +
-      '<boltArtifact id="hello" title="Hello">\n```html\n<h1>hi</h1>\n```\n</boltArtifact>';
+      '<caArtifact id="hello" title="Hello">\n```html\n<h1>hi</h1>\n```\n</caArtifact>';
 
     const output = parser.parse('msg', input);
 
@@ -851,7 +850,7 @@ describe('StreamingMessageParser thought-div handling', () => {
 
     parser.parse(
       'msg',
-      '<div class="__caThought__">thought</div><boltArtifact id="a" title="A">\n```html\n<b>x</b>\n```\n</boltArtifact>',
+      '<div class="__caThought__">thought</div><caArtifact id="a" title="A">\n```html\n<b>x</b>\n```\n</caArtifact>',
     );
 
     expect(callbacks.onArtifactOpen).toHaveBeenCalledTimes(1);
@@ -881,7 +880,7 @@ describe('StreamingMessageParser thought-div handling', () => {
   it('keeps state isolated per message id', () => {
     const { parser } = createParser();
 
-    parser.parse('idA', '<boltArtifact id="one" title="One">\n');
+    parser.parse('idA', '<caArtifact id="one" title="One">\n');
     parser.parse('idB', 'plain text for B');
 
     expect(parser.parse('idA', '')).toBe('');
@@ -891,8 +890,8 @@ describe('StreamingMessageParser thought-div handling', () => {
     const { parser, callbacks } = createParser();
 
     const message = [
-      '<boltArtifact id="first" title="First">\n```html\n<a>1</a>\n```\n</boltArtifact>',
-      '<boltArtifact id="second" title="Second">\n```html\n<b>2</b>\n```\n</boltArtifact>',
+      '<caArtifact id="first" title="First">\n```html\n<a>1</a>\n```\n</caArtifact>',
+      '<caArtifact id="second" title="Second">\n```html\n<b>2</b>\n```\n</caArtifact>',
     ].join('');
 
     parser.parse('msg', message);
@@ -905,11 +904,11 @@ describe('StreamingMessageParser thought-div handling', () => {
   it('clears per-message state on reset', () => {
     const { parser, callbacks } = createParser();
 
-    parser.parse('msg', '<boltArtifact id="one" title="One">\n```html\n<a>1</a>\n```\n</boltArtifact>');
+    parser.parse('msg', '<caArtifact id="one" title="One">\n```html\n<a>1</a>\n```\n</caArtifact>');
     expect(callbacks.onArtifactOpen).toHaveBeenCalledTimes(1);
 
     parser.reset();
-    parser.parse('msg', '<boltArtifact id="one" title="One">\n```html\n<a>1</a>\n```\n</boltArtifact>');
+    parser.parse('msg', '<caArtifact id="one" title="One">\n```html\n<a>1</a>\n```\n</caArtifact>');
 
     expect(callbacks.onArtifactOpen).toHaveBeenCalledTimes(2);
     expect(callbacks.onArtifactOpen.mock.calls[1][0].id).toBe('msg-0');

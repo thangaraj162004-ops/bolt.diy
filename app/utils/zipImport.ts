@@ -57,7 +57,7 @@ export interface ZipImportResult {
 }
 
 /**
- * Reads a ZIP file and converts its contents into the same boltArtifact
+ * Reads a ZIP file and converts its contents into the same caArtifact
  * chat-message structure that createChatFromFolder produces. This lets
  * bolt load the project correctly without writing directly to the
  * WebContainer filesystem (which can be wiped by navigation resets).
@@ -179,15 +179,15 @@ export const createChatFromZip = async (zipFile: File): Promise<ZipImportResult>
     id: generateId(),
     text: `I've imported the contents of the "${folderName}" ZIP archive.${binaryFilesMessage}
 
-<boltArtifact id="imported-files" title="Imported Files" type="bundled">
+<caArtifact id="imported-files" title="Imported Files" type="bundled">
 ${fileArtifacts
   .map(
-    (file) => `<boltAction type="file" filePath="${file.path}">
+    (file) => `<caAction type="file" filePath="${file.path}">
 ${escapeCaTags(file.content)}
-</boltAction>`,
+</caAction>`,
   )
   .join('\n\n')}
-</boltArtifact>`,
+</caArtifact>`,
   }) as UIMessage;
 
   const userMessage = createMessage({

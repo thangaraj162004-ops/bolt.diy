@@ -86,7 +86,7 @@ const rehypeSanitizeOptions: RehypeSanitizeOptions = {
     div: [
       ...(defaultSchema.attributes?.div ?? []),
       'data*',
-      ['className', '__boltArtifact__', '__caThought__', '__caQuickAction', '__caSelectedElement__'],
+      ['className', '__caArtifact__', '__caThought__', '__caQuickAction', '__caSelectedElement__'],
 
       // ['className', '__caThought__']
     ],
@@ -97,7 +97,7 @@ const rehypeSanitizeOptions: RehypeSanitizeOptions = {
       'disabled',
       'name',
       'value',
-      ['className', '__boltArtifact__', '__caThought__', '__caQuickAction'],
+      ['className', '__caArtifact__', '__caThought__', '__caQuickAction'],
     ],
   },
   strip: [],
