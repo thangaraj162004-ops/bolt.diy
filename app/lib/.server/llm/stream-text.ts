@@ -216,7 +216,7 @@ export async function streamText(props: {
   );
 
   let systemPrompt =
-    PromptLibrary.getPropmtFromLibrary(promptId || 'default', {
+    PromptLibrary.getPropmtFromLibrary(PromptLibrary.resolvePromptId(promptId), {
       cwd: WORK_DIR,
       allowedHtmlElements: allowedHTMLElements,
       modificationTagName: MODIFICATIONS_TAG_NAME,

@@ -1,4 +1,9 @@
+import { PREVIEW_ENGINE, type PreviewEngine } from '~/lib/webcontainer/engine';
+
 const WORKSTYLE_TAG = '<workstyle>';
+
+const ESBUILD_RUNTIME_LINE_FROM = 'Keep runtime load lightweight in WebContainer:';
+const ESBUILD_RUNTIME_LINE_TO = 'Keep runtime load lightweight in the browser preview:';
 
 const PROJECT_MCP_TAG = '<project_mcp_workflow>';
 
@@ -33,7 +38,10 @@ const PROJECT_MCP_INSTRUCTIONS = `
  *
  * Kept as a pure function so it can be unit-tested.
  */
-export function withDevelopmentCommentaryWorkstyle(systemPrompt: string): string {
+export function withDevelopmentCommentaryWorkstyle(
+  systemPrompt: string,
+  engine: PreviewEngine = PREVIEW_ENGINE,
+): string {
   let result = systemPrompt;
 
   if (!result.includes(WORKSTYLE_TAG)) {
@@ -65,6 +73,11 @@ export function withDevelopmentCommentaryWorkstyle(systemPrompt: string): string
 
   if (!result.includes(PROJECT_MCP_TAG)) {
     result = `${result}${PROJECT_MCP_INSTRUCTIONS}`;
+  }
+
+  // esbuild engine: the same guidance, without naming the WebContainer runtime the preview no longer uses
+  if (engine === 'esbuild') {
+    result = result.replace(ESBUILD_RUNTIME_LINE_FROM, ESBUILD_RUNTIME_LINE_TO);
   }
 
   return result;
