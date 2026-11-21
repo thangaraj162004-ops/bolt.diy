@@ -1,7 +1,7 @@
-import type { WebContainer, WebContainerProcess } from '@webcontainer/api';
 import { atom } from 'nanostores';
 import { withResolvers } from './promises';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
+import type { WebContainer, WebContainerProcess } from '~/lib/webcontainer/types';
 import type { ITerminal } from '~/types/terminal';
 
 export async function newShellProcess(webcontainer: WebContainer, terminal: ITerminal) {

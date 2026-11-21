@@ -1,6 +1,6 @@
-import type { WebContainer } from '@webcontainer/api';
 import { describe, expect, it, vi } from 'vitest';
 import { ActionRunner } from './action-runner';
+import type { WebContainer } from '~/lib/webcontainer/types';
 import type { BoltShell } from '~/utils/shell';
 
 describe('ActionRunner file actions', () => {

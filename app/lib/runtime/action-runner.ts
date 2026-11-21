@@ -1,6 +1,6 @@
-import type { WebContainer } from '@webcontainer/api';
 import { atom, map, type MapStore } from 'nanostores';
 import type { ActionCallbackData } from './message-parser';
+import type { WebContainer } from '~/lib/webcontainer/types';
 import type { ActionAlert, BoltAction, DeployAlert, FileHistory, SupabaseAction, SupabaseAlert } from '~/types/actions';
 import { createScopedLogger } from '~/utils/logger';
 import { path as nodePath } from '~/utils/path';

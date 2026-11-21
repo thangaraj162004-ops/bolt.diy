@@ -6,7 +6,6 @@
  */
 // eslint-disable-next-line unicorn/prefer-node-protocol
 import { Buffer } from 'buffer';
-import type { PathWatcherEvent, WebContainer } from '@webcontainer/api';
 import { getEncoding } from 'istextorbinary';
 import { map, type MapStore } from 'nanostores';
 import {
@@ -22,6 +21,7 @@ import {
   clearCache,
   clearAllLocksForChat,
 } from '~/lib/persistence/lockedFiles';
+import type { PathWatcherEvent, WebContainer } from '~/lib/webcontainer/types';
 import { bufferWatchEvents } from '~/utils/buffer';
 import { WORK_DIR } from '~/utils/constants';
 import { computeFileModifications } from '~/utils/diff';

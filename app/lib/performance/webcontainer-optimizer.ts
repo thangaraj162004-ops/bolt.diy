@@ -1,5 +1,5 @@
-import type { WebContainer } from '@webcontainer/api';
 import { webcontainer } from '~/lib/webcontainer';
+import type { WebContainer } from '~/lib/webcontainer/types';
 
 let webContainerInstance: WebContainer | null = null;
 

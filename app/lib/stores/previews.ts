@@ -1,5 +1,5 @@
-import type { WebContainer } from '@webcontainer/api';
 import { atom } from 'nanostores';
+import type { WebContainer } from '~/lib/webcontainer/types';
 
 // Extend Window interface to include our custom property
 declare global {
