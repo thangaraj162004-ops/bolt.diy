@@ -16,6 +16,16 @@ export function getPreviewEngine(value: unknown = import.meta.env.VITE_PREVIEW_E
 
 export const PREVIEW_ENGINE: PreviewEngine = getPreviewEngine();
 
+/**
+ * Starter templates (picked by the model, then downloaded from GitHub) are not
+ * used with the esbuild engine: they bring their own tool configs (vite,
+ * tsconfig, tailwind, postcss) and frameworks the in-browser compiler cannot
+ * run, while the esbuild-preview prompt defines a layout it can.
+ */
+export function usesStarterTemplates(engine: PreviewEngine = PREVIEW_ENGINE): boolean {
+  return engine !== 'esbuild';
+}
+
 /** The port the esbuild shim's dev server reports (`npm run dev`). */
 export const ESBUILD_DEV_PORT = 5173;
 

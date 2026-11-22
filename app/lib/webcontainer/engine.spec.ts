@@ -60,3 +60,12 @@ describe('cross-origin isolation headers', () => {
     expect(crossOriginIsolationHeaders('esbuild')).toEqual({});
   });
 });
+
+describe('starter templates', () => {
+  it('are used with the WebContainer engine and skipped with the esbuild engine', async () => {
+    const { usesStarterTemplates } = await import('./engine');
+
+    expect(usesStarterTemplates('webcontainer')).toBe(true);
+    expect(usesStarterTemplates('esbuild')).toBe(false);
+  });
+});

@@ -37,6 +37,7 @@ import { usePluginStore } from '~/lib/stores/plugins';
 import { streamingState } from '~/lib/stores/streaming';
 import { supabaseConnection } from '~/lib/stores/supabase';
 import { workbenchStore } from '~/lib/stores/workbench';
+import { usesStarterTemplates } from '~/lib/webcontainer/engine';
 import type { LlmErrorAlertType } from '~/types/actions';
 import type { ProgressAnnotation } from '~/types/context';
 import { defaultDesignScheme, type DesignScheme } from '~/types/design-scheme';
@@ -957,7 +958,8 @@ export const ChatImpl = memo(
       if (!chatStarted) {
         setFakeLoading(true);
 
-        if (autoSelectTemplate) {
+        // no starter templates with the esbuild engine (see usesStarterTemplates)
+        if (autoSelectTemplate && usesStarterTemplates()) {
           const { template, title } = await selectStarterTemplate({
             message: finalMessageContent,
             model,

@@ -99,6 +99,26 @@ describe('esbuild-preview prompt', () => {
     expect(getFineTunedPrompt()).toContain('You are Bolt');
   });
 
+  it('keeps first versions simple and runs the dev server once, never a build', () => {
+    for (const text of [
+      'Never run "npm run build"',
+      'Run "npm run dev" only once, at the end',
+      'never run it again',
+      'Keep the first version simple and small',
+      'No sounds, confetti',
+      'history',
+      'themes',
+      'single src/App.tsx where possible',
+      'under about 150 lines',
+    ]) {
+      expect(artifactPrompt).toContain(text);
+      expect(toolPrompt).toContain(text);
+    }
+
+    expect(toolPrompt).toContain('Start the preview with "npm run dev" once, at the end; never run "npm run build".');
+    expect(commandsIn(artifactPrompt)).not.toContain('npm run build');
+  });
+
   it('every shell and start action it shows is one of the allowed commands', () => {
     const commands = commandsIn(artifactPrompt);
 

@@ -55,7 +55,16 @@ function environmentRules({ designScheme }: PromptOptions) {
   Never run any other command: no cd, ls, rm, mkdir, cat, git, npx, curl, or chained lines beyond
   "npm install && npm run dev". Dependencies are not downloaded; they load from esm.sh when the preview runs,
   but keep package.json accurate.
+  Never run "npm run build": the preview does not need it. Run "npm run dev" only once, at the end, after all
+  files are written; the running preview rebuilds by itself when files change, so never run it again.
 </commands>
+
+<scope>
+  Keep the first version simple and small: build exactly what the user asked for, nothing more.
+  No sounds, confetti, animations libraries, history, undo, themes, dark-mode toggles, settings, or extra
+  features unless the user asks for them. Put the app in a single src/App.tsx where possible and keep it
+  under about 150 lines; split into components only when it is clearly larger. Improve it in later turns.
+</scope>
 
 <packages>
   Bare imports work for browser-safe packages served by esm.sh, at the version pinned in package.json.
@@ -186,7 +195,7 @@ function getToolPrompt(options: PromptOptions) {
 
   const environment = `<project_environment>
 Working directory: ${options.cwd}. Paths supplied to project tools are relative to this directory; use "." to list the root.
-With project_run_command, run only "npm install" or "npm run dev". Start the preview with "npm run dev".
+With project_run_command, run only "npm install" or "npm run dev". Start the preview with "npm run dev" once, at the end; never run "npm run build".
 </project_environment>
 
 ${environmentRules(options)}`;

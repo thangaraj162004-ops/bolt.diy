@@ -31,6 +31,7 @@ import { StickToBottom, useStickToBottomContext } from '~/lib/hooks';
 import type { ModelInfo } from '~/lib/modules/llm/types';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import { workbenchStore } from '~/lib/stores/workbench';
+import { usesStarterTemplates } from '~/lib/webcontainer/engine';
 import type { ActionAlert, DeployAlert, LlmErrorAlertType } from '~/types/actions';
 import type { ProgressAnnotation } from '~/types/context';
 import type { DesignScheme } from '~/types/design-scheme';
@@ -534,7 +535,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
 
                     handleSendMessage?.(event, messageInput);
                   })}
-                {!chatStarted && <StarterTemplates />}
+                {!chatStarted && usesStarterTemplates() && <StarterTemplates />}
                 {!chatStarted && <OpenSourceFooterLink />}
               </div>
             </div>
