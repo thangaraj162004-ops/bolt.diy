@@ -20,15 +20,6 @@ export {
   optimizeForHighlighting,
 } from './streaming-optimizer';
 
-// WebContainer optimization
-export {
-  prebootWebContainer,
-  getWebContainer,
-  isWebContainerReady,
-  resetWebContainer,
-  getWebContainerPreconnect,
-} from './webcontainer-optimizer';
-
 // CodeMirror optimizations
 export {
   createOptimizedExtensions,

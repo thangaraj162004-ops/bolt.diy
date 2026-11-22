@@ -8,10 +8,6 @@ function createStore() {
 }
 
 describe('PreviewsStore.getPreviewId', () => {
-  it('still reads the id from WebContainer preview URLs', () => {
-    expect(createStore().getPreviewId('https://k3j2h1.local-credentialless.webcontainer-api.io/')).toBe('k3j2h1');
-  });
-
   it('recognises the esbuild marker URL and uses the port as the id', () => {
     const store = createStore();
 
@@ -24,5 +20,6 @@ describe('PreviewsStore.getPreviewId', () => {
 
     expect(store.getPreviewId('https://example.com/5173/')).toBeNull();
     expect(store.getPreviewId('https://esbuild-preview.invalid.example.com/5173/')).toBeNull();
+    expect(store.getPreviewId('https://k3j2h1.local-credentialless.webcontainer-api.io/')).toBeNull();
   });
 });

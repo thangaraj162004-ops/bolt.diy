@@ -45,7 +45,7 @@ export function useGit() {
   const gitClone = useCallback(
     async (url: string, retryCount = 0) => {
       if (!webcontainer || !fs || !ready) {
-        throw new Error('Webcontainer not initialized. Please try again later.');
+        throw new Error('The project file system is not ready yet. Please try again in a moment.');
       }
 
       fileData.current = {};
@@ -181,7 +181,7 @@ export function useGit() {
   return { ready, gitClone };
 }
 
-const getFs = (
+export const getFs = (
   webcontainer: WebContainer,
   record: MutableRefObject<Record<string, { data: any; encoding?: string }>>,
 ) => ({
@@ -308,8 +308,14 @@ const getFs = (
           };
         }
 
-        const resp = await webcontainer.fs.readdir(dirPath, { withFileTypes: true });
-        const fileInfo = resp.find((x) => x.name === fileName);
+        // the project root itself (isomorphic-git's checkout walks from it)
+        const isRoot = relativePath === '' || relativePath === '.';
+
+        const resp = isRoot ? [] : await webcontainer.fs.readdir(dirPath, { withFileTypes: true });
+
+        const fileInfo = isRoot
+          ? { isFile: () => false, isDirectory: () => true }
+          : resp.find((x) => x.name === fileName);
 
         if (!fileInfo) {
           const err = new Error(`ENOENT: no such file or directory, stat '${path}'`) as NodeJS.ErrnoException;
@@ -362,7 +368,7 @@ const getFs = (
     },
     symlink: async (target: string, path: string) => {
       /*
-       * Since WebContainer doesn't support symlinks,
+       * The preview file system has no symlinks,
        * we'll throw a "operation not supported" error
        */
       throw new Error(`EPERM: operation not permitted, symlink '${target}' -> '${path}'`);
@@ -370,7 +376,7 @@ const getFs = (
 
     chmod: async (_path: string, _mode: number) => {
       /*
-       * WebContainer doesn't support changing permissions,
+       * The preview file system has no permissions,
        * but we can pretend it succeeded for compatibility
        */
       return await Promise.resolve();

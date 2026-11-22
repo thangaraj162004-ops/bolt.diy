@@ -211,13 +211,7 @@ export class PreviewsStore {
 
   // Helper to extract preview ID from URL
   getPreviewId(url: string): string | null {
-    const match = url.match(/^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/);
-
-    if (match) {
-      return match[1];
-    }
-
-    // esbuild engine marker URL: https://esbuild-preview.invalid/<port>/ → the port is the id
+    // esbuild marker URL: https://esbuild-preview.invalid/<port>/ → the port is the id
     const esbuildPort = parseEsbuildPreviewUrl(url);
 
     return esbuildPort === undefined ? null : String(esbuildPort);
@@ -322,10 +316,7 @@ let previewsStore: PreviewsStore | null = null;
 
 export function usePreviewStore() {
   if (!previewsStore) {
-    /*
-     * Initialize with a Promise that resolves to WebContainer
-     * This should match how you're initializing WebContainer elsewhere
-     */
+    // placeholder runtime: this instance is only used for its broadcast helpers
     previewsStore = new PreviewsStore(Promise.resolve({} as WebContainer));
   }
 

@@ -1,14 +1,10 @@
 /**
- * Our own minimal description of the WebContainer runtime.
+ * Our own minimal description of the preview runtime.
  *
  * These interfaces list ONLY the methods, properties and events that CodeApp AI
- * actually uses today. They let most of the app stop importing types from
- * `@webcontainer/api`, so a different preview engine (for example esbuild-wasm
- * running in a sandboxed iframe) can implement the same shape later.
- *
- * The shapes deliberately mirror `@webcontainer/api` so the real WebContainer
- * instance stays assignable to `WebContainer` below. Keep this file free of
- * runtime code and of any imports from `@webcontainer/api`.
+ * actually uses. The in-browser esbuild shim (./shim/shim.ts) implements them;
+ * the rest of the app talks to this interface, not to a specific engine, so a
+ * second engine can be added later. Keep this file free of runtime code.
  */
 
 /** Function returned by `on(...)` that removes the listener. */

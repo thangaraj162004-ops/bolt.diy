@@ -6,7 +6,6 @@ import type { WritableAtom } from 'nanostores';
 import type { PreviewUpdate } from './shim/shim';
 import type { PreviewMessage } from './types';
 import type { ActionAlert } from '~/types/actions';
-import { cleanStackTrace } from '~/utils/stacktrace';
 
 /** Title of the alert shown when the esbuild preview fails to compile. */
 export const PREVIEW_BUILD_ERROR_TITLE = 'Preview Build Error';
@@ -23,7 +22,7 @@ export function reportPreviewMessage(message: PreviewMessage, actionAlert: Writa
       type: 'preview',
       title,
       description: 'message' in message ? message.message : 'Unknown error',
-      content: `Error occurred at ${message.pathname}${message.search}${message.hash}\nPort: ${message.port}\n\nStack trace:\n${cleanStackTrace(message.stack || '')}`,
+      content: `Error occurred at ${message.pathname}${message.search}${message.hash}\nPort: ${message.port}\n\nStack trace:\n${message.stack || ''}`,
       source: 'preview',
     });
   }

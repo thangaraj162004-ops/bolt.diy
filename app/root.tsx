@@ -102,7 +102,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className="w-full h-full">
         {/*
-          The app boots a WebContainer and reads IndexedDB/localStorage, so it is
+          The app runs the in-browser preview and reads IndexedDB/localStorage, so it is
           genuinely client-only. `ClientOnly` renders `fallback` on the server and
           on the first client render (keeping hydration in sync), then swaps in the
           real tree once mounted.
@@ -143,7 +143,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 import { journeys, observeWebVitals } from './lib/performance/metrics';
-import { prebootWebContainer } from './lib/performance/webcontainer-optimizer';
 import { logStore } from './lib/stores/logs';
 import { themeStore } from './lib/stores/theme';
 import globalStyles from './styles/index.scss?url';
@@ -166,9 +165,6 @@ export default function App() {
 
     // Start Web Vitals observation
     observeWebVitals();
-
-    // Pre-boot WebContainer in background
-    prebootWebContainer();
 
     // Initialize debug logging with improved error handling
     import('./utils/debugLogger')
