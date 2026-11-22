@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { ESBUILD_ALLOWED_COMMANDS, ESBUILD_APPROVED_PACKAGES, getEsbuildPreviewPrompt } from './esbuild-preview';
+import {
+  ESBUILD_ALLOWED_COMMANDS,
+  ESBUILD_APPROVED_PACKAGES,
+  LUCIDE_BRAND_ICONS,
+  LUCIDE_REACT_VERSION,
+  LUCIDE_VERIFIED_ICONS,
+  getEsbuildPreviewPrompt,
+} from './esbuild-preview';
 import { getFineTunedPrompt } from './new-prompt';
 import optimized from './optimized';
 import { getProjectToolPrompt } from './project-tools';
 import { getTinyTimPrompt } from './tiny-tim';
 import { withDevelopmentCommentaryWorkstyle } from '~/lib/.server/llm/prompt-workstyle';
 import { ESBUILD_PREVIEW_PROMPT_ID, PromptLibrary, type PromptOptions } from '~/lib/common/prompt-library';
+import { toEsmShUrl } from '~/lib/webcontainer/shim/preview/bare-imports';
+import { buildProject, projectFilesFromRecord } from '~/lib/webcontainer/shim/preview/compiler';
 import { MODIFICATIONS_TAG_NAME, WORK_DIR } from '~/utils/constants';
 import { allowedHTMLElements } from '~/utils/markdown';
 
@@ -23,6 +32,13 @@ const previousChoice = (promptId: string | undefined) => promptId || 'default';
 const estimateTokens = (text: string) => Math.ceil(text.length / 4);
 
 const BANNED_WORDS = [/WebContainer/i, /StackBlitz/i, /\bNode(\.js)?\b/i];
+
+/** filePath -> content of every file action in a prompt's examples. */
+function exampleFiles(text: string) {
+  return Object.fromEntries(
+    [...text.matchAll(/<caAction type="file" filePath="([^"]+)">([\s\S]*?)<\/caAction>/g)].map((m) => [m[1], m[2]]),
+  );
+}
 
 /** Bodies of every shell and start action in a prompt's examples. */
 function commandsIn(text: string) {
@@ -117,6 +133,77 @@ describe('esbuild-preview prompt', () => {
 
     expect(toolPrompt).toContain('Start the preview with "npm run dev" once, at the end; never run "npm run build".');
     expect(commandsIn(artifactPrompt)).not.toContain('npm run build');
+  });
+
+  it('forbids brand icons, lists only verified icons and explains the one-write fix', () => {
+    for (const text of [artifactPrompt, toolPrompt]) {
+      expect(text).toContain(`lucide-react pinned to "${LUCIDE_REACT_VERSION}"`);
+      expect(text).toContain(LUCIDE_VERIFIED_ICONS.join(', '));
+      expect(text).toContain('Never import brand logos from lucide-react');
+
+      for (const brand of LUCIDE_BRAND_ICONS.filter((name) => name !== 'X')) {
+        expect(text).toContain(brand);
+      }
+
+      expect(text).toContain('or X as a logo');
+      expect(text).toContain('For social links use a small inline <svg> or a plain text link');
+      expect(text).toContain('does not provide an export named NAME');
+      expect(text).toContain('rewrite the whole src/App.tsx in ONE file write');
+      expect(text).toContain('do not use patch edits for this fix');
+      expect(text).toContain('Keep every file small, so that rewriting a whole file is cheap');
+    }
+
+    expect(LUCIDE_VERIFIED_ICONS).toEqual([
+      'Menu',
+      'X',
+      'Check',
+      'Plus',
+      'Minus',
+      'Star',
+      'Heart',
+      'Phone',
+      'Mail',
+      'MapPin',
+      'Clock',
+      'ArrowRight',
+      'ChevronDown',
+      'Search',
+      'User',
+      'ShoppingBag',
+      'Globe',
+      'Share2',
+    ]);
+  });
+
+  it('example code uses no brand icon and imports only verified lucide icons', () => {
+    const files = exampleFiles(artifactPrompt);
+    const code = Object.values(files).join('\n');
+
+    expect(Object.keys(files)).toContain('src/App.tsx');
+
+    for (const brand of LUCIDE_BRAND_ICONS) {
+      expect(code).not.toMatch(new RegExp(`\\b${brand}\\b`));
+    }
+
+    const imported = [...code.matchAll(/import \{([^}]*)\} from 'lucide-react'/g)].flatMap((m) =>
+      m[1].split(',').map((name) => name.trim()),
+    );
+
+    expect(imported.length).toBeGreaterThan(0);
+    imported.forEach((name) => expect(LUCIDE_VERIFIED_ICONS).toContain(name));
+  });
+
+  it('example package.json pins the verified lucide-react version, which the shim loads from esm.sh', async () => {
+    const files = exampleFiles(artifactPrompt);
+    const packageJson = JSON.parse(files['package.json']);
+
+    expect(packageJson.dependencies['lucide-react']).toBe(LUCIDE_REACT_VERSION);
+    expect(toEsmShUrl('lucide-react', packageJson)).toBe(
+      `https://esm.sh/lucide-react@${LUCIDE_REACT_VERSION}?deps=react@18.3.1,react-dom@18.3.1`,
+    );
+
+    const result = await buildProject({ files: projectFilesFromRecord(files) });
+    expect(result.js).toContain(`https://esm.sh/lucide-react@${LUCIDE_REACT_VERSION}?deps=`);
   });
 
   it('every shell and start action it shows is one of the allowed commands', () => {

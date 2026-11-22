@@ -16,6 +16,48 @@ import { getProjectToolPrompt } from '~/lib/common/prompts/project-tools';
 /** The only shell commands the model may use. */
 export const ESBUILD_ALLOWED_COMMANDS = ['npm install', 'npm run dev', 'npm install && npm run dev'] as const;
 
+/**
+ * lucide-react version the prompt pins. 1.x has no brand icons. Every name in
+ * LUCIDE_VERIFIED_ICONS was checked against this version's export list on
+ * esm.sh (https://esm.sh/lucide-react@1.77.0/es2022/lucide-react.mjs).
+ */
+export const LUCIDE_REACT_VERSION = '1.77.0';
+
+/** Icons verified to exist in LUCIDE_REACT_VERSION (and in 1.16.0 and 0.468.0). */
+export const LUCIDE_VERIFIED_ICONS = [
+  'Menu',
+  'X',
+  'Check',
+  'Plus',
+  'Minus',
+  'Star',
+  'Heart',
+  'Phone',
+  'Mail',
+  'MapPin',
+  'Clock',
+  'ArrowRight',
+  'ChevronDown',
+  'Search',
+  'User',
+  'ShoppingBag',
+  'Globe',
+  'Share2',
+] as const;
+
+/** Brand logos the model must never import from lucide-react (removed in lucide-react 1.x). */
+export const LUCIDE_BRAND_ICONS = [
+  'Facebook',
+  'Instagram',
+  'Twitter',
+  'X',
+  'Youtube',
+  'Github',
+  'Linkedin',
+  'Tiktok',
+  'Whatsapp',
+] as const;
+
 /** Packages the model may import without being asked. */
 export const ESBUILD_APPROVED_PACKAGES = [
   'react',
@@ -64,6 +106,7 @@ function environmentRules({ designScheme }: PromptOptions) {
   No sounds, confetti, animations libraries, history, undo, themes, dark-mode toggles, settings, or extra
   features unless the user asks for them. Put the app in a single src/App.tsx where possible and keep it
   under about 150 lines; split into components only when it is clearly larger. Improve it in later turns.
+  Keep every file small, so that rewriting a whole file is cheap.
 </scope>
 
 <packages>
@@ -72,6 +115,19 @@ function environmentRules({ designScheme }: PromptOptions) {
   Avoid every other package unless the user asks for it, and never use packages that need a server or native code.
   Do not import CSS files from packages unless it is essential.
 </packages>
+
+<icons>
+  For icons use lucide-react pinned to "${LUCIDE_REACT_VERSION}" in package.json, and import only these names:
+  ${LUCIDE_VERIFIED_ICONS.join(', ')} (X is the close icon).
+  Never import brand logos from lucide-react (${LUCIDE_BRAND_ICONS.filter((name) => name !== 'X').join(', ')},
+  or X as a logo): they do not exist in it. For social links use a small inline <svg> or a plain text link.
+</icons>
+
+<fixing_errors>
+  If a preview error says a module does not provide an export named NAME, replace NAME with an inline <svg>
+  or one of the icon names above, then rewrite the whole src/App.tsx in ONE file write (one file action, or
+  one project_write_file call). Do not read the file several times and do not use patch edits for this fix.
+</fixing_errors>
 
 <styling>
   Use Tailwind v3 utility classes in className. src/index.css starts with exactly:
@@ -131,7 +187,7 @@ function artifactFormat({ modificationTagName }: PromptOptions) {
   "private": true,
   "type": "module",
   "scripts": { "dev": "vite" },
-  "dependencies": { "react": "18.3.1", "react-dom": "18.3.1" },
+  "dependencies": { "lucide-react": "${LUCIDE_REACT_VERSION}", "react": "18.3.1", "react-dom": "18.3.1" },
   "devDependencies": { "tailwindcss": "3.4.17" }
 }</caAction>
   <caAction type="file" filePath="index.html"><!doctype html>
@@ -148,14 +204,15 @@ import './index.css';
 
 createRoot(document.getElementById('root')!).render(<App />);</caAction>
   <caAction type="file" filePath="src/App.tsx">import { useState } from 'react';
+import { Plus } from 'lucide-react';
 
 export default function App() {
   const [count, setCount] = useState(0);
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50">
-      <button className="rounded-lg bg-indigo-600 px-4 py-2 text-white" onClick={() => setCount(count + 1)}>
-        Count: {count}
+      <button className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-white" onClick={() => setCount(count + 1)}>
+        <Plus size={18} /> Count: {count}
       </button>
     </main>
   );
