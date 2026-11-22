@@ -2,6 +2,7 @@
  * Builds the HTML document shown in the preview iframe. Pure function.
  */
 import { renderBridgeScript, type BridgeConfig } from './bridge';
+import { renderStorageShimScript } from './storage-shim';
 
 export const TAILWIND_CDN_URL = 'https://cdn.tailwindcss.com';
 
@@ -82,9 +83,12 @@ export function renderPreviewHtml({
 }: PreviewHtmlInput): string {
   const base = indexHtml?.trim() ? removeLocalModuleScripts(indexHtml) : DEFAULT_DOCUMENT;
 
-  const head: string[] = [];
+  // storage first: the sandbox blocks localStorage/sessionStorage, which generated apps use a lot
+  const head: string[] = [
+    `<script data-ca-preview-storage>\n${escapeScriptContent(renderStorageShimScript())}\n</script>`,
+  ];
 
-  // first, so it also reports errors thrown by the other scripts
+  // then the bridge, so it also reports errors thrown by the other scripts
   if (bridge) {
     head.push(`<script data-ca-preview-bridge>\n${escapeScriptContent(renderBridgeScript(bridge))}\n</script>`);
   }

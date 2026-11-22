@@ -151,16 +151,49 @@ describe('Preview with the esbuild engine', () => {
     expect(iframe.getAttribute('srcdoc')).toBe(shim.html);
   });
 
-  it('updates the iframe when the runtime reports a new build or a build error', async () => {
-    const iframe = await renderPreview();
+  it('shows each new build in a fresh iframe (ready, rebuilt, build-error)', async () => {
+    const first = await renderPreview();
 
     shim.html = '<!doctype html><html><body><h1>build 2</h1></body></html>';
     act(() => shim.update('rebuilt'));
-    expect(iframe.getAttribute('srcdoc')).toContain('build 2');
+
+    const second = screen.getByTitle('preview') as HTMLIFrameElement;
+    expect(second.getAttribute('srcdoc')).toContain('build 2');
+
+    // a new element, so Chromium cannot drop the srcdoc update while the old one is still loading
+    expect(second).not.toBe(first);
+    expect(first.isConnected).toBe(false);
+    expect(second.getAttribute('sandbox')).toBe(ESBUILD_PREVIEW_SANDBOX);
 
     shim.html = '<!doctype html><html><body><h1>The preview could not be built</h1></body></html>';
     act(() => shim.update('build-error'));
-    expect(iframe.getAttribute('srcdoc')).toContain('could not be built');
+    expect(screen.getByTitle('preview').getAttribute('srcdoc')).toContain('could not be built');
+  });
+
+  it('keeps the same iframe when the document did not change', async () => {
+    const first = await renderPreview();
+
+    act(() => shim.update('rebuilt'));
+
+    expect(screen.getByTitle('preview')).toBe(first);
+  });
+
+  it('shows a placeholder, not an empty iframe, until the first document arrives', async () => {
+    shim.html = undefined as unknown as string;
+    workbenchStore.previews.set([{ port: 5173, ready: true, baseUrl: MARKER_URL }]);
+    render(<Preview />);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByTitle('preview')).toBeNull();
+    expect(screen.getByTestId('esbuild-preview-pending').textContent).toContain('Starting the preview');
+
+    shim.html = '<!doctype html><html><body><h1>first</h1></body></html>';
+    act(() => shim.update('ready'));
+
+    expect(screen.getByTitle('preview').getAttribute('srcdoc')).toContain('first');
   });
 
   it('rebuilds on reload', async () => {

@@ -8,7 +8,7 @@
  * - `useEsbuildPreview`: keeps the HTML in sync with the shim (ready, rebuilt,
  *   build-error) and runs the one listener for the preview's error bridge.
  */
-import { forwardRef, useEffect, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { forwardRef, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
 import { webcontainer } from '~/lib/webcontainer';
 import { ESBUILD_PREVIEW_SANDBOX } from '~/lib/webcontainer/engine';
 import { createPreviewBridgeListener } from '~/lib/webcontainer/shim/preview/bridge';
@@ -21,17 +21,53 @@ interface EsbuildPreviewFrameProps {
   style?: CSSProperties;
 }
 
+/** A short, cheap fingerprint of a document (FNV-1a), used as the iframe key. */
+function documentKey(html: string) {
+  let hash = 0x811c9dc5;
+
+  for (let i = 0; i < html.length; i++) {
+    hash ^= html.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+
+  return `${html.length}-${(hash >>> 0).toString(16)}`;
+}
+
+/*
+ * Every new document gets a new iframe element (keyed by its content), and no
+ * iframe exists before the first document. Updating `srcdoc` on an iframe whose
+ * previous srcdoc is still loading can be dropped by Chromium, which left the
+ * preview blank when the first build arrived right after the iframe mounted
+ * with an empty document.
+ */
 export const EsbuildPreviewFrame = forwardRef<HTMLIFrameElement, EsbuildPreviewFrameProps>(
-  ({ srcDoc, title = 'preview', className, style }, ref) => (
-    <iframe
-      ref={ref}
-      title={title}
-      className={className}
-      style={style}
-      srcDoc={srcDoc ?? ''}
-      sandbox={ESBUILD_PREVIEW_SANDBOX}
-    />
-  ),
+  ({ srcDoc, title = 'preview', className, style }, ref) => {
+    const key = useMemo(() => (srcDoc === undefined ? 'pending' : documentKey(srcDoc)), [srcDoc]);
+
+    if (srcDoc === undefined) {
+      return (
+        <div
+          data-testid="esbuild-preview-pending"
+          className={className}
+          style={{ ...style, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+        >
+          <span className="text-sm text-ca-elements-textSecondary">Starting the preview…</span>
+        </div>
+      );
+    }
+
+    return (
+      <iframe
+        key={key}
+        ref={ref}
+        title={title}
+        className={className}
+        style={style}
+        srcDoc={srcDoc}
+        sandbox={ESBUILD_PREVIEW_SANDBOX}
+      />
+    );
+  },
 );
 
 EsbuildPreviewFrame.displayName = 'EsbuildPreviewFrame';
