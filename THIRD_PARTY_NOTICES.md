@@ -9,7 +9,7 @@ This inventory lists every npm package installed for this repository, generated 
 from the package metadata in `node_modules`. It is a due-diligence aid, not legal advice: a package's
 declared license can differ from the files it ships.
 
-- Packages (name and version): 1320 in total, 696 in production, 624 development-only.
+- Packages (name and version): 1319 in total, 695 in production, 624 development-only.
 - Licenses outside MIT, ISC, BSD, Apache-2.0, 0BSD and CC0: 32 (listed in the next section).
 
 ## Packages whose license is not MIT, ISC, BSD, Apache-2.0, 0BSD or CC0
@@ -398,7 +398,6 @@ A dual license ("X OR Y") counts as permissive when one option is in that list; 
 | @vitest/istanbul-lib-report | 1.0.2 | MIT | development |
 | @vitest/mocker | 5.0.3 | MIT | development |
 | @vitest/spy | 5.0.3 | MIT | development |
-| @webcontainer/api | 1.6.5-internal.2 | MIT | production |
 | @workflow/serde | 4.1.0 | Apache-2.0 | production |
 | @xmldom/xmldom | 0.8.15 | MIT | development |
 | @xterm/addon-fit | 0.11.0 | MIT | production |

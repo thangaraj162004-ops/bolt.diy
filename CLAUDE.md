@@ -2,20 +2,17 @@
 
 Rules for anyone (human or AI) working on this fork of bolt.diy.
 
-## Project goal
+## How the preview works
 
-- We are removing `@webcontainer/api` completely.
-- Previews will be built in the browser with `esbuild-wasm` and shown in an
-  `<iframe>` with `sandbox="allow-scripts"`.
-- When the work is finished, nothing in the app may depend on `@webcontainer/api`.
-
-## How to build the replacement
-
-- Put the replacement behind a small interface (start from
-  `app/lib/webcontainer/types.ts`). The rest of the app should talk to that
-  interface, not to a specific engine, so a second engine can be added later.
-- Do not import types from `@webcontainer/api` in new code. Use
-  `~/lib/webcontainer/types` instead.
+- There is one preview engine: previews are built in the browser with
+  `esbuild-wasm` (the shim in `app/lib/webcontainer/shim/`) and shown in an
+  `<iframe>` with a sandbox that allows scripts but never `allow-same-origin`.
+- `@webcontainer/api` (StackBlitz WebContainers) has been removed. Do not add it
+  back, and do not add another engine switch: there is no engine variable.
+- The rest of the app talks to the small interface in
+  `app/lib/webcontainer/types.ts`, not to the shim directly, so a second engine
+  could be added later. The folder name `webcontainer` is historical.
+- There is one build prompt, `app/lib/common/prompts/esbuild-preview.ts`.
 
 ## Security
 
@@ -24,8 +21,9 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
 ## Pages and headers
 
 - Keep payments and login on normal pages.
-- The preview must NOT need cross-origin isolation headers
-  (`Cross-Origin-Embedder-Policy` / `Cross-Origin-Opener-Policy`).
+- The app must never send cross-origin isolation headers
+  (`Cross-Origin-Embedder-Policy` / `Cross-Origin-Opener-Policy`); the preview
+  does not need them.
 
 ## Way of working
 
@@ -35,8 +33,10 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
 ## Deployment
 
 - The Cloudflare production branch for this test deploy is `esbuild-shim-1`.
-- Set `VITE_PREVIEW_ENGINE` as a Cloudflare **build** variable. It is read at
-  build time, not at runtime, so a runtime variable has no effect.
+- No build variable is needed for the preview. An old `VITE_PREVIEW_ENGINE`
+  value is ignored and can be deleted.
+- `VITE_*` variables are read at build time, not at runtime, so set them as
+  Cloudflare **build** variables; a runtime variable has no effect.
 - Never set any `VITE_*_TOKEN` variables on a public deploy. Every `VITE_*`
   value is copied into the public JavaScript that anyone can read.
 - Never commit secrets.

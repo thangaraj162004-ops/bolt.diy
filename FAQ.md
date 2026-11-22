@@ -75,7 +75,7 @@ This authentication error can be resolved by:
 ### **Blank preview when running the app**
 Blank previews usually indicate code generation issues:
 - Check developer console for JavaScript runtime errors
-- Verify WebContainer is running properly
+- Check the error shown above the preview (build errors appear there)
 - Try refreshing the preview pane
 - Check for hallucinated or incomplete code in generated files
 - Restart the development server if issues persist
@@ -116,13 +116,12 @@ If your custom LLM provider isn't appearing:
 - Check browser console for provider loading errors
 - Ensure proper TypeScript compilation (`pnpm run typecheck`)
 
-### **WebContainer preview not loading**
+### **Preview not loading**
 If the live preview isn't working:
-- Check WebContainer status in the terminal
-- Verify Node.js compatibility with your project
-- Restart the development environment
+- The preview is compiled in your browser; check the developer console and the error alert in the workbench
+- Packages load from esm.sh: check that your network can reach it
+- Only browser-safe packages work (no server code, Node.js modules or native packages)
 - Clear browser cache and reload
-- Check for conflicting ports (default is 5173)
 
 ### **"Everything works, but the results are bad"**
 Local LLMs can work well for smaller applications, while larger hosted models may handle complex projects more reliably. Try a small task first and choose based on the quality, privacy, cost, and speed you need.

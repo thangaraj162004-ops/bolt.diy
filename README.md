@@ -102,11 +102,10 @@ LMSTUDIO_BASE_URL=http://127.0.0.1:1234
 
 ## Features
 
-- **In-Browser Web Development**: Full-stack Node.js development environment powered by WebContainers.
+- **In-Browser Preview**: React apps are compiled in your browser with esbuild-wasm and run in a sandboxed iframe (`sandbox="allow-scripts"`, no `allow-same-origin`). Packages load from esm.sh. No server, Node.js runtime or cross-origin isolation headers are needed.
 - **22+ AI Providers**: Cloud (Anthropic, OpenAI, Google, DeepSeek, Groq, xAI, Mistral, etc.) and Local (Ollama, LM Studio). OpenRouter, Anthropic, OpenAI, and Google are enabled by default.
-- **Interactive Workbench**: Integrated code editor, terminal, visual diff viewer, and real-time live preview. Opens by default for a started chat and can be reopened after closing.
-- **Starter Setup**: Explicit framework requests select a matching starter in code. Starter files include detected install and development server commands before the first customization request.
-- **Prompt Library**: Choose a system prompt under Settings → Workspace → Features, including Simple Sal for concise guidance and Tiny Tim for smaller models.
+- **Interactive Workbench**: Integrated code editor, terminal (it runs `npm install`, `npm run dev` and `npm run build`), visual diff viewer, and real-time live preview. Opens by default for a started chat and can be reopened after closing.
+- **One Build Prompt**: Every build request uses the same prompt, written for the in-browser preview.
 - **Project Workflows**: Git cloning/pushing, snapshot restoration, file conflict locking, and ZIP export.
 - **Deployments**: One-click deployment to Netlify, Vercel, and GitHub Pages.
 - **Database & Visuals**: Supabase integration, data visualization charts, and Model Context Protocol (MCP) tooling.
@@ -151,4 +150,4 @@ LMSTUDIO_BASE_URL=http://127.0.0.1:1234
 
 ## Licensing
 
-bolt.diy is open-source under the MIT License. It utilizes the [WebContainers API](https://webcontainers.io/enterprise), which has specific commercial licensing terms for enterprise deployment.
+bolt.diy is open-source under the MIT License. This fork no longer uses the WebContainers API; the preview runs on esbuild-wasm (MIT). See `THIRD_PARTY_NOTICES.md`.
