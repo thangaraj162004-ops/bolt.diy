@@ -7,7 +7,14 @@
 import { MemoryFileSystem } from './memory-fs';
 import type { BuildError } from './preview/compiler';
 import { PreviewRuntime, buildForProduction, defaultCompiler, type Compiler } from './preview/runtime';
-import { createCommandProcess, createShellProcess, type CommandHost, type DevServerHandle } from './shell-commands';
+import {
+  createCommandLineProcess,
+  createCommandProcess,
+  createShellProcess,
+  shellCommandLine,
+  type CommandHost,
+  type DevServerHandle,
+} from './shell-commands';
 import { ESBUILD_DEV_PORT, esbuildPreviewUrl } from '~/lib/webcontainer/engine';
 import type {
   PortListener,
@@ -177,7 +184,10 @@ export class WebContainerShim implements WebContainer {
    */
   async spawn(command: string, args: string[] = [], _options?: SpawnOptions): Promise<WebContainerProcess> {
     if (command === '/bin/jsh' || command === 'jsh') {
-      return createShellProcess(this.#host);
+      // `jsh -c "<line>"` runs the line once and exits (project_run_command uses this); plain jsh is interactive
+      const line = shellCommandLine(args);
+
+      return line === undefined ? createShellProcess(this.#host) : createCommandLineProcess(this.#host, line);
     }
 
     return createCommandProcess(this.#host, command, args);

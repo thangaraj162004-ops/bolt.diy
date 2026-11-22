@@ -6,6 +6,7 @@ import {
   classifyPackageManagerCommand,
   oscExit,
   parseCommandLine,
+  shellCommandLine,
 } from './shell-commands';
 import { PREVIEW_PORT, PREVIEW_URL, WebContainerShim } from './shim';
 import type { WebContainer, WebContainerProcess } from '~/lib/webcontainer/types';
@@ -272,6 +273,98 @@ describe('builtins (one-off processes)', () => {
     });
     expect((await run(shim, 'npm run lint')).output).toContain('not supported in the browser preview: npm run lint');
     expect((await run(shim, 'npm run lint')).exitCode).toBe(127);
+  });
+});
+
+/** Package files like the Vite + React + Tailwind starter, whose scripts need tsc and vite. */
+const VITE_STARTER = {
+  ...REACT_PROJECT,
+  'package.json': JSON.stringify({
+    name: 'vite-react-typescript-starter',
+    type: 'module',
+    scripts: { dev: 'vite', build: 'tsc -b && vite build', lint: 'eslint .', preview: 'vite preview' },
+    dependencies: { 'lucide-react': '0.344.0', react: '18.3.1', 'react-dom': '18.3.1' },
+    devDependencies: { tailwindcss: '3.4.1', typescript: '5.5.3', vite: '5.4.2' },
+  }),
+  'vite.config.ts': "import { defineConfig } from 'vite';\nexport default defineConfig({});\n",
+  'tailwind.config.js': 'export default { content: [] };\n',
+  'postcss.config.js': 'export default { plugins: {} };\n',
+  'tsconfig.json': '{ "files": [] }',
+  'src/vite-env.d.ts': '/// <reference types="vite/client" />\n',
+};
+
+describe('jsh -c (how project_run_command runs commands)', () => {
+  it('finds the command line after -c', () => {
+    expect(shellCommandLine(['-c', 'npm run dev'])).toBe('npm run dev');
+    expect(shellCommandLine(['--osc', '-c', 'echo hi && pwd'])).toBe('echo hi && pwd');
+    expect(shellCommandLine(['--osc'])).toBeUndefined();
+    expect(shellCommandLine([])).toBeUndefined();
+  });
+
+  it('runs the line once, prints its output and exits with its code', async () => {
+    const shim = await createShim({ 'a.txt': 'alpha' });
+
+    const ok = await shim.spawn('/bin/jsh', ['-c', 'echo hi && cat a.txt']);
+    const okOut = collect(ok);
+    await expect(ok.exit).resolves.toBe(0);
+    await waitFor(() => okOut.done);
+    expect(okOut.text).toBe('hi\r\nalpha');
+    expect(okOut.text).not.toContain(OSC_PROMPT);
+
+    const failed = await shim.spawn('/bin/jsh', ['-c', 'false']);
+    await expect(failed.exit).resolves.toBe(1);
+
+    const unsupported = await shim.spawn('jsh', ['-c', 'tsc -b']);
+    collect(unsupported);
+    await expect(unsupported.exit).resolves.toBe(127);
+  });
+
+  it('npm run build exits 0 and writes dist/index.html, even though the starter script is "tsc -b && vite build"', async () => {
+    const shim = await createShim(VITE_STARTER);
+
+    const build = await shim.spawn('/bin/jsh', ['-c', 'npm run build']);
+    const out = collect(build);
+    await expect(build.exit).resolves.toBe(0);
+    await waitFor(() => out.done);
+
+    expect(out.text).toContain('Building for production');
+    expect(out.text).toContain('dist/index.html');
+    expect(out.text).toMatch(/built in \d+ms/);
+    expect(await shim.fs.readFile('dist/index.html', 'utf-8')).toContain('hello one');
+  });
+
+  it('npm run dev keeps running, prints the ready line and emits port and server-ready', async () => {
+    const shim = await createShim(VITE_STARTER);
+    const ready = vi.fn();
+    shim.on('server-ready', ready);
+
+    const dev = await shim.spawn('/bin/jsh', ['-c', 'cd /home/project && npm run dev']);
+    const out = collect(dev);
+    await waitFor(() => out.text.includes('Preview ready'));
+
+    expect(out.text).toMatch(/built in \d+ms/);
+    expect(ready).toHaveBeenCalledWith(PREVIEW_PORT, PREVIEW_URL);
+    expect(shim.getPreviewHtml(PREVIEW_PORT)).toContain('hello one');
+    expect(out.done).toBe(false);
+
+    dev.kill();
+    await expect(dev.exit).resolves.toBe(143);
+    expect(shim.previewRuntime).toBeUndefined();
+  });
+
+  it('a build error prints the file and line and exits 1', async () => {
+    const shim = await createShim({
+      ...VITE_STARTER,
+      'src/App.tsx': "import Missing from './Missing';\nexport default () => <Missing />;",
+    });
+
+    const build = await shim.spawn('/bin/jsh', ['-c', 'npm run build']);
+    const out = collect(build);
+    await expect(build.exit).resolves.toBe(1);
+    await waitFor(() => out.done);
+
+    expect(out.text).toContain('Build failed');
+    expect(out.text).toContain('src/App.tsx:1:');
   });
 });
 

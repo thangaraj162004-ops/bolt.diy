@@ -636,14 +636,24 @@ class ProcessChannel {
 
 /** One command, run once: `spawn('npm', ['run', 'build'])`. */
 export function createCommandProcess(host: CommandHost, command: string, args: string[]): WebContainerProcess {
-  const channel = new ProcessChannel();
-  const abort = new AbortController();
-  const executor = new CommandExecutor(host, (text) => channel.write(text));
-
   // quote arguments so `spawn('echo', ['a b'])` keeps one argument
   const line = [command, ...args]
     .map((arg) => (/^[\w@%+=:,./-]+$/.test(arg) ? arg : `'${arg.replace(/'/g, `'\\''`)}'`))
     .join(' ');
+
+  return createCommandLineProcess(host, line);
+}
+
+/**
+ * A whole command line, run once and then exit with its code: what
+ * `spawn('/bin/jsh', ['-c', 'npm install && npm run dev'])` does, as with a
+ * real shell. Long-running commands (the dev server) keep the process alive
+ * until it is killed.
+ */
+export function createCommandLineProcess(host: CommandHost, line: string): WebContainerProcess {
+  const channel = new ProcessChannel();
+  const abort = new AbortController();
+  const executor = new CommandExecutor(host, (text) => channel.write(text));
 
   void executor.run(line, abort.signal).then(
     (code) => channel.close(code),
@@ -666,6 +676,13 @@ export function createCommandProcess(host: CommandHost, command: string, args: s
       // no terminal size to track
     },
   };
+}
+
+/** Returns the command line of `jsh -c <line>` (or `jsh --osc -c <line>`), or undefined for an interactive shell. */
+export function shellCommandLine(args: string[]): string | undefined {
+  const index = args.indexOf('-c');
+
+  return index === -1 ? undefined : args[index + 1];
 }
 
 /** The interactive shell: `spawn('/bin/jsh', ['--osc'])`. */
