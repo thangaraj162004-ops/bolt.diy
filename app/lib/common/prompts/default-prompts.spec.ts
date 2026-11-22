@@ -24,7 +24,7 @@ const current = renderDefaultPromptVariants();
 describe('default-engine prompts after the tag rename', () => {
   it('covers every prompt variant', () => {
     expect(Object.keys(current).sort()).toEqual(Object.keys(frozen).sort());
-    expect(Object.keys(current).length).toBeGreaterThanOrEqual(15);
+    expect(Object.keys(current).length).toBeGreaterThanOrEqual(14);
   });
 
   it.each(Object.keys(frozen).sort())('%s equals the previous prompt with only the tags renamed', (name) => {

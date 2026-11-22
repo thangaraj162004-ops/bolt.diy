@@ -1,18 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import {
-  ESBUILD_PREVIEW_SANDBOX,
-  crossOriginIsolationHeaders,
-  esbuildPreviewUrl,
-  getPreviewEngine,
-  parseEsbuildPreviewUrl,
-} from './engine';
+import * as engine from './engine';
+import { ESBUILD_PREVIEW_SANDBOX, esbuildPreviewUrl, parseEsbuildPreviewUrl } from './engine';
 
-describe('preview engine switch', () => {
-  it('is esbuild only for the exact value, webcontainer otherwise', () => {
-    expect(getPreviewEngine('esbuild')).toBe('esbuild');
-    expect(getPreviewEngine('webcontainer')).toBe('webcontainer');
-    expect(getPreviewEngine(undefined)).toBe('webcontainer');
-    expect(getPreviewEngine('ESBUILD')).toBe('webcontainer');
+describe('single preview engine', () => {
+  it('has no engine switch, no starter-template switch and no isolation headers', () => {
+    expect(
+      Object.keys(engine).filter((name) => /PreviewEngine|StarterTemplates|crossOriginIsolation/i.test(name)),
+    ).toEqual([]);
   });
 });
 
@@ -45,27 +39,5 @@ describe('preview sandbox', () => {
       'allow-scripts',
     ]);
     expect(ESBUILD_PREVIEW_SANDBOX).not.toContain('allow-same-origin');
-  });
-});
-
-describe('cross-origin isolation headers', () => {
-  it('are sent for the webcontainer engine', () => {
-    expect(crossOriginIsolationHeaders('webcontainer')).toEqual({
-      'Cross-Origin-Embedder-Policy': 'credentialless',
-      'Cross-Origin-Opener-Policy': 'same-origin',
-    });
-  });
-
-  it('are absent for the esbuild engine', () => {
-    expect(crossOriginIsolationHeaders('esbuild')).toEqual({});
-  });
-});
-
-describe('starter templates', () => {
-  it('are used with the WebContainer engine and skipped with the esbuild engine', async () => {
-    const { usesStarterTemplates } = await import('./engine');
-
-    expect(usesStarterTemplates('webcontainer')).toBe(true);
-    expect(usesStarterTemplates('esbuild')).toBe(false);
   });
 });

@@ -10,7 +10,8 @@ describe('withDevelopmentCommentaryWorkstyle', () => {
     expect(enhanced).toContain('<workstyle>');
     expect(enhanced).toContain('</workstyle>');
     expect(enhanced).toContain('provide frequent short progress updates in plain English Markdown');
-    expect(enhanced).toContain('Keep runtime load lightweight in WebContainer');
+    expect(enhanced).toContain('Keep runtime load lightweight in the browser preview');
+    expect(enhanced).not.toMatch(/WebContainer/i);
   });
 
   it('should preserve existing workstyle and append MCP guidance only once', () => {

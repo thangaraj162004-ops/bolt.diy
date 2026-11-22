@@ -2,20 +2,16 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { isPreviewDemoEnabled } from '~/lib/webcontainer/engine';
 
 /*
- * /preview-demo exists only with VITE_PREVIEW_ENGINE=esbuild AND
- * VITE_PREVIEW_DEMO=1. The flags are read when the loader runs.
+ * /preview-demo exists only with VITE_PREVIEW_DEMO=1. The flag is read when
+ * the loader runs. An old VITE_PREVIEW_ENGINE value has no effect.
  */
 
 async function loadWith(engine: string | undefined, demo: string | undefined) {
   vi.unstubAllEnvs();
 
-  if (engine !== undefined) {
-    vi.stubEnv('VITE_PREVIEW_ENGINE', engine);
-  }
-
-  if (demo !== undefined) {
-    vi.stubEnv('VITE_PREVIEW_DEMO', demo);
-  }
+  // undefined removes the variable, even when the shell running the tests sets it
+  vi.stubEnv('VITE_PREVIEW_ENGINE', engine);
+  vi.stubEnv('VITE_PREVIEW_DEMO', demo);
 
   const { loader } = await import('./preview-demo');
 
@@ -33,11 +29,9 @@ afterEach(() => {
 describe('/preview-demo loader', () => {
   it.each([
     ['no flags', undefined, undefined],
-    ['engine off (default)', undefined, '1'],
-    ['engine webcontainer', 'webcontainer', '1'],
-    ['demo flag missing', 'esbuild', undefined],
-    ['demo flag 0', 'esbuild', '0'],
-    ['demo flag true (only "1" counts)', 'esbuild', 'true'],
+    ['demo flag missing (old engine value set)', 'esbuild', undefined],
+    ['demo flag 0', undefined, '0'],
+    ['demo flag true (only "1" counts)', undefined, 'true'],
   ])('returns a plain 404 when %s', async (_label, engine, demo) => {
     const { thrown } = await loadWith(engine, demo);
 
@@ -49,8 +43,11 @@ describe('/preview-demo loader', () => {
     expect(await response.text()).toBe('Not Found');
   });
 
-  it('is enabled with VITE_PREVIEW_ENGINE=esbuild and VITE_PREVIEW_DEMO=1', async () => {
-    const { result, thrown } = await loadWith('esbuild', '1');
+  it.each([
+    ['alone', undefined],
+    ['with an old VITE_PREVIEW_ENGINE=webcontainer', 'webcontainer'],
+  ])('is enabled with VITE_PREVIEW_DEMO=1 %s', async (_label, engine) => {
+    const { result, thrown } = await loadWith(engine, '1');
 
     expect(thrown).toBeUndefined();
     expect(result).toBeNull();
@@ -58,11 +55,14 @@ describe('/preview-demo loader', () => {
 });
 
 describe('isPreviewDemoEnabled', () => {
-  it('needs both flags', () => {
-    expect(isPreviewDemoEnabled('esbuild', '1')).toBe(true);
-    expect(isPreviewDemoEnabled('esbuild', 1)).toBe(true);
-    expect(isPreviewDemoEnabled('webcontainer', '1')).toBe(false);
-    expect(isPreviewDemoEnabled('esbuild', '')).toBe(false);
-    expect(isPreviewDemoEnabled(undefined, undefined)).toBe(false);
+  it('needs VITE_PREVIEW_DEMO=1', () => {
+    expect(isPreviewDemoEnabled('1')).toBe(true);
+    expect(isPreviewDemoEnabled(1)).toBe(true);
+    expect(isPreviewDemoEnabled('')).toBe(false);
+    expect(isPreviewDemoEnabled('true')).toBe(false);
+    expect(isPreviewDemoEnabled(null)).toBe(false);
+
+    vi.stubEnv('VITE_PREVIEW_DEMO', undefined);
+    expect(isPreviewDemoEnabled()).toBe(false);
   });
 });

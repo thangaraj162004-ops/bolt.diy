@@ -10,7 +10,7 @@ import { IconButton } from '~/components/ui/IconButton';
 import { ExpoQrModal } from '~/components/workbench/ExpoQrModal';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import { workbenchStore } from '~/lib/stores/workbench';
-import { PREVIEW_ENGINE, parseEsbuildPreviewUrl } from '~/lib/webcontainer/engine';
+import { parseEsbuildPreviewUrl } from '~/lib/webcontainer/engine';
 
 type ResizeSide = 'left' | 'right' | null;
 
@@ -69,15 +69,12 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
   const activePreview = previews[activePreviewIndex];
 
   /*
-   * esbuild engine: the preview is an HTML document from the shim, shown with
-   * `srcDoc` in a sandboxed iframe (no allow-same-origin). Undefined for the
-   * WebContainer engine, which keeps using `src` exactly as before.
+   * The preview is an HTML document from the esbuild shim, shown with `srcDoc`
+   * in a sandboxed iframe (no allow-same-origin). It never opens in a new tab
+   * or window: outside the sandbox the generated code would run in our origin.
    */
-  const esbuildPort = PREVIEW_ENGINE === 'esbuild' ? parseEsbuildPreviewUrl(activePreview?.baseUrl) : undefined;
-  const isEsbuildPreview = esbuildPort !== undefined;
+  const esbuildPort = parseEsbuildPreviewUrl(activePreview?.baseUrl);
   const esbuildPreview = useEsbuildPreview(esbuildPort, iframeRef);
-  const [displayPath, setDisplayPath] = useState('/');
-  const [iframeUrl, setIframeUrl] = useState<string | undefined>();
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isInspectorMode, setIsInspectorMode] = useState(false);
   const [selectedInspectorElement, setSelectedInspectorElement] = useState<ElementInfo | null>(null);
@@ -104,23 +101,9 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
   const [isWindowSizeDropdownOpen, setIsWindowSizeDropdownOpen] = useState(false);
   const [selectedWindowSize, setSelectedWindowSize] = useState<WindowSize>(WINDOW_SIZES[0]);
   const [isLandscape, setIsLandscape] = useState(false);
-  const [showDeviceFrame, setShowDeviceFrame] = useState(true);
   const [showDeviceFrameInPreview, setShowDeviceFrameInPreview] = useState(false);
   const expoUrl = useStore(expoUrlAtom);
   const [isExpoQrModalOpen, setIsExpoQrModalOpen] = useState(false);
-
-  useEffect(() => {
-    if (!activePreview) {
-      setIframeUrl(undefined);
-      setDisplayPath('/');
-
-      return;
-    }
-
-    const { baseUrl } = activePreview;
-    setIframeUrl(baseUrl);
-    setDisplayPath('/');
-  }, [activePreview]);
 
   const findMinPortIndex = useCallback(
     (minIndex: number, preview: { port: number }, index: number, array: { port: number }[]) => {
@@ -136,16 +119,9 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
     }
   }, [previews, findMinPortIndex]);
 
+  // rebuild; the new HTML (new bridge token) reloads the iframe
   const reloadPreview = () => {
-    // esbuild engine: rebuild; the new HTML (new bridge token) reloads the iframe
-    if (isEsbuildPreview) {
-      esbuildPreview.rebuild();
-      return;
-    }
-
-    if (iframeRef.current) {
-      iframeRef.current.src = iframeRef.current.src;
-    }
+    esbuildPreview.rebuild();
   };
 
   const toggleFullscreen = async () => {
@@ -399,196 +375,6 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
       </div>
     </div>
   );
-
-  const openInNewWindow = (size: WindowSize) => {
-    // never for the esbuild engine: outside the sandbox the generated code would run in our origin
-    if (isEsbuildPreview) {
-      return;
-    }
-
-    if (activePreview?.baseUrl) {
-      const match = activePreview.baseUrl.match(/^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/);
-
-      if (match) {
-        const previewId = match[1];
-        const previewUrl = `/webcontainer/preview/${previewId}`;
-
-        // Adjust dimensions for landscape mode if applicable
-        let width = size.width;
-        let height = size.height;
-
-        if (isLandscape && (size.frameType === 'mobile' || size.frameType === 'tablet')) {
-          // Swap width and height for landscape mode
-          width = size.height;
-          height = size.width;
-        }
-
-        // Create a window with device frame if enabled
-        if (showDeviceFrame && size.hasFrame) {
-          // Calculate frame dimensions
-          const frameWidth = size.frameType === 'mobile' ? (isLandscape ? 120 : 40) : 60; // Width padding on each side
-          const frameHeight = size.frameType === 'mobile' ? (isLandscape ? 80 : 80) : isLandscape ? 60 : 100; // Height padding on top and bottom
-
-          // Create a window with the correct dimensions first
-          const newWindow = window.open(
-            '',
-            '_blank',
-            `width=${width + frameWidth},height=${height + frameHeight + 40},menubar=no,toolbar=no,location=no,status=no`,
-          );
-
-          if (!newWindow) {
-            console.error('Failed to open new window');
-            return;
-          }
-
-          // Create the HTML content for the frame
-          const frameColor = getFrameColor();
-          const frameRadius = size.frameType === 'mobile' ? '36px' : '20px';
-
-          const framePadding =
-            size.frameType === 'mobile'
-              ? isLandscape
-                ? '40px 60px'
-                : '40px 20px'
-              : isLandscape
-                ? '30px 50px'
-                : '50px 30px';
-
-          // Position notch and home button based on orientation
-          const notchTop = isLandscape ? '50%' : '20px';
-          const notchLeft = isLandscape ? '30px' : '50%';
-          const notchTransform = isLandscape ? 'translateY(-50%)' : 'translateX(-50%)';
-          const notchWidth = isLandscape ? '8px' : size.frameType === 'mobile' ? '60px' : '80px';
-          const notchHeight = isLandscape ? (size.frameType === 'mobile' ? '60px' : '80px') : '8px';
-
-          const homeBottom = isLandscape ? '50%' : '15px';
-          const homeRight = isLandscape ? '30px' : '50%';
-          const homeTransform = isLandscape ? 'translateY(50%)' : 'translateX(50%)';
-          const homeWidth = isLandscape ? '4px' : '40px';
-          const homeHeight = isLandscape ? '40px' : '4px';
-
-          // Create HTML content for the wrapper page
-          const htmlContent = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="utf-8">
-              <title>${size.name} Preview</title>
-              <style>
-                body {
-                  margin: 0;
-                  padding: 0;
-                  display: flex;
-                  justify-content: center;
-                  align-items: center;
-                  height: 100vh;
-                  background: #f0f0f0;
-                  overflow: hidden;
-                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                }
-                
-                .device-container {
-                  position: relative;
-                }
-                
-                .device-name {
-                  position: absolute;
-                  top: -30px;
-                  left: 0;
-                  right: 0;
-                  text-align: center;
-                  font-size: 14px;
-                  color: #333;
-                }
-                
-                .device-frame {
-                  position: relative;
-                  border-radius: ${frameRadius};
-                  background: ${frameColor};
-                  padding: ${framePadding};
-                  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-                  overflow: hidden;
-                }
-                
-                /* Notch */
-                .device-frame:before {
-                  content: '';
-                  position: absolute;
-                  top: ${notchTop};
-                  left: ${notchLeft};
-                  transform: ${notchTransform};
-                  width: ${notchWidth};
-                  height: ${notchHeight};
-                  background: #333;
-                  border-radius: 4px;
-                  z-index: 2;
-                }
-                
-                /* Home button */
-                .device-frame:after {
-                  content: '';
-                  position: absolute;
-                  bottom: ${homeBottom};
-                  right: ${homeRight};
-                  transform: ${homeTransform};
-                  width: ${homeWidth};
-                  height: ${homeHeight};
-                  background: #333;
-                  border-radius: 50%;
-                  z-index: 2;
-                }
-                
-                iframe {
-                  border: none;
-                  width: ${width}px;
-                  height: ${height}px;
-                  background: white;
-                  display: block;
-                }
-              </style>
-            </head>
-            <body>
-              <div class="device-container">
-                <div class="device-name">${size.name} ${isLandscape ? '(Landscape)' : '(Portrait)'}</div>
-                <div class="device-frame">
-                  <iframe src="${previewUrl}" sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin" allow="cross-origin-isolated"></iframe>
-                </div>
-              </div>
-            </body>
-            </html>
-          `;
-
-          // Write the HTML content to the new window
-          newWindow.document.open();
-          newWindow.document.write(htmlContent);
-          newWindow.document.close();
-        } else {
-          // Standard window without frame
-          const newWindow = window.open(
-            previewUrl,
-            '_blank',
-            `width=${width},height=${height},menubar=no,toolbar=no,location=no,status=no`,
-          );
-
-          if (newWindow) {
-            newWindow.focus();
-          }
-        }
-      } else {
-        console.warn('[Preview] Invalid WebContainer URL:', activePreview.baseUrl);
-      }
-    }
-  };
-
-  const openInNewTab = () => {
-    if (isEsbuildPreview) {
-      return;
-    }
-
-    if (activePreview?.baseUrl) {
-      window.open(activePreview?.baseUrl, '_blank');
-    }
-  };
 
   // Function to get the correct frame padding based on orientation
   const getFramePadding = useCallback(() => {
@@ -887,28 +673,9 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
             ref={inputRef}
             className="w-full bg-transparent outline-none"
             type="text"
-            value={displayPath}
-            onChange={(event) => {
-              setDisplayPath(event.target.value);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && activePreview) {
-                let targetPath = displayPath.trim();
-
-                if (!targetPath.startsWith('/')) {
-                  targetPath = '/' + targetPath;
-                }
-
-                const fullUrl = activePreview.baseUrl + targetPath;
-                setIframeUrl(fullUrl);
-                setDisplayPath(targetPath);
-
-                if (inputRef.current) {
-                  inputRef.current.blur();
-                }
-              }
-            }}
-            disabled={!activePreview || isEsbuildPreview}
+            value="/"
+            readOnly
+            disabled
           />
         </div>
 
@@ -953,7 +720,7 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
             <IconButton
               icon="i-ph:list"
               onClick={() => setIsWindowSizeDropdownOpen(!isWindowSizeDropdownOpen)}
-              title="New Window Options"
+              title="Window Size Options"
             />
 
             {isWindowSizeDropdownOpen && (
@@ -965,69 +732,6 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                       <span className="text-sm font-medium text-[#111827] dark:text-gray-300">Window Options</span>
                     </div>
                     <div className="flex flex-col gap-2">
-                      {/* esbuild engine: no new tab/window, the preview must stay inside the sandboxed iframe */}
-                      {!isEsbuildPreview && (
-                        <>
-                          <button
-                            className={`flex w-full justify-between items-center text-start bg-transparent text-xs text-ca-elements-textTertiary hover:text-ca-elements-textPrimary`}
-                            onClick={() => {
-                              openInNewTab();
-                            }}
-                          >
-                            <span>Open in new tab</span>
-                            <div className="i-ph:arrow-square-out h-5 w-4" />
-                          </button>
-                          <button
-                            className={`flex w-full justify-between items-center text-start bg-transparent text-xs text-ca-elements-textTertiary hover:text-ca-elements-textPrimary`}
-                            onClick={() => {
-                              if (!activePreview?.baseUrl) {
-                                console.warn('[Preview] No active preview available');
-                                return;
-                              }
-
-                              const match = activePreview.baseUrl.match(
-                                /^https?:\/\/([^.]+)\.local-credentialless\.webcontainer-api\.io/,
-                              );
-
-                              if (!match) {
-                                console.warn('[Preview] Invalid WebContainer URL:', activePreview.baseUrl);
-                                return;
-                              }
-
-                              const previewId = match[1];
-                              const previewUrl = `/webcontainer/preview/${previewId}`;
-
-                              // Open in a new window with simple parameters
-                              window.open(
-                                previewUrl,
-                                `preview-${previewId}`,
-                                'width=1280,height=720,menubar=no,toolbar=no,location=no,status=no,resizable=yes',
-                              );
-                            }}
-                          >
-                            <span>Open in new window</span>
-                            <div className="i-ph:browser h-5 w-4" />
-                          </button>
-                        </>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-ca-elements-textTertiary">Show Device Frame</span>
-                        <button
-                          className={`w-10 h-5 rounded-full transition-colors duration-200 ${
-                            showDeviceFrame ? 'bg-[#6D28D9]' : 'bg-gray-300 dark:bg-gray-700'
-                          } relative`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowDeviceFrame(!showDeviceFrame);
-                          }}
-                        >
-                          <span
-                            className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
-                              showDeviceFrame ? 'transform translate-x-5' : ''
-                            }`}
-                          />
-                        </button>
-                      </div>
                       <div className="flex items-center justify-between">
                         <span className="text-xs text-ca-elements-textTertiary">Landscape Mode</span>
                         <button
@@ -1055,10 +759,6 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                       onClick={() => {
                         setSelectedWindowSize(size);
                         setIsWindowSizeDropdownOpen(false);
-
-                        if (!isEsbuildPreview) {
-                          openInNewWindow(size);
-                        }
                       }}
                     >
                       <div
@@ -1072,7 +772,6 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                           {isLandscape && (size.frameType === 'mobile' || size.frameType === 'tablet')
                             ? `${size.height} × ${size.width}`
                             : `${size.width} × ${size.height}`}
-                          {size.hasFrame && showDeviceFrame ? ' (with frame)' : ''}
                         </span>
                       </div>
                       {selectedWindowSize.name === size.name && (
@@ -1186,50 +885,24 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
                       }}
                     />
 
-                    {isEsbuildPreview ? (
-                      <EsbuildPreviewFrame
-                        ref={iframeRef}
-                        srcDoc={esbuildPreview.srcDoc}
-                        style={{
-                          border: 'none',
-                          width: isLandscape ? `${selectedWindowSize.height}px` : `${selectedWindowSize.width}px`,
-                          height: isLandscape ? `${selectedWindowSize.width}px` : `${selectedWindowSize.height}px`,
-                          background: 'white',
-                          display: 'block',
-                        }}
-                      />
-                    ) : (
-                      <iframe
-                        ref={iframeRef}
-                        title="preview"
-                        style={{
-                          border: 'none',
-                          width: isLandscape ? `${selectedWindowSize.height}px` : `${selectedWindowSize.width}px`,
-                          height: isLandscape ? `${selectedWindowSize.width}px` : `${selectedWindowSize.height}px`,
-                          background: 'white',
-                          display: 'block',
-                        }}
-                        src={iframeUrl}
-                        sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                        allow="cross-origin-isolated"
-                      />
-                    )}
+                    <EsbuildPreviewFrame
+                      ref={iframeRef}
+                      srcDoc={esbuildPreview.srcDoc}
+                      style={{
+                        border: 'none',
+                        width: isLandscape ? `${selectedWindowSize.height}px` : `${selectedWindowSize.width}px`,
+                        height: isLandscape ? `${selectedWindowSize.width}px` : `${selectedWindowSize.height}px`,
+                        background: 'white',
+                        display: 'block',
+                      }}
+                    />
                   </div>
                 </div>
-              ) : isEsbuildPreview ? (
+              ) : (
                 <EsbuildPreviewFrame
                   ref={iframeRef}
                   className="border-none w-full h-full bg-ca-elements-background-depth-1"
                   srcDoc={esbuildPreview.srcDoc}
-                />
-              ) : (
-                <iframe
-                  ref={iframeRef}
-                  title="preview"
-                  className="border-none w-full h-full bg-ca-elements-background-depth-1"
-                  src={iframeUrl}
-                  sandbox="allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin"
-                  allow="geolocation; ch-ua-full-version-list; cross-origin-isolated; screen-wake-lock; publickey-credentials-get; shared-storage-select-url; ch-ua-arch; bluetooth; compute-pressure; ch-prefers-reduced-transparency; deferred-fetch; usb; ch-save-data; publickey-credentials-create; shared-storage; deferred-fetch-minimal; run-ad-auction; ch-ua-form-factors; ch-downlink; otp-credentials; payment; ch-ua; ch-ua-model; ch-ect; autoplay; camera; private-state-token-issuance; accelerometer; ch-ua-platform-version; idle-detection; private-aggregation; interest-cohort; ch-viewport-height; local-fonts; ch-ua-platform; midi; ch-ua-full-version; xr-spatial-tracking; clipboard-read; gamepad; display-capture; keyboard-map; join-ad-interest-group; ch-width; ch-prefers-reduced-motion; browsing-topics; encrypted-media; gyroscope; serial; ch-rtt; ch-ua-mobile; window-management; unload; ch-dpr; ch-prefers-color-scheme; ch-ua-wow64; attribution-reporting; fullscreen; identity-credentials-get; private-state-token-redemption; hid; ch-ua-bitness; storage-access; sync-xhr; ch-device-memory; ch-viewport-width; picture-in-picture; magnetometer; clipboard-write; microphone"
                 />
               )}
               {!isPreviewPaused && (

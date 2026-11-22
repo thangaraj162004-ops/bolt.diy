@@ -8,9 +8,7 @@ import {
   getEsbuildPreviewPrompt,
 } from './esbuild-preview';
 import { getFineTunedPrompt } from './new-prompt';
-import optimized from './optimized';
 import { getProjectToolPrompt } from './project-tools';
-import { getTinyTimPrompt } from './tiny-tim';
 import { withDevelopmentCommentaryWorkstyle } from '~/lib/.server/llm/prompt-workstyle';
 import { ESBUILD_PREVIEW_PROMPT_ID, PromptLibrary, type PromptOptions } from '~/lib/common/prompt-library';
 import { toEsmShUrl } from '~/lib/webcontainer/shim/preview/bare-imports';
@@ -24,9 +22,6 @@ const OPTIONS: PromptOptions = {
   modificationTagName: MODIFICATIONS_TAG_NAME,
   supabase: { isConnected: false, hasSelectedProject: false },
 };
-
-/** How stream-text chose the prompt before this change. */
-const previousChoice = (promptId: string | undefined) => promptId || 'default';
 
 /** Rough token count: about 4 characters per token for English prose and code. */
 const estimateTokens = (text: string) => Math.ceil(text.length / 4);
@@ -46,50 +41,15 @@ function commandsIn(text: string) {
 }
 
 describe('prompt selection', () => {
-  it.each([undefined, '', 'default', 'tiny-tim', 'experimental-prompt'])(
-    'the default engine keeps the previous choice for %j',
+  it.each([undefined, '', 'default', 'tiny-tim', 'experimental-prompt', 'esbuild-preview'])(
+    'every request uses esbuild-preview (requested %j)',
     (promptId) => {
-      expect(PromptLibrary.resolvePromptId(promptId, 'webcontainer')).toBe(previousChoice(promptId));
+      expect(PromptLibrary.resolvePromptId(promptId)).toBe(ESBUILD_PREVIEW_PROMPT_ID);
     },
   );
 
-  it('the default engine produces exactly the same prompt text as before', () => {
-    const resolve = (id: string | undefined) => PromptLibrary.resolvePromptId(id, 'webcontainer');
-
-    expect(PromptLibrary.getPropmtFromLibrary(resolve(undefined), OPTIONS)).toBe(
-      getFineTunedPrompt(OPTIONS.cwd, OPTIONS.supabase, OPTIONS.designScheme),
-    );
-    expect(PromptLibrary.getPropmtFromLibrary(resolve('default'), { ...OPTIONS, projectTools: true })).toBe(
-      getProjectToolPrompt({ ...OPTIONS, projectTools: true }),
-    );
-    expect(PromptLibrary.getPropmtFromLibrary(resolve('tiny-tim'), OPTIONS)).toBe(
-      getTinyTimPrompt(OPTIONS.cwd, OPTIONS.supabase, OPTIONS.designScheme),
-    );
-    expect(PromptLibrary.getPropmtFromLibrary(resolve('experimental-prompt'), OPTIONS)).toBe(optimized(OPTIONS));
-  });
-
-  it('the default engine cannot select the esbuild prompt', () => {
-    expect(PromptLibrary.resolvePromptId(ESBUILD_PREVIEW_PROMPT_ID, 'webcontainer')).toBe('default');
-    expect(PromptLibrary.getList('webcontainer').map((prompt) => prompt.id)).toEqual([
-      'default',
-      'tiny-tim',
-      'experimental-prompt',
-    ]);
-  });
-
-  it.each([undefined, 'default', 'tiny-tim', 'experimental-prompt'])(
-    'the esbuild engine always selects esbuild-preview (requested %j)',
-    (promptId) => {
-      expect(PromptLibrary.resolvePromptId(promptId, 'esbuild')).toBe('esbuild-preview');
-    },
-  );
-
-  it('settings list only the esbuild prompt with the esbuild engine', () => {
-    expect(PromptLibrary.getList('esbuild').map((prompt) => prompt.id)).toEqual(['esbuild-preview']);
-  });
-
-  it('the build default (no VITE_PREVIEW_ENGINE in tests) is the WebContainer engine', () => {
-    expect(PromptLibrary.resolvePromptId(undefined)).toBe('default');
+  it('settings list only the esbuild prompt', () => {
+    expect(PromptLibrary.getList().map((prompt) => prompt.id)).toEqual([ESBUILD_PREVIEW_PROMPT_ID]);
   });
 });
 
@@ -246,11 +206,8 @@ describe('esbuild-preview prompt', () => {
   it.each([
     ['artifact prompt', () => artifactPrompt],
     ['tool prompt', () => toolPrompt],
-    [
-      'artifact prompt with the build-mode workstyle',
-      () => withDevelopmentCommentaryWorkstyle(artifactPrompt, 'esbuild'),
-    ],
-    ['tool prompt with the build-mode workstyle', () => withDevelopmentCommentaryWorkstyle(toolPrompt, 'esbuild')],
+    ['artifact prompt with the build-mode workstyle', () => withDevelopmentCommentaryWorkstyle(artifactPrompt)],
+    ['tool prompt with the build-mode workstyle', () => withDevelopmentCommentaryWorkstyle(toolPrompt)],
   ])('the %s mentions none of WebContainer, StackBlitz or Node', (_label, get) => {
     const text = get();
 
@@ -267,11 +224,8 @@ describe('esbuild-preview prompt', () => {
     expect(toolPrompt).not.toContain('Prefer Vite for a new web project');
   });
 
-  it('the build-mode workstyle is unchanged for the default engine', () => {
-    const base = getFineTunedPrompt();
-    expect(withDevelopmentCommentaryWorkstyle(base, 'webcontainer')).toBe(withDevelopmentCommentaryWorkstyle(base));
-    expect(withDevelopmentCommentaryWorkstyle(base, 'webcontainer')).toContain('lightweight in WebContainer:');
-    expect(withDevelopmentCommentaryWorkstyle(base, 'esbuild')).toContain('lightweight in the browser preview:');
+  it('the build-mode workstyle names the browser preview', () => {
+    expect(withDevelopmentCommentaryWorkstyle('Build mode')).toContain('lightweight in the browser preview:');
   });
 
   it('includes the design scheme when given', () => {

@@ -3,10 +3,9 @@ import { getFineTunedPrompt } from './prompts/new-prompt';
 import optimized from './prompts/optimized';
 import { getProjectToolPrompt } from './prompts/project-tools';
 import { getTinyTimPrompt } from './prompts/tiny-tim';
-import { PREVIEW_ENGINE, type PreviewEngine } from '~/lib/webcontainer/engine';
 import type { DesignScheme } from '~/types/design-scheme';
 
-/** The prompt used for every build request when the preview engine is esbuild. */
+/** The prompt used for every build request. */
 export const ESBUILD_PREVIEW_PROMPT_ID = 'esbuild-preview';
 
 export interface PromptOptions {
@@ -59,24 +58,15 @@ export class PromptLibrary {
     },
   };
 
-  /**
-   * The prompt to use for a request. With the esbuild engine every request uses
-   * the esbuild-preview prompt (the others assume a terminal and a server). With
-   * the default engine the requested prompt is used exactly as before, and the
-   * esbuild-preview prompt cannot be selected. The engine is fixed at build time.
-   */
-  static resolvePromptId(requested: string | undefined, engine: PreviewEngine = PREVIEW_ENGINE): string {
-    if (engine === 'esbuild') {
-      return ESBUILD_PREVIEW_PROMPT_ID;
-    }
-
-    return !requested || requested === ESBUILD_PREVIEW_PROMPT_ID ? 'default' : requested;
+  /** The prompt to use for every build request: always esbuild-preview, whatever was requested or stored. */
+  static resolvePromptId(_requested?: string): string {
+    return ESBUILD_PREVIEW_PROMPT_ID;
   }
 
-  /** Prompts offered in settings: only the esbuild-preview prompt with that engine, all others otherwise. */
-  static getList(engine: PreviewEngine = PREVIEW_ENGINE) {
+  /** Prompts offered in settings: only the esbuild-preview prompt. */
+  static getList() {
     return Object.entries(this.library)
-      .filter(([key]) => (engine === 'esbuild') === (key === ESBUILD_PREVIEW_PROMPT_ID))
+      .filter(([key]) => key === ESBUILD_PREVIEW_PROMPT_ID)
       .map(([key, value]) => {
         const { label, description } = value;
         return {

@@ -3,7 +3,7 @@ import type { PromptOptions } from '~/lib/common/prompt-library';
 import { getProjectToolPrompt } from '~/lib/common/prompts/project-tools';
 
 /**
- * System prompt for the esbuild preview engine (VITE_PREVIEW_ENGINE=esbuild).
+ * System prompt for build requests (the in-browser esbuild preview).
  *
  * The app is compiled in the browser with esbuild-wasm and shown in a
  * sandboxed iframe; packages come from esm.sh. The model gets the rules of

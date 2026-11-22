@@ -1,33 +1,32 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('~/components/chat/StarterTemplateImport.client', () => ({ StarterTemplateImport: () => null }));
-vi.mock('~/components/header/Header', () => ({ Header: () => null }));
-
 afterEach(() => {
   vi.unstubAllEnvs();
 });
 
 describe('/starter', () => {
-  it('goes back to the start page with the esbuild engine (no starter templates)', async () => {
-    vi.stubEnv('VITE_PREVIEW_ENGINE', 'esbuild');
+  it.each([undefined, 'webcontainer', 'esbuild'])(
+    'goes back to the start page (old VITE_PREVIEW_ENGINE=%s is ignored)',
+    async (engine) => {
+      vi.resetModules();
 
-    const { loader } = await import('./starter');
+      if (engine !== undefined) {
+        vi.stubEnv('VITE_PREVIEW_ENGINE', engine);
+      }
 
-    let thrown: unknown;
+      const { loader } = await import('./starter');
 
-    try {
-      loader();
-    } catch (error) {
-      thrown = error;
-    }
+      let thrown: unknown;
 
-    expect(thrown).toBeInstanceOf(Response);
-    expect((thrown as Response).status).toBe(302);
-    expect((thrown as Response).headers.get('Location')).toBe('/');
-  });
+      try {
+        loader();
+      } catch (error) {
+        thrown = error;
+      }
 
-  it('works as before with the WebContainer engine', async () => {
-    const { loader } = await import('./starter');
-    expect(loader()).toBeNull();
-  });
+      expect(thrown).toBeInstanceOf(Response);
+      expect((thrown as Response).status).toBe(302);
+      expect((thrown as Response).headers.get('Location')).toBe('/');
+    },
+  );
 });

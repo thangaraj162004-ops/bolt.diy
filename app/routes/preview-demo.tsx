@@ -6,9 +6,8 @@ import { isPreviewDemoEnabled } from '~/lib/webcontainer/engine';
 
 /*
  * /preview-demo: try the esbuild preview without an AI key.
- * Exists only when VITE_PREVIEW_ENGINE=esbuild AND VITE_PREVIEW_DEMO=1 (both
- * read at build time); otherwise every request gets a 404. Keep it off for any
- * public launch.
+ * Exists only when VITE_PREVIEW_DEMO=1 (read at build time); otherwise every
+ * request gets a 404. Keep it off for any public launch.
  */
 
 const PreviewDemo = lazy(() =>

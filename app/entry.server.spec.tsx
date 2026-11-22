@@ -2,21 +2,17 @@ import type { EntryContext, RouterContextProvider } from 'react-router';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 /*
- * The document response headers, per engine. React rendering is replaced by an
- * empty stream; VITE_PREVIEW_ENGINE is read when the modules load, so each case
- * re-imports them.
+ * The document response headers. React rendering is replaced by an empty
+ * stream. The app never sends cross-origin isolation headers: the esbuild
+ * preview does not need them, and payments and login stay on normal pages.
  */
 
 vi.mock('react-dom/server', () => ({
   renderToReadableStream: async () => Object.assign(new ReadableStream(), { allReady: Promise.resolve() }),
 }));
 
-async function documentHeaders(engine: string | undefined) {
+async function documentHeaders() {
   vi.resetModules();
-
-  if (engine !== undefined) {
-    vi.stubEnv('VITE_PREVIEW_ENGINE', engine);
-  }
 
   const { default: handleRequest } = await import('./entry.server');
 
@@ -35,27 +31,21 @@ afterEach(() => {
   vi.unstubAllEnvs();
 });
 
-describe('entry.server isolation headers', () => {
-  it('sends COEP and COOP for the default (webcontainer) engine', async () => {
-    const headers = await documentHeaders(undefined);
+describe('entry.server headers', () => {
+  it('sends HTML without COEP or COOP', async () => {
+    const headers = await documentHeaders();
 
-    expect(headers.get('Cross-Origin-Embedder-Policy')).toBe('credentialless');
-    expect(headers.get('Cross-Origin-Opener-Policy')).toBe('same-origin');
     expect(headers.get('Content-Type')).toBe('text/html');
+    expect(headers.has('Cross-Origin-Embedder-Policy')).toBe(false);
+    expect(headers.has('Cross-Origin-Opener-Policy')).toBe(false);
   });
 
-  it('sends them for VITE_PREVIEW_ENGINE=webcontainer', async () => {
-    const headers = await documentHeaders('webcontainer');
+  it('ignores an old VITE_PREVIEW_ENGINE value', async () => {
+    vi.stubEnv('VITE_PREVIEW_ENGINE', 'webcontainer');
 
-    expect(headers.get('Cross-Origin-Embedder-Policy')).toBe('credentialless');
-    expect(headers.get('Cross-Origin-Opener-Policy')).toBe('same-origin');
-  });
-
-  it('sends neither for VITE_PREVIEW_ENGINE=esbuild', async () => {
-    const headers = await documentHeaders('esbuild');
+    const headers = await documentHeaders();
 
     expect(headers.has('Cross-Origin-Embedder-Policy')).toBe(false);
     expect(headers.has('Cross-Origin-Opener-Policy')).toBe(false);
-    expect(headers.get('Content-Type')).toBe('text/html');
   });
 });

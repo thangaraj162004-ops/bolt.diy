@@ -1,6 +1,6 @@
 /**
- * Browser-only stand-in for WebContainer, used when
- * `VITE_PREVIEW_ENGINE=esbuild`. Files live in memory; `spawn` runs a small
+ * The app's browser-only preview runtime (the only implementation of
+ * ~/lib/webcontainer/types). Files live in memory; `spawn` runs a small
  * fake shell (shell-commands.ts) and `npm run dev` starts a PreviewRuntime
  * that compiles the project with esbuild-wasm.
  */

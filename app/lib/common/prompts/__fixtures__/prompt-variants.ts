@@ -2,7 +2,6 @@
  * Every default-engine prompt variant, rendered with fixed options. Used to
  * prove a rename changed only the shared tag names (see default-prompts.spec.ts).
  */
-import { withDevelopmentCommentaryWorkstyle } from '~/lib/.server/llm/prompt-workstyle';
 import { getDiligentDanPrompt } from '~/lib/common/prompts/diligent-dan';
 import { discussPrompt } from '~/lib/common/prompts/discuss-prompt';
 import { CONTINUE_PROMPT as FINE_TUNED_CONTINUE, getFineTunedPrompt } from '~/lib/common/prompts/new-prompt';
@@ -32,10 +31,6 @@ export function renderDefaultPromptVariants(): Record<string, string> {
   return {
     'default-artifact': getFineTunedPrompt(WORK_DIR, NOT_CONNECTED),
     'default-artifact-supabase': getFineTunedPrompt(WORK_DIR, CONNECTED),
-    'default-artifact-build-mode': withDevelopmentCommentaryWorkstyle(
-      getFineTunedPrompt(WORK_DIR, NOT_CONNECTED),
-      'webcontainer',
-    ),
     'default-tools': getProjectToolPrompt({ ...OPTIONS, projectTools: true }),
     'tiny-tim': getTinyTimPrompt(WORK_DIR, NOT_CONNECTED),
     'tiny-tim-supabase': getTinyTimPrompt(WORK_DIR, CONNECTED),

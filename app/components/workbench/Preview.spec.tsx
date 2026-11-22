@@ -13,20 +13,8 @@ const MARKER_URL = 'https://esbuild-preview.invalid/5173/';
 const TOKEN = 'token-of-current-build';
 
 const mocks = vi.hoisted(() => ({
-  engine: 'esbuild' as 'esbuild' | 'webcontainer',
   shim: undefined as unknown,
 }));
-
-vi.mock('~/lib/webcontainer/engine', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('~/lib/webcontainer/engine')>();
-
-  return {
-    ...actual,
-    get PREVIEW_ENGINE() {
-      return mocks.engine;
-    },
-  };
-});
 
 vi.mock('~/lib/webcontainer', () => ({
   get webcontainer() {
@@ -116,7 +104,6 @@ function postFrom(source: MessageEventSource | null, data: unknown) {
 let shim: ReturnType<typeof createFakeShim>;
 
 beforeEach(() => {
-  mocks.engine = 'esbuild';
   shim = createFakeShim();
   mocks.shim = shim;
   vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -127,7 +114,7 @@ afterEach(() => {
   workbenchStore.previews.set([]);
 });
 
-describe('Preview with the esbuild engine', () => {
+describe('Preview', () => {
   it('renders a sandboxed srcdoc iframe that never has allow-same-origin', async () => {
     const iframe = await renderPreview();
 
@@ -204,11 +191,11 @@ describe('Preview with the esbuild engine', () => {
     expect(shim.rebuildPreview).toHaveBeenCalledWith(5173);
   });
 
-  it('hides "open in new tab" and "open in new window", and picking a size opens nothing', async () => {
+  it('has no "open in new tab" or "open in new window", and picking a size opens nothing', async () => {
     const open = vi.spyOn(window, 'open').mockImplementation(() => null);
     await renderPreview();
 
-    fireEvent.click(screen.getByTitle('New Window Options'));
+    fireEvent.click(screen.getByTitle('Window Size Options'));
 
     expect(screen.queryByText('Open in new tab')).toBeNull();
     expect(screen.queryByText('Open in new window')).toBeNull();
@@ -262,20 +249,17 @@ describe('Preview with the esbuild engine', () => {
   });
 });
 
-describe('Preview with the WebContainer engine', () => {
-  it('keeps the original iframe (src, its sandbox and allow) for WebContainer URLs', async () => {
-    mocks.engine = 'webcontainer';
+describe('Preview with a URL that is not an esbuild marker', () => {
+  it('never loads it in an iframe and waits for the shim instead', async () => {
+    workbenchStore.previews.set([{ port: 5173, ready: true, baseUrl: 'https://example.com/' }]);
+    render(<Preview />);
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
 
-    const iframe = await renderPreview('https://abc123.local-credentialless.webcontainer-api.io');
-
-    expect(iframe.getAttribute('src')).toBe('https://abc123.local-credentialless.webcontainer-api.io');
-    expect(iframe.getAttribute('sandbox')).toBe(
-      'allow-scripts allow-forms allow-popups allow-modals allow-storage-access-by-user-activation allow-same-origin',
-    );
-    expect(iframe.hasAttribute('srcdoc')).toBe(false);
-    expect(shim.getPreviewHtml).not.toHaveBeenCalled();
-
-    fireEvent.click(screen.getByTitle('New Window Options'));
-    expect(screen.getByText('Open in new tab')).toBeTruthy();
+    expect(screen.queryByTitle('preview')).toBeNull();
+    expect(document.querySelector('iframe[src]')).toBeNull();
+    expect(screen.getByTestId('esbuild-preview-pending')).toBeTruthy();
   });
 });

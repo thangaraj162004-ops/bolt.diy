@@ -27,8 +27,8 @@ function now() {
 }
 
 async function getShim(): Promise<WebContainerShim | undefined> {
-  const instance = (await webcontainer) as unknown as WebContainerShim;
-  return typeof instance.getPreviewHtml === 'function' ? instance : undefined;
+  const instance: WebContainerShim | undefined = await webcontainer;
+  return typeof instance?.getPreviewHtml === 'function' ? instance : undefined;
 }
 
 async function writeProject(shim: WebContainerShim, files: Record<string, string>) {
@@ -180,7 +180,7 @@ export function PreviewDemo() {
   if (unavailable) {
     return (
       <div className="p-4 text-ca-elements-textPrimary">
-        The esbuild preview engine is not active in this build (VITE_PREVIEW_ENGINE=esbuild is required).
+        The preview engine did not start. Reload the page to try again.
       </div>
     );
   }

@@ -1,15 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
 
 /*
- * The live AI flow in esbuild mode, without an API key: the native project tools
+ * The live AI flow, without an API key: the native project tools
  * (project_write_file, project_run_command, ...) are called through the same
  * client entry point the chat uses for tool calls (callProjectMcpTool), on a
  * starter layout like the Vite + React + Tailwind template.
  *
- * Needs the dev server started with VITE_PREVIEW_ENGINE=esbuild (and network
- * access to esm.sh for React). Skips itself on any other build.
+ * Needs network access to esm.sh for React.
  *
- *   VITE_PREVIEW_ENGINE=esbuild VITE_PREVIEW_DEMO=1 pnpm exec react-router dev --port 5173
+ *   VITE_PREVIEW_DEMO=1 pnpm exec react-router dev --port 5173
  *   pnpm exec playwright test --config=playwright.config.e2e.ts e2e-tests/06-esbuild-native-tools.e2e.ts
  *
  * Set PW_CHROMIUM_PATH if the installed browser does not match @playwright/test.
@@ -201,14 +200,6 @@ test.describe('esbuild engine: native project tools', () => {
       }
     });
     await page.goto('/', { waitUntil: 'networkidle' });
-
-    const engine = await page
-      .evaluate(
-        async () =>
-          (await import(/* dev-server module URL */ String('/app/lib/webcontainer/engine.ts'))).PREVIEW_ENGINE,
-      )
-      .catch(() => 'unknown');
-    test.skip(engine !== 'esbuild', 'needs the dev server with VITE_PREVIEW_ENGINE=esbuild');
 
     await page.evaluate(async () => {
       const db = await import(/* dev-server module URL */ String('/app/lib/persistence/db.ts'));
