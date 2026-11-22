@@ -50,24 +50,25 @@ describe('toSafeStreamErrorMessage', () => {
   it('recognizes a provider 429 even when its message does not mention the status', () => {
     const error = Object.assign(new Error('Provider returned error: secret-value'), { statusCode: 429 });
 
-    expect(toSafeStreamErrorMessage(error)).toContain('API rate limit exceeded');
+    expect(toSafeStreamErrorMessage(error)).toContain('rate limit or free-tier limit was reached');
     expect(toSafeStreamErrorMessage(error)).not.toContain('secret-value');
   });
 
   it('recognizes capitalized rate-limit messages', () => {
     expect(toSafeStreamErrorMessage(new Error('Rate limit exceeded: free-models-per-day'))).toContain(
-      'API rate limit exceeded',
+      'rate limit or free-tier limit was reached',
     );
   });
 
-  it('returns a generic message instead of an unknown provider diagnostic', () => {
+  it('shows an unknown provider diagnostic only after removing links and keys', () => {
     const diagnostic = 'Request https://provider.example/?api_key=secret-value failed';
     const responseMessage = toSafeStreamErrorMessage(new Error(diagnostic));
 
-    expect(responseMessage).toBe(
-      'Custom error: The AI provider request failed. Check your provider settings and try again.',
+    expect(JSON.parse(responseMessage).message).toBe(
+      'The AI provider returned an error: Request [link removed] failed',
     );
     expect(responseMessage).not.toContain(diagnostic);
+    expect(responseMessage).not.toContain('provider.example');
     expect(responseMessage).not.toContain('secret-value');
   });
 
@@ -76,7 +77,7 @@ describe('toSafeStreamErrorMessage', () => {
       new Error('Invalid API key https://provider.example/?api_key=secret-value'),
     );
 
-    expect(responseMessage).toContain('Invalid or missing API key');
+    expect(responseMessage).toContain('did not accept the API key');
     expect(responseMessage).not.toContain('provider.example');
     expect(responseMessage).not.toContain('secret-value');
   });
@@ -113,7 +114,7 @@ describe('toSafeTextStream', () => {
     const body = await response.text();
 
     expect(body).toContain('partial response');
-    expect(body).toContain('The AI provider request failed');
+    expect(body).toContain('The AI provider returned an error: [link removed]');
     expect(body).not.toContain(diagnostic);
     expect(body).not.toContain('secret-value');
   });

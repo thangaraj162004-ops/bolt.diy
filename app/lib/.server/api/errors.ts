@@ -1,4 +1,5 @@
 import { InvalidToolInputError, NoSuchToolError, ToolChoiceViolationError } from 'ai';
+import { classifyProviderError, describeProviderError, extractProviderError } from './provider-errors';
 import { createScopedLogger } from '~/utils/logger';
 
 const logger = createScopedLogger('api.errors');
@@ -128,61 +129,78 @@ export function toMissingCredentialError(provider: string, providerMessage?: str
   });
 }
 
-/** Converts a streaming provider error to a client-safe hint without forwarding diagnostics. */
-export function toSafeStreamErrorMessage(error: unknown): string {
+/**
+ * A provider failure as an ApiError with a plain-English message (see
+ * provider-errors.ts). The original error is logged on the server without keys,
+ * headers or the request body.
+ */
+export function toProviderApiError(error: unknown, provider = 'unknown'): ApiError {
+  const described = describeProviderError(error);
+
+  return new ApiError(described.message, {
+    status: described.statusCode,
+    code: `provider_${described.kind}`,
+    isRetryable: described.isRetryable,
+    provider,
+  });
+}
+
+/** The client-safe text for a stream failure (tool-call problems, timeouts, provider errors). */
+export function toSafeStreamErrorText(error: unknown): { message: string; statusCode: number; isRetryable: boolean } {
   const providerMessage = error instanceof Error ? error.message : String(error);
   const normalizedMessage = providerMessage.toLowerCase();
 
-  const statusCode =
-    typeof error === 'object' && error !== null && 'statusCode' in error ? error.statusCode : undefined;
-
-  logger.error(`Streaming provider error (${error instanceof Error ? error.name : 'UnknownError'})`);
-
   if ((error instanceof Error && error.name === 'TimeoutError') || /timeout|timed\s*out/.test(normalizedMessage)) {
-    return 'Custom error: The AI provider stopped responding before the next step completed. Completed file changes and tool results are preserved. Retry to continue, or select a different model.';
+    if (extractProviderError(error).status === undefined) {
+      logger.error('Streaming provider timeout');
+      return {
+        message:
+          'The AI provider stopped responding before the next step completed. Completed file changes and tool results are preserved. Retry to continue, or select a different model.',
+        statusCode: 504,
+        isRetryable: true,
+      };
+    }
   }
 
   if (ToolChoiceViolationError.isInstance(error)) {
-    return 'Custom error: The selected model returned text instead of the required tool call, so the build could not continue. Retry or select a model that reliably supports tool calling.';
+    return {
+      message:
+        'The selected model returned text instead of the required tool call, so the build could not continue. Retry or select a model that reliably supports tool calling.',
+      statusCode: 422,
+      isRetryable: true,
+    };
   }
 
   if (InvalidToolInputError.isInstance(error) || normalizedMessage.startsWith('invalid input for tool ')) {
-    return 'Custom error: The model supplied invalid tool arguments. Retry the tool call using its declared input schema.';
+    return {
+      message: 'The model supplied invalid tool arguments. Retry the tool call using its declared input schema.',
+      statusCode: 422,
+      isRetryable: true,
+    };
   }
 
   if (NoSuchToolError.isInstance(error) || normalizedMessage.startsWith('model tried to call unavailable tool ')) {
-    return 'Custom error: The model requested an unavailable tool. Use one of the supplied tools instead.';
+    return {
+      message: 'The model requested an unavailable tool. Use one of the supplied tools instead.',
+      statusCode: 422,
+      isRetryable: true,
+    };
   }
 
-  if (providerMessage.includes('model') && providerMessage.includes('not found')) {
-    return 'Custom error: Invalid model selected. Please check that the model name is correct and available.';
-  }
+  const described = describeProviderError(error);
 
-  if (providerMessage.includes('Invalid JSON response')) {
-    return 'Custom error: The AI service returned an invalid response. This may be due to an invalid model name, API rate limiting, or server issues. Try selecting a different model or check your API key.';
-  }
+  return { message: described.message, statusCode: described.statusCode, isRetryable: described.isRetryable };
+}
 
-  if (
-    providerMessage.includes('API key') ||
-    providerMessage.includes('unauthorized') ||
-    providerMessage.includes('authentication')
-  ) {
-    return 'Custom error: Invalid or missing API key. Please check your API key configuration.';
-  }
+/**
+ * The error text for a UI message stream that already started. It is the same
+ * JSON body as an error response, so the client shows the same title and
+ * message whether the failure came before or after the response began.
+ */
+export function toSafeStreamErrorMessage(error: unknown, provider = 'unknown'): string {
+  const { message, statusCode, isRetryable } = toSafeStreamErrorText(error);
 
-  if (providerMessage.includes('token') && providerMessage.includes('limit')) {
-    return 'Custom error: Token limit exceeded. The conversation is too long for the selected model. Try using a model with larger context window or start a new conversation.';
-  }
-
-  if (statusCode === 429 || normalizedMessage.includes('rate limit') || providerMessage.includes('429')) {
-    return 'Custom error: API rate limit exceeded, or the provider rejected the request for account reasons. Check your provider account and try again.';
-  }
-
-  if (providerMessage.includes('network') || providerMessage.includes('timeout')) {
-    return 'Custom error: Network error. Please check your internet connection and try again.';
-  }
-
-  return 'Custom error: The AI provider request failed. Check your provider settings and try again.';
+  return JSON.stringify({ error: true, message, statusCode, isRetryable, provider } satisfies ApiErrorBody);
 }
 
 /** Wraps a plain-text provider stream so late failures become a safe text chunk. */
@@ -210,13 +228,10 @@ export function toSafeTextStream(stream: ReadableStream<string>): ReadableStream
         }
 
         controller.enqueue(encoder.encode(value));
-      } catch {
+      } catch (error) {
         failed = true;
-        logger.error('Streaming provider error');
         reader.releaseLock();
-        controller.enqueue(
-          encoder.encode('Custom error: The AI provider request failed. Check your provider settings and try again.'),
-        );
+        controller.enqueue(encoder.encode(`\n\n${toSafeStreamErrorText(error).message}`));
         controller.close();
       }
     },
@@ -239,22 +254,16 @@ export function toTokenLimitError(provider: string): ApiError {
   );
 }
 
-/** Identifies provider token-limit diagnostics without forwarding their text. */
+/**
+ * True only when the provider really says the context or token limit was
+ * exceeded. A rate limit that mentions "tokens per minute" is not one.
+ */
 export function isTokenLimitFailure(error: unknown): error is Error {
   if (!(error instanceof Error) || isTypedFailure(error)) {
     return false;
   }
 
-  const message = error.message.toLowerCase();
-
-  return (
-    /\bmax[_ -]?tokens?\b/.test(message) ||
-    /\btoken\s+limit\s+(?:exceeded|exceeds|reached)\b/.test(message) ||
-    /\b(?:maximum|max)\s+context\s+length\b/.test(message) ||
-    /\bcontext\s+length\b.{0,40}\b(?:exceed(?:ed|s)?|maximum|limit)\b/.test(message) ||
-    /\btoo\s+many\s+tokens\b/.test(message) ||
-    /\brequested\s+tokens\b.{0,40}\b(?:exceed(?:ed|s)?|maximum|limit)\b/.test(message)
-  );
+  return classifyProviderError(extractProviderError(error)) === 'context_limit';
 }
 
 function isTypedFailure(error: unknown): boolean {

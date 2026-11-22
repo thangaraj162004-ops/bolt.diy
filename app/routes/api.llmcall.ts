@@ -5,9 +5,11 @@ import {
   isTokenLimitFailure,
   toApiErrorResponse,
   toMissingCredentialError,
+  toProviderApiError,
   toSafeTextStream,
   toTokenLimitError,
 } from '~/lib/.server/api/errors';
+import { isProviderError } from '~/lib/.server/api/provider-errors';
 import { readJsonBody } from '~/lib/.server/api/read-body';
 import { REQUEST_LIMITS, asProviderInfo, llmCallRequestSchema, parseBody } from '~/lib/.server/api/schemas';
 import { MAX_TOKENS, PROVIDER_COMPLETION_LIMITS, isReasoningModel } from '~/lib/.server/llm/constants';
@@ -131,6 +133,11 @@ async function llmCallAction({ context, request }: ActionFunctionArgs) {
         },
       });
     } catch (error: unknown) {
+      // provider failures (rate limit, key, model, context, outage) get a plain-English message
+      if (isProviderError(error)) {
+        return toApiErrorResponse(toProviderApiError(error, providerName));
+      }
+
       if (isTokenLimitFailure(error)) {
         return toApiErrorResponse(toTokenLimitError(providerName));
       }
@@ -250,6 +257,11 @@ async function llmCallAction({ context, request }: ActionFunctionArgs) {
        * they get an actionable 400 rather than falling through to a 500 whose
        * message says only "An unexpected error occurred".
        */
+      // provider failures (rate limit, key, model, context, outage) get a plain-English message
+      if (isProviderError(error)) {
+        return toApiErrorResponse(toProviderApiError(error, providerName));
+      }
+
       if (isTokenLimitFailure(error)) {
         return toApiErrorResponse(toTokenLimitError(providerName));
       }

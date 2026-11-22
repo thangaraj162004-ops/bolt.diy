@@ -9,7 +9,13 @@ import {
 } from 'ai';
 import type { ActionFunctionArgs } from 'react-router';
 import { createChatUIMessageStream } from '~/lib/.server/api/chat-stream';
-import { toApiErrorResponse, toMissingCredentialError, toSafeStreamErrorMessage } from '~/lib/.server/api/errors';
+import {
+  toApiErrorResponse,
+  toMissingCredentialError,
+  toProviderApiError,
+  toSafeStreamErrorMessage,
+} from '~/lib/.server/api/errors';
+import { isProviderError } from '~/lib/.server/api/provider-errors';
 import { readJsonBody } from '~/lib/.server/api/read-body';
 import {
   REQUEST_LIMITS,
@@ -618,6 +624,11 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
      * retryability and provider survive into the response body. The client reads
      * those fields to pick its alert type, so they are part of the contract.
      */
+    // provider failures before the stream started (rate limit, key, model, context, outage)
+    if (isProviderError(error)) {
+      return toApiErrorResponse(toProviderApiError(error));
+    }
+
     const message = error instanceof Error ? error.message : String(error);
 
     if (message.includes('API key')) {
