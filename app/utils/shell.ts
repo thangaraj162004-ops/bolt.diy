@@ -258,7 +258,7 @@ export class CaShell {
       if (state?.active) {
         /*
          * The outgoing reader consumes exit before the incoming reader consumes
-         * prompt. Both signals can arrive in the same WebContainer output chunk.
+         * prompt. Both signals can arrive in the same output chunk.
          */
         await this.stop(state.sessionId);
       } else {

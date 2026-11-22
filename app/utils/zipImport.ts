@@ -60,7 +60,7 @@ export interface ZipImportResult {
  * Reads a ZIP file and converts its contents into the same caArtifact
  * chat-message structure that createChatFromFolder produces. This lets
  * CodeApp AI load the project correctly without writing directly to the
- * WebContainer filesystem (which can be wiped by navigation resets).
+ * preview file system (which can be wiped by navigation resets).
  */
 export const createChatFromZip = async (zipFile: File): Promise<ZipImportResult> => {
   const zip = new JSZip();
@@ -117,7 +117,7 @@ export const createChatFromZip = async (zipFile: File): Promise<ZipImportResult>
 
   /*
    * Detect Expo/React Native projects so we can suppress the "npm install
-   * and start dev server" prompt — WebContainer can't run native mobile code.
+   * and start dev server" prompt — the browser preview can't run native mobile code.
    * We check for app.json / app.config.js (Expo-specific config files) or
    * an "expo" key in the package.json dependencies.
    */

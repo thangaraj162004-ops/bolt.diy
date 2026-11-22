@@ -73,7 +73,7 @@ export class FilesStore {
   #deletedPaths: Set<string> = import.meta.hot?.data.deletedPaths ?? new Set();
 
   /**
-   * Map of files that matches the state of WebContainer.
+   * Map of files that matches the state of the preview runtime's file system.
    */
   files: MapStore<FileMap> = import.meta.hot?.data.files ?? map({});
 

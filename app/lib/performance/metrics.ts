@@ -7,7 +7,7 @@
  * - Starting Chat: Time to typeable composer
  * - Loading Project: Time to show existing conversation
  * - Sending Message: Time from send to first token
- * - Code Preview: Time to render WebContainer preview
+ * - Code Preview: Time to render the preview
  */
 
 interface PerformanceMetric {
@@ -252,15 +252,6 @@ export const journeys = {
     dataLoaded: (projectId: string) => performanceMonitor.markStart(`project-load-${projectId}`, 'data-loaded'),
     rendered: (projectId: string, metadata?: Record<string, any>) =>
       performanceMonitor.markEnd(`project-load-${projectId}`, 'rendered', metadata),
-  },
-
-  /**
-   * WebContainer Boot Journey
-   */
-  webContainer: {
-    start: () => performanceMonitor.markStart('webcontainer-boot'),
-    apiLoaded: () => performanceMonitor.markStart('webcontainer-boot', 'api-loaded'),
-    booted: (metadata?: Record<string, any>) => performanceMonitor.markEnd('webcontainer-boot', 'booted', metadata),
   },
 
   /**

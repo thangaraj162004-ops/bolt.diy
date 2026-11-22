@@ -45,7 +45,7 @@ export const ImportZipButton: React.FC<ImportZipButtonProps> = ({ className, imp
          */
         if (result.hasExpoConfig) {
           /*
-           * Expo/React Native - WebContainer can't run native code.
+           * Expo/React Native - the browser preview can't run native code.
            * Ask CodeApp AI to review the code instead of trying to boot the project.
            */
           localStorage.setItem(

@@ -651,7 +651,7 @@ export class ActionRunner {
       if (rmMatch) {
         const filePaths = rmMatch[1].split(/\s+/);
 
-        // Check if any of the files exist using WebContainer
+        // Check if any of the files exist in the project
         try {
           const webcontainer = await this.#webcontainer;
           const existingFiles = [];
@@ -779,7 +779,7 @@ export class ActionRunner {
         pattern: /command not found/,
         title: 'Command Not Found',
         getMessage: () =>
-          `The command '${firstWord}' is not available in WebContainer.\n\nSuggestion: Check available commands or use a package manager to install it.`,
+          `The command '${firstWord}' is not available in the browser preview.\n\nSuggestion: Only npm install, npm run dev and npm run build work there.`,
       },
       {
         pattern: /Is a directory/,

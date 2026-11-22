@@ -7,8 +7,6 @@ import {
   LUCIDE_VERIFIED_ICONS,
   getEsbuildPreviewPrompt,
 } from './esbuild-preview';
-import { getFineTunedPrompt } from './new-prompt';
-import { getProjectToolPrompt } from './project-tools';
 import { withDevelopmentCommentaryWorkstyle } from '~/lib/.server/llm/prompt-workstyle';
 import { ESBUILD_PREVIEW_PROMPT_ID, PromptLibrary, type PromptOptions } from '~/lib/common/prompt-library';
 import { toEsmShUrl } from '~/lib/webcontainer/shim/preview/bare-imports';
@@ -48,8 +46,8 @@ describe('prompt selection', () => {
     },
   );
 
-  it('settings list only the esbuild prompt', () => {
-    expect(PromptLibrary.getList().map((prompt) => prompt.id)).toEqual([ESBUILD_PREVIEW_PROMPT_ID]);
+  it('esbuild-preview is the only prompt in the library', () => {
+    expect(Object.keys(PromptLibrary.library)).toEqual([ESBUILD_PREVIEW_PROMPT_ID]);
   });
 });
 
@@ -69,10 +67,8 @@ describe('esbuild-preview prompt', () => {
     expect(toolPrompt.startsWith('You are CodeApp AI,')).toBe(true);
     expect(artifactPrompt).not.toMatch(/\bCa\b/);
     expect(toolPrompt).not.toMatch(/\bCa\b/);
-
-    // the default engine's prompts keep their original wording
-    expect(getProjectToolPrompt(OPTIONS).startsWith('You are Bolt,')).toBe(true);
-    expect(getFineTunedPrompt()).toContain('You are Bolt');
+    expect(artifactPrompt).not.toMatch(/\bBolt\b/);
+    expect(toolPrompt).not.toMatch(/\bBolt\b/);
   });
 
   it('keeps first versions simple and runs the dev server once, never a build', () => {
@@ -240,14 +236,10 @@ describe('esbuild-preview prompt', () => {
   it('stays under a sensible size (token estimate)', () => {
     const artifactTokens = estimateTokens(artifactPrompt);
     const toolTokens = estimateTokens(toolPrompt);
-    const defaultTokens = estimateTokens(getFineTunedPrompt());
 
-    console.info(
-      `[prompt size] esbuild artifact ≈ ${artifactTokens} tokens, esbuild tool ≈ ${toolTokens} tokens, default ≈ ${defaultTokens} tokens`,
-    );
+    console.info(`[prompt size] esbuild artifact ≈ ${artifactTokens} tokens, esbuild tool ≈ ${toolTokens} tokens`);
 
     expect(artifactTokens).toBeLessThan(3000);
     expect(toolTokens).toBeLessThan(3500);
-    expect(artifactTokens).toBeLessThan(defaultTokens);
   });
 });

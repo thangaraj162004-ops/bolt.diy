@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { PromptLibrary } from '~/lib/common/prompt-library';
+import { ESBUILD_PREVIEW_PROMPT_ID, PromptLibrary } from '~/lib/common/prompt-library';
 
-describe('default native tool prompt', () => {
+describe('native tool prompt', () => {
   const options = { cwd: '/home/project', allowedHtmlElements: [], modificationTagName: 'modifications' };
 
   it('uses one execution protocol and respects simple requests', () => {
-    const prompt = PromptLibrary.getPropmtFromLibrary('default', {
+    const prompt = PromptLibrary.getPropmtFromLibrary(ESBUILD_PREVIEW_PROMPT_ID, {
       ...options,
       projectTools: true,
       supabase: { isConnected: true, hasSelectedProject: true },
@@ -16,9 +16,10 @@ describe('default native tool prompt', () => {
     expect(prompt).not.toContain('<caAction');
     expect(prompt).not.toContain('bespoke masterpieces');
     expect(prompt).toContain('row-level security');
+    expect(prompt).not.toMatch(/WebContainer|\bBolt\b/);
   });
 
-  it('retains the legacy prompt for builds without the agent tools', () => {
-    expect(PromptLibrary.getPropmtFromLibrary('default', options)).toContain('<caArtifact');
+  it('keeps the artifact format for builds without the agent tools', () => {
+    expect(PromptLibrary.getPropmtFromLibrary(ESBUILD_PREVIEW_PROMPT_ID, options)).toContain('<caArtifact');
   });
 });

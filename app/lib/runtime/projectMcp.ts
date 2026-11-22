@@ -660,7 +660,7 @@ export async function createProjectMcpBridge() {
           assertProjectCurrent();
 
           /*
-           * spawn's cwd is relative to the WebContainer project root. Passing
+           * spawn's cwd is relative to the project root. Passing
            * wc.workdir as an absolute cwd fails with ENOENT; the default is the project.
            */
           const process = await wc.spawn('/bin/jsh', ['-c', command]);

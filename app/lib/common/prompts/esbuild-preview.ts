@@ -10,7 +10,7 @@ import { getProjectToolPrompt } from '~/lib/common/prompts/project-tools';
  * that environment plus the same output format the app already parses:
  * <caArtifact> with file, shell and start actions. When the request uses
  * the native project tools (agent loop), the same rules are given with the
- * tool protocol instead.
+ * tool protocol instead. This is the only build prompt.
  */
 
 /** The only shell commands the model may use. */
@@ -243,13 +243,8 @@ ${RESPONSE_STYLE}
 `;
 }
 
-/**
- * Native project-tool prompt: the shared tool protocol, with its environment
- * section replaced by the esbuild rules (and commands limited to the two allowed ones).
- */
+/** Native project-tool prompt: the shared tool protocol with the esbuild rules (commands limited to the two allowed ones). */
 function getToolPrompt(options: PromptOptions) {
-  const base = getProjectToolPrompt(options);
-
   const environment = `<project_environment>
 Working directory: ${options.cwd}. Paths supplied to project tools are relative to this directory; use "." to list the root.
 With project_run_command, run only "npm install" or "npm run dev". Start the preview with "npm run dev" once, at the end; never run "npm run build".
@@ -257,9 +252,7 @@ With project_run_command, run only "npm install" or "npm run dev". Start the pre
 
 ${environmentRules(options)}`;
 
-  return base
-    .replace(/^You are Bolt,/, () => `You are ${PRODUCT_NAME},`)
-    .replace(/<project_environment>[\s\S]*?<\/project_environment>/, () => environment);
+  return getProjectToolPrompt(options, environment);
 }
 
 export function getEsbuildPreviewPrompt(options: PromptOptions): string {

@@ -6,7 +6,6 @@ import { withDevelopmentCommentaryWorkstyle } from './prompt-workstyle';
 import { createFilesContext, extractPropertiesFromMessage } from './utils';
 import { PromptLibrary } from '~/lib/common/prompt-library';
 import { discussPrompt } from '~/lib/common/prompts/discuss-prompt';
-import { getSystemPrompt } from '~/lib/common/prompts/prompts';
 import { LLMManager } from '~/lib/modules/llm/manager';
 import { createMessage, getMessageText } from '~/lib/persistence/messageMigration';
 import type { DesignScheme } from '~/types/design-scheme';
@@ -215,19 +214,18 @@ export async function streamText(props: {
     `Token limits for model ${modelDetails.name}: maxTokens=${safeMaxTokens}, maxTokenAllowed=${modelDetails.maxTokenAllowed}, maxCompletionTokens=${modelDetails.maxCompletionTokens}`,
   );
 
-  let systemPrompt =
-    PromptLibrary.getPropmtFromLibrary(PromptLibrary.resolvePromptId(promptId), {
-      cwd: WORK_DIR,
-      allowedHtmlElements: allowedHTMLElements,
-      modificationTagName: MODIFICATIONS_TAG_NAME,
-      designScheme,
-      projectTools: chatMode === 'build' && Boolean(options?.prepareStep),
-      supabase: {
-        isConnected: options?.supabaseConnection?.isConnected || false,
-        hasSelectedProject: options?.supabaseConnection?.hasSelectedProject || false,
-        credentials: options?.supabaseConnection?.credentials || undefined,
-      },
-    }) ?? getSystemPrompt();
+  let systemPrompt = PromptLibrary.getPropmtFromLibrary(PromptLibrary.resolvePromptId(promptId), {
+    cwd: WORK_DIR,
+    allowedHtmlElements: allowedHTMLElements,
+    modificationTagName: MODIFICATIONS_TAG_NAME,
+    designScheme,
+    projectTools: chatMode === 'build' && Boolean(options?.prepareStep),
+    supabase: {
+      isConnected: options?.supabaseConnection?.isConnected || false,
+      hasSelectedProject: options?.supabaseConnection?.hasSelectedProject || false,
+      credentials: options?.supabaseConnection?.credentials || undefined,
+    },
+  });
 
   // Inject workstyle commentary guidance for build mode
   if (chatMode === 'build') {

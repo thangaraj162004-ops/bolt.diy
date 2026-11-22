@@ -35,14 +35,6 @@
         "history": [
           { "date": "2024-01-01", "value": 730, "note": "Initial baseline" }
         ]
-      },
-      "webcontainer-boot": {
-        "budget": 2000,
-        "unit": "ms",
-        "description": "WebContainer boot time",
-        "history": [
-          { "date": "2024-01-01", "value": 2000, "note": "Initial baseline" }
-        ]
       }
     },
     "component-performance": {
@@ -112,14 +104,6 @@
         "description": "Vendor bundle size (gzipped)",
         "history": [
           { "date": "2024-01-01", "value": 300, "note": "Initial baseline" }
-        ]
-      },
-      "webcontainer-api": {
-        "budget": 200,
-        "unit": "kb",
-        "description": "WebContainer API bundle size",
-        "history": [
-          { "date": "2024-01-01", "value": 200, "note": "Initial baseline" }
         ]
       }
     },

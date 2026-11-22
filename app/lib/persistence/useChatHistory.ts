@@ -485,7 +485,7 @@ ${value.content}
         }
 
         /*
-         * WebContainer filesystem methods resolve paths relative to the project
+         * The preview runtime's file system methods resolve paths relative to the project
          * workdir; a leading slash would instead target the container root.
          */
         return filePath.replace(/^\/+/, '');

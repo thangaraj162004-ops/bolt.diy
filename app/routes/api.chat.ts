@@ -36,7 +36,7 @@ import { streamText, type StreamingOptions } from '~/lib/.server/llm/stream-text
 import { extractPropertiesFromMessage } from '~/lib/.server/llm/utils';
 import { getApiKeysFromCookie, getProviderSettingsFromCookie } from '~/lib/api/cookies';
 import { getAgentLoopInstructions, getAgentLoopProgress } from '~/lib/common/agentLoop';
-import { CONTINUE_PROMPT } from '~/lib/common/prompts/prompts';
+import { CONTINUE_PROMPT } from '~/lib/common/prompts/continue-prompt';
 import { getStarterBuildProgress } from '~/lib/common/starterBuild';
 import { createMessage, getMessageText } from '~/lib/persistence/messageMigration';
 import { getPluginToolDescriptions, getPluginTools } from '~/lib/plugins/adapters';

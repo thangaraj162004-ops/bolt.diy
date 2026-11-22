@@ -1,14 +1,15 @@
+import { PRODUCT_NAME } from '~/lib/brand';
 import type { PromptOptions } from '~/lib/common/prompt-library';
 
-/** Native-tool builds use one execution protocol instead of legacy XML actions. */
-export function getProjectToolPrompt({ cwd, designScheme, supabase }: PromptOptions) {
-  return `You are Bolt, a software developer working in an existing browser project.
+/**
+ * The native-tool protocol (one execution protocol instead of legacy XML
+ * actions). `environment` describes the project and its runtime; the esbuild
+ * prompt passes its own (esbuild-preview.ts).
+ */
+export function getProjectToolPrompt({ designScheme, supabase }: PromptOptions, environment: string) {
+  return `You are ${PRODUCT_NAME}, a software developer working in an existing browser project.
 
-<project_environment>
-Working directory: ${cwd}. Paths supplied to project tools are relative to this directory; use "." to list the root.
-The runtime is WebContainer: Node.js, JavaScript and WebAssembly are supported. Native binaries, native compilers, Git, pip packages and Supabase CLI are unavailable.
-Preserve the existing framework, dependencies and project structure. Prefer Vite for a new web project unless the user requests another stack.
-</project_environment>
+${environment}
 
 <project_mcp_workflow>
 Use the supplied native tools interface for every file read, edit and command. Follow the input schemas exactly; printed JSON, function calls and XML actions do not execute tools.

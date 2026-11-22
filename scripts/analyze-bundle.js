@@ -59,9 +59,6 @@ function checkAgainstBudgets(bundles, budgets) {
     } else if (bundle.name.includes('vendor') || bundle.name.includes('node_modules')) {
       budget = budgets.budgets['bundle-size']['vendor-bundle'];
       budgetName = 'vendor-bundle';
-    } else if (bundle.name.includes('webcontainer')) {
-      budget = budgets.budgets['bundle-size']['webcontainer-api'];
-      budgetName = 'webcontainer-api';
     }
 
     if (budget) {

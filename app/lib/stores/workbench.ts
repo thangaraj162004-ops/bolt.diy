@@ -868,7 +868,7 @@ export class WorkbenchStore {
       }
 
       /*
-       * The first write can happen before FilesStore's WebContainer watcher
+       * The first write can happen before FilesStore's file watcher
        * is ready. Register the file directly when that watcher has not
        * populated the store, so imported projects do not remain invisible
        * in the file tree and editor.
