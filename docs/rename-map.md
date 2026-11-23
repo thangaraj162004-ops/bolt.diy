@@ -565,8 +565,7 @@ Utility prefixes such as `text-`, `bg-`, `hover:` and `dark:` are folded into on
 | Where | Why |
 |---|---|
 | `LICENSE`, `/open-source` page and its test | MIT credit and copyright must name bolt.diy and StackBlitz, Inc. |
-| `package.json` `name` (`bolt`) and author | stays until the Cloudflare Worker is renamed |
-| `wrangler.jsonc` `name` (`bolt`) | must match the existing Cloudflare Worker |
+| `package.json` author (`bolt.diy team`) | upstream credit; the package `name` is now `codeapp-ai` |
 | Default-engine prompt text ("You are Bolt…", support.bolt.new links) | prompts must stay word-for-word; only the shared tags were renamed |
 | `app/lib/common/prompts/__fixtures__/pre-rename-prompts/` | frozen copy of the prompts before the rename, used by `default-prompts.spec.ts` |
 | `app/lib/persistence/legacyTags.ts` (+ spec) | converts the old tag names in saved chats |
@@ -575,3 +574,8 @@ Utility prefixes such as `text-`, `bg-`, `hover:` and `dark:` are folded into on
 | `scripts/update.sh`, `electron-update.yml` | update from upstream releases |
 | `app/lib/hooks/StickToBottom.tsx`, `useStickToBottom.tsx` | third-party copyright notice |
 | Brand tests (`brand.spec.ts`, `Header.spec.tsx`, `esbuild-preview.spec.ts`) | they check the old names are gone from the UI |
+
+## Worker rename (later)
+
+`wrangler.jsonc` `name` and `package.json` `name` changed from `bolt` to `codeapp-ai`, the name of
+our Cloudflare Worker.

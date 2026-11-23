@@ -32,14 +32,19 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
 
 ## Deployment
 
+- The Cloudflare Worker is named `codeapp-ai` (`name` in `wrangler.jsonc`, which
+  also matches `name` in `package.json`).
 - The Cloudflare production branch for this test deploy is `esbuild-shim-1`.
-- No build variable is needed for the preview. An old `VITE_PREVIEW_ENGINE`
-  value is ignored and can be deleted.
-- `VITE_*` variables are read at build time, not at runtime, so set them as
+- The custom domain is attached in the Cloudflare dashboard, not in
+  `wrangler.jsonc`. Do not add `routes` or `custom_domain` there: a build fails
+  if the zone or its DNS records conflict.
+- There is no engine variable any more. An old `VITE_PREVIEW_ENGINE` value is
+  ignored and can be deleted.
+- `VITE_PREVIEW_DEMO=1` is the only build variable. It turns on the testing-only
+  `/preview-demo` page and must be removed before any public launch (unset or
+  not `1`; the route then returns 404).
+- `VITE_*` variables are read at build time, not at runtime, so they are
   Cloudflare **build** variables; a runtime variable has no effect.
-- Never set any `VITE_*_TOKEN` variables on a public deploy. Every `VITE_*`
-  value is copied into the public JavaScript that anyone can read.
+- Never set any `VITE_*_TOKEN` variables. Every `VITE_*` value is copied into
+  the public JavaScript that anyone can read.
 - Never commit secrets.
-- The `/preview-demo` page and its `VITE_PREVIEW_DEMO` flag are for testing
-  only. Before any public launch, remove the page or keep the flag off (unset
-  or not `1`); with it off the route returns 404.

@@ -1,7 +1,7 @@
 /**
  * The product's visible name. Internal names (caArtifact/caAction tags,
- * CaShell, CSS classes, storage keys, API routes, package and Worker names)
- * intentionally stay as they are.
+ * CaShell, CSS classes, storage keys, API routes) intentionally stay as they
+ * are. The package and the Cloudflare Worker are named `codeapp-ai`.
  */
 export const PRODUCT_NAME = 'CodeApp AI';
 
