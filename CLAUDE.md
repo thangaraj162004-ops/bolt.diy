@@ -47,4 +47,6 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
   Cloudflare **build** variables; a runtime variable has no effect.
 - Never set any `VITE_*_TOKEN` variables. Every `VITE_*` value is copied into
   the public JavaScript that anyone can read.
+- `CA_BUG_REPORT_REPO` (a runtime variable, not `VITE_*`) turns on the
+  bug-report route; without it the route returns 404.
 - Never commit secrets.

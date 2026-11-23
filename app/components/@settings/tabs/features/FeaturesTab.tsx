@@ -105,22 +105,11 @@ const FeatureSection = memo(
 );
 
 export default function FeaturesTab() {
-  const {
-    isLatestBranch,
-    contextOptimizationEnabled,
-    eventLogs,
-    enableLatestBranch,
-    enableContextOptimization,
-    setEventLogs,
-  } = useSettings();
+  const { contextOptimizationEnabled, eventLogs, enableContextOptimization, setEventLogs } = useSettings();
 
   // Enable features by default on first load
   React.useEffect(() => {
     // Only set defaults if values are undefined
-    if (isLatestBranch === undefined) {
-      enableLatestBranch(false); // Default: OFF - Don't auto-update from main branch
-    }
-
     if (contextOptimizationEnabled === undefined) {
       enableContextOptimization(true); // Default: ON - Enable context optimization
     }
@@ -133,12 +122,6 @@ export default function FeaturesTab() {
   const handleToggleFeature = useCallback(
     (id: string, enabled: boolean) => {
       switch (id) {
-        case 'latestBranch': {
-          enableLatestBranch(enabled);
-          toast.success(`Main branch updates ${enabled ? 'enabled' : 'disabled'}`);
-          break;
-        }
-
         case 'contextOptimization': {
           enableContextOptimization(enabled);
           toast.success(`Context optimization ${enabled ? 'enabled' : 'disabled'}`);
@@ -155,19 +138,11 @@ export default function FeaturesTab() {
           break;
       }
     },
-    [enableLatestBranch, enableContextOptimization, setEventLogs],
+    [enableContextOptimization, setEventLogs],
   );
 
   const features = {
     stable: [
-      {
-        id: 'latestBranch',
-        title: 'Main Branch Updates',
-        description: 'Get the latest updates from the main branch',
-        icon: 'i-ph:git-branch',
-        enabled: isLatestBranch,
-        tooltip: 'Enabled by default to receive updates from the main development branch',
-      },
       {
         id: 'contextOptimization',
         title: 'Context Optimization',

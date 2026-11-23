@@ -1,5 +1,5 @@
 import { Octokit } from '@octokit/rest';
-import type { ActionFunctionArgs } from 'react-router';
+import type { ActionFunctionArgs, LoaderFunctionArgs } from 'react-router';
 import { z } from 'zod';
 import { getTrustedClientIP } from '~/lib/security';
 
@@ -133,7 +133,38 @@ function formatIssueBody(data: z.infer<typeof bugReportSchema>): string {
   return body;
 }
 
+/**
+ * The GitHub repository ("owner/name") that receives bug reports, from the
+ * CA_BUG_REPORT_REPO environment variable. There is no default: without it
+ * the route does not exist (plain 404), so nothing is ever sent to upstream.
+ */
+export function getBugReportRepo(context?: { cloudflare?: { env?: unknown } }): string | undefined {
+  const fromWorker = (context?.cloudflare?.env as Record<string, unknown> | undefined)?.CA_BUG_REPORT_REPO;
+  const value = typeof fromWorker === 'string' && fromWorker ? fromWorker : process.env.CA_BUG_REPORT_REPO;
+  const repo = value?.trim();
+
+  return repo && /^[\w.-]+\/[\w.-]+$/.test(repo) ? repo : undefined;
+}
+
+function notFound() {
+  return new Response('Not Found', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+}
+
+export function loader({ context }: LoaderFunctionArgs) {
+  if (!getBugReportRepo(context)) {
+    return notFound();
+  }
+
+  return Response.json({ error: 'Method not allowed' }, { status: 405 });
+}
+
 export async function action({ request, context }: ActionFunctionArgs) {
+  const targetRepo = getBugReportRepo(context);
+
+  if (!targetRepo) {
+    return notFound();
+  }
+
   // Only allow POST requests
   if (request.method !== 'POST') {
     return Response.json({ error: 'Method not allowed' }, { status: 405 });
@@ -195,8 +226,6 @@ export async function action({ request, context }: ActionFunctionArgs) {
     // Get GitHub configuration
     const githubToken =
       (context?.cloudflare?.env as any)?.GITHUB_BUG_REPORT_TOKEN || process.env.GITHUB_BUG_REPORT_TOKEN;
-    const targetRepo =
-      (context?.cloudflare?.env as any)?.BUG_REPORT_REPO || process.env.BUG_REPORT_REPO || 'stackblitz-labs/bolt.diy';
 
     if (!githubToken) {
       console.error('GitHub bug report token not configured');
