@@ -25,6 +25,7 @@ import {
   chatRequestSchema,
   parseBody,
 } from '~/lib/.server/api/schemas';
+import { chargeChatRequest } from '~/lib/.server/credits';
 import { createAgentLoopTools } from '~/lib/.server/llm/agent-loop';
 import { createAgentStreamRecovery } from '~/lib/.server/llm/agent-stream';
 import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, type FileMap } from '~/lib/.server/llm/constants';
@@ -84,6 +85,23 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
   } = body;
 
   const messages = asMessages(body.messages);
+
+  /*
+   * Credits: before any AI work, spend CREDITS_PER_MESSAGE as the logged-in
+   * user for a new user message (never for the AI's own follow-up tool steps).
+   * A Response here means "please log in" / "out of credits" / "check failed",
+   * and the AI is not called. Without the Supabase variables nothing is charged.
+   */
+  const creditsRefusal = await chargeChatRequest({
+    request,
+    messages,
+    env: context.cloudflare?.env,
+  });
+
+  if (creditsRefusal) {
+    return creditsRefusal;
+  }
+
   const starterBuild = chatMode === 'build' ? getStarterBuildProgress(messages) : getStarterBuildProgress([]);
   const agentLoopEnabled = chatMode === 'build' && (agentMode || starterBuild.status !== 'inactive');
   const agentProgress = getAgentLoopProgress(messages, agentLoopEnabled);

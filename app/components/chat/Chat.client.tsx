@@ -36,7 +36,13 @@ import { usePluginStore } from '~/lib/stores/plugins';
 import { streamingState } from '~/lib/stores/streaming';
 import { supabaseConnection } from '~/lib/stores/supabase';
 import { workbenchStore } from '~/lib/stores/workbench';
-import { mayChargeAndSend } from '~/lib/supabase/credits';
+import {
+  chatAuthHeaders,
+  creditsErrorCode,
+  mayTrySend,
+  refreshCreditsBadge,
+  showCreditsError,
+} from '~/lib/supabase/credits';
 import type { LlmErrorAlertType } from '~/types/actions';
 import type { ProgressAnnotation } from '~/types/context';
 import { defaultDesignScheme, type DesignScheme } from '~/types/design-scheme';
@@ -45,8 +51,10 @@ import { shouldPreserveChatMessagesOnRefresh } from '~/utils/chatHistoryRefresh'
 import {
   DEFAULT_MODEL,
   DEFAULT_PROVIDER,
+  MODEL_REGEX,
   PROMPT_COOKIE_KEY,
   PROVIDER_LIST,
+  PROVIDER_REGEX,
   TOOL_EXECUTION_APPROVAL,
 } from '~/utils/constants';
 import { debounce } from '~/utils/debounce';
@@ -264,6 +272,9 @@ export const ChatImpl = memo(
          * instead of the build prompt, so no artifacts were ever produced.
          */
         body: () => bodyRef.current,
+
+        // the server spends credits as this user before calling the AI (app/lib/.server/credits.ts)
+        headers: chatAuthHeaders,
       }),
 
       /*
@@ -361,6 +372,13 @@ export const ChatImpl = memo(
     const isLoading = status === 'submitted' || status === 'streaming';
     const messagesRef = useRef(messages);
     messagesRef.current = messages;
+
+    // a reply started, so the server has spent the credit: show the new balance
+    useEffect(() => {
+      if (status === 'streaming') {
+        void refreshCreditsBadge();
+      }
+    }, [status]);
 
     const executingProjectCallsRef = useRef(new Set<string>());
     const projectToolControllersRef = useRef(new Map<string, AbortController>());
@@ -623,7 +641,7 @@ export const ChatImpl = memo(
 
         void (async () => {
           // credits (test version): logged out or out of credits keeps the prompt in the input instead
-          if (!(await mayChargeAndSend())) {
+          if (!(await mayTrySend())) {
             setInput(prompt);
             return;
           }
@@ -781,6 +799,23 @@ export const ChatImpl = memo(
         stop();
         setFakeLoading(false);
 
+        /*
+         * The server answered "please log in" or "out of credits" and did not
+         * call the AI: show that dialog, drop the unsent message and give its
+         * text back to the input.
+         */
+        if (showCreditsError(creditsErrorCode(error?.responseBody ?? error?.message))) {
+          const current = messagesRef.current;
+          const last = current[current.length - 1];
+
+          if (last?.role === 'user') {
+            setMessages(current.slice(0, -1));
+            setInput(getMessageText(last).replace(MODEL_REGEX, '').replace(PROVIDER_REGEX, ''));
+          }
+
+          return;
+        }
+
         let errorInfo = {
           message: 'An unexpected error occurred',
           isRetryable: true,
@@ -841,7 +876,7 @@ export const ChatImpl = memo(
         });
         setProgressAnnotations([]);
       },
-      [provider.name, stop],
+      [provider.name, setMessages, stop],
     );
 
     const clearApiErrorAlert = useCallback(() => {
@@ -950,7 +985,7 @@ export const ChatImpl = memo(
        * Credits (test version, see CLAUDE.md): spend CREDITS_PER_MESSAGE before
        * sending. Logged out or out of credits opens a dialog and keeps the input.
        */
-      if (!(await mayChargeAndSend())) {
+      if (!(await mayTrySend())) {
         return;
       }
 
@@ -1136,7 +1171,7 @@ export const ChatImpl = memo(
         append={(message) => {
           void (async () => {
             // quick actions send an AI message too, so they spend credits the same way
-            if (await mayChargeAndSend()) {
+            if (await mayTrySend()) {
               await sendChatMessage(message as UIMessage);
             }
           })();

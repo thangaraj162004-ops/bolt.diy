@@ -1,108 +1,104 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { fakeSupabase, settle } from './__fixtures__/fake-supabase';
-import { authDialog, authState, outOfCreditsDialog, startAuth } from './auth';
-import { CREDITS_PER_MESSAGE, chargeForMessage, isOutOfCredits } from './credits';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fakeSupabase } from './__fixtures__/fake-supabase';
+import { authDialog, authState, outOfCreditsDialog } from './auth';
 
-const toastError = vi.hoisted(() => vi.fn());
-vi.mock('react-toastify', () => ({ toast: { error: toastError } }));
+/*
+ * The browser no longer spends credits (the server does, in /api/chat). It
+ * sends the access token, opens the right dialog for the server's answer, and
+ * refreshes the badge.
+ */
 
-const signedIn = { user: { id: 'user-1', email: 'a@b.co' } };
+const signedIn = { user: { id: 'user-1', email: 'a@b.co' }, access_token: 'user-token' };
 
-let stop: (() => void) | undefined;
+async function loadWith(client: unknown) {
+  vi.resetModules();
+  vi.doMock('./client', () => ({ supabase: client }));
 
-beforeEach(() => {
-  vi.spyOn(console, 'error').mockImplementation(() => undefined);
-});
+  const credits = await import('./credits');
+  const auth = await import('./auth');
+
+  return { ...credits, auth };
+}
 
 afterEach(() => {
-  stop?.();
-  stop = undefined;
+  vi.doUnmock('./client');
   authState.set({ status: 'loading', balance: null });
   authDialog.set(null);
   outOfCreditsDialog.set(false);
-  vi.restoreAllMocks();
-  toastError.mockReset();
 });
 
-describe('credits per AI message', () => {
-  it('costs 1 credit (one constant)', () => {
+describe('browser credits', () => {
+  it('keeps CREDITS_PER_MESSAGE = 1 in one place', async () => {
+    const { CREDITS_PER_MESSAGE } = await loadWith(null);
     expect(CREDITS_PER_MESSAGE).toBe(1);
   });
 
-  it('does nothing without Supabase', async () => {
-    expect(await chargeForMessage(null)).toBe('not-configured');
-    expect(authDialog.get()).toBeNull();
-    expect(outOfCreditsDialog.get()).toBe(false);
-  });
+  it('never calls spend_credits', async () => {
+    const client = fakeSupabase({ session: signedIn });
+    const { mayTrySend, chatAuthHeaders, refreshCreditsBadge } = await loadWith(client);
 
-  it('opens the log in dialog and spends nothing when logged out', async () => {
-    const client = fakeSupabase();
+    await mayTrySend();
+    await chatAuthHeaders();
+    await refreshCreditsBadge();
 
-    expect(await chargeForMessage(client)).toBe('login-required');
-    expect(authDialog.get()).toEqual({ hint: 'Log in to send your message.' });
     expect(client.rpc).not.toHaveBeenCalled();
   });
 
-  it('spends 1 credit with reason "ai message" and updates the badge', async () => {
-    const client = fakeSupabase({ session: signedIn, balance: 20 });
-    stop = startAuth(client);
-    await settle();
-    expect(authState.get().balance).toBe(20);
-
-    expect(await chargeForMessage(client)).toBe('charged');
-    expect(client.rpc).toHaveBeenCalledWith('spend_credits', { amount: 1, reason: 'ai message' });
-    expect(authState.get().balance).toBe(19);
+  it('sends the access token with chat requests', async () => {
+    const { chatAuthHeaders } = await loadWith(fakeSupabase({ session: signedIn }));
+    expect(await chatAuthHeaders()).toEqual({ Authorization: 'Bearer user-token' });
   });
 
-  it('stops at zero: "You are out of credits." and the message is not sent', async () => {
-    const client = fakeSupabase({ session: signedIn, balance: 1 });
-    stop = startAuth(client);
-    await settle();
+  it('sends no token, and changes nothing, without Supabase', async () => {
+    const { chatAuthHeaders, mayTrySend, auth } = await loadWith(null);
 
-    expect(await chargeForMessage(client)).toBe('charged');
-    expect(authState.get().balance).toBe(0);
-
-    expect(await chargeForMessage(client)).toBe('out-of-credits');
-    expect(outOfCreditsDialog.get()).toBe(true);
-    expect(authState.get().balance).toBe(0);
+    expect(await chatAuthHeaders()).toEqual({});
+    expect(await mayTrySend()).toBe(true);
+    expect(auth.authDialog.get()).toBeNull();
   });
 
-  it('does not send when the check itself fails, and says so', async () => {
-    const client = fakeSupabase({ session: signedIn });
-    client.rpc.mockResolvedValueOnce({ data: null, error: { message: 'function spend_credits does not exist' } });
+  it('opens the log in dialog instead of sending when logged out', async () => {
+    const { mayTrySend, chatAuthHeaders, auth } = await loadWith(fakeSupabase());
 
-    expect(await chargeForMessage(client)).toBe('failed');
-    expect(toastError).toHaveBeenCalledWith('Could not check your credits. Please try again.');
-    expect(outOfCreditsDialog.get()).toBe(false);
+    expect(await chatAuthHeaders()).toEqual({});
+    expect(await mayTrySend()).toBe(false);
+    expect(auth.authDialog.get()).toEqual({ hint: 'Log in to send your message.' });
   });
 
-  it('recognises the SQL error for a low balance', () => {
-    expect(isOutOfCredits({ code: 'P0001', message: 'not enough credits' })).toBe(true);
-    expect(isOutOfCredits({ message: 'not logged in' })).toBe(false);
-    expect(isOutOfCredits(undefined)).toBe(false);
-  });
-});
+  it('reads the error code from the /api/chat answer', async () => {
+    const { creditsErrorCode } = await loadWith(null);
 
-describe('mayChargeAndSend', () => {
-  it('sends when Supabase is not configured', async () => {
-    vi.resetModules();
-    vi.doMock('./client', () => ({ supabase: null }));
-
-    const { mayChargeAndSend } = await import('./credits');
-    expect(await mayChargeAndSend()).toBe(true);
-
-    vi.doUnmock('./client');
+    expect(
+      creditsErrorCode('{"error":true,"code":"login_required","message":"Please log in to send a message."}'),
+    ).toBe('login_required');
+    expect(creditsErrorCode({ code: 'out_of_credits' })).toBe('out_of_credits');
+    expect(creditsErrorCode('{"error":true,"message":"Invalid API key"}')).toBeUndefined();
+    expect(creditsErrorCode('not json')).toBeUndefined();
+    expect(creditsErrorCode(undefined)).toBeUndefined();
   });
 
-  it('does not send when logged out', async () => {
-    vi.resetModules();
+  it('shows the log in dialog for "please log in" and the out-of-credits dialog for "out of credits"', async () => {
+    const { showCreditsError, auth } = await loadWith(fakeSupabase({ session: signedIn, balance: 0 }));
 
-    const client = fakeSupabase();
-    vi.doMock('./client', () => ({ supabase: client }));
+    expect(showCreditsError('login_required')).toBe(true);
+    expect(auth.authDialog.get()).toEqual({ hint: 'Please log in to send a message.' });
 
-    const { mayChargeAndSend } = await import('./credits');
-    expect(await mayChargeAndSend()).toBe(false);
+    expect(showCreditsError('out_of_credits')).toBe(true);
+    expect(auth.outOfCreditsDialog.get()).toBe(true);
 
-    vi.doUnmock('./client');
+    // a failed check is a normal error, shown by the chat as before
+    expect(showCreditsError('credits_unavailable')).toBe(false);
+    expect(showCreditsError(undefined)).toBe(false);
+  });
+
+  it('refreshes the badge from credit_balances', async () => {
+    const client = fakeSupabase({ session: signedIn, balance: 7 });
+    const { refreshCreditsBadge, auth } = await loadWith(client);
+
+    auth.authState.set({ status: 'signed-in', userId: 'user-1', email: 'a@b.co', balance: 8 });
+    await refreshCreditsBadge();
+
+    expect(client.from).toHaveBeenCalledWith('credit_balances');
+    expect(auth.authState.get().balance).toBe(7);
   });
 });

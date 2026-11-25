@@ -42,10 +42,15 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
 - The database schema is in `supabase/migrations/`. Row Level Security is on
   for every table; the browser may only read its own rows, and credits change
   only through `spend_credits` (and the signup trigger).
-- Each AI message spends `CREDITS_PER_MESSAGE` (in
-  `app/lib/supabase/credits.ts`). This check runs in the browser, so anyone can
-  skip it: it is for testing only. Before launch the check must move to the
-  server and run before the paid AI is called.
+- Each new AI message spends `CREDITS_PER_MESSAGE` (in
+  `app/lib/supabase/credits-config.ts`). The check is on the server:
+  `/api/chat` calls `spend_credits` as the logged-in user (their access token
+  from the `Authorization` header, plus the publishable key) before it calls
+  the AI, and refuses with "please log in" or "out of credits". The AI's own
+  follow-up tool steps are free (`app/lib/.server/credits.ts`). The browser
+  never spends credits.
+- A credit is not given back when the AI call then fails. Refund-on-failure
+  needs a server-only secret key (never a `VITE_*` variable) and is a later task.
 
 ## Deployment
 
