@@ -1,8 +1,9 @@
 import { useStore } from '@nanostores/react';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { AuthDialog } from './AuthDialog';
-import { authState, signOut, startAuth } from '~/lib/supabase/auth';
+import { OutOfCreditsDialog } from './OutOfCreditsDialog';
+import { authDialog, authState, outOfCreditsDialog, signOut, startAuth } from '~/lib/supabase/auth';
 import { supabase as defaultClient } from '~/lib/supabase/client';
 
 interface AccountMenuProps {
@@ -19,7 +20,8 @@ const buttonClass =
  */
 export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
   const state = useStore(authState);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const loginDialog = useStore(authDialog);
+  const outOfCredits = useStore(outOfCreditsDialog);
 
   useEffect(() => (client ? startAuth(client) : undefined), [client]);
 
@@ -30,10 +32,15 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
   if (state.status === 'signed-out') {
     return (
       <>
-        <button type="button" className={buttonClass} onClick={() => setDialogOpen(true)}>
+        <button type="button" className={buttonClass} onClick={() => authDialog.set({})}>
           Log in
         </button>
-        <AuthDialog client={client} open={dialogOpen} onClose={() => setDialogOpen(false)} />
+        <AuthDialog
+          client={client}
+          open={loginDialog !== null}
+          hint={loginDialog?.hint}
+          onClose={() => authDialog.set(null)}
+        />
       </>
     );
   }
@@ -50,6 +57,7 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
       <button type="button" className={buttonClass} onClick={() => void signOut(client)}>
         Log out
       </button>
+      <OutOfCreditsDialog open={outOfCredits} onClose={() => outOfCreditsDialog.set(false)} />
     </div>
   );
 }

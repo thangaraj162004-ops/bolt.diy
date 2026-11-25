@@ -23,6 +23,21 @@ export interface AuthState {
 
 export const authState = atom<AuthState>({ status: 'loading', balance: null });
 
+/** The log in dialog: null when closed; `hint` explains why it opened. */
+export const authDialog = atom<{ hint?: string } | null>(null);
+
+/** The "You are out of credits." dialog. */
+export const outOfCreditsDialog = atom(false);
+
+/** Sets the balance shown in the header (after a spend). */
+export function setBalance(balance: number) {
+  const current = authState.get();
+
+  if (current.status === 'signed-in') {
+    authState.set({ ...current, balance });
+  }
+}
+
 export const MIN_PASSWORD_LENGTH = 6;
 
 export type AuthMode = 'login' | 'signup';
@@ -136,6 +151,9 @@ function applySession(client: SupabaseClient, session: Session | null) {
 
   const previous = authState.get();
   const sameUser = previous.status === 'signed-in' && previous.userId === user.id;
+
+  // logged in: a log in dialog is no longer needed
+  authDialog.set(null);
 
   authState.set({
     status: 'signed-in',

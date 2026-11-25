@@ -42,6 +42,10 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
 - The database schema is in `supabase/migrations/`. Row Level Security is on
   for every table; the browser may only read its own rows, and credits change
   only through `spend_credits` (and the signup trigger).
+- Each AI message spends `CREDITS_PER_MESSAGE` (in
+  `app/lib/supabase/credits.ts`). This check runs in the browser, so anyone can
+  skip it: it is for testing only. Before launch the check must move to the
+  server and run before the paid AI is called.
 
 ## Deployment
 

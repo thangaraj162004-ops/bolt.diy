@@ -8,13 +8,16 @@ interface AuthDialogProps {
   open: boolean;
   onClose: () => void;
   initialMode?: AuthMode;
+
+  /** Why the dialog opened, e.g. "Log in to send your message." */
+  hint?: string;
 }
 
 const inputClass =
   'w-full rounded-lg border border-ca-elements-borderColor bg-ca-elements-background-depth-2 px-3 py-2 text-base text-ca-elements-textPrimary placeholder-ca-elements-textTertiary focus:outline-none focus:ring-2 focus:ring-purple-500/40';
 
 /** Sign up / Log in with email and password. */
-export function AuthDialog({ client, open, onClose, initialMode = 'login' }: AuthDialogProps) {
+export function AuthDialog({ client, open, onClose, initialMode = 'login', hint }: AuthDialogProps) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -78,7 +81,7 @@ export function AuthDialog({ client, open, onClose, initialMode = 'login' }: Aut
           <div>
             <DialogTitle>{isSignup ? 'Create your account' : 'Log in'}</DialogTitle>
             <DialogDescription>
-              {isSignup ? 'New accounts start with 20 free test credits.' : 'Welcome back.'}
+              {hint ?? (isSignup ? 'New accounts start with 20 free test credits.' : 'Welcome back.')}
             </DialogDescription>
           </div>
 

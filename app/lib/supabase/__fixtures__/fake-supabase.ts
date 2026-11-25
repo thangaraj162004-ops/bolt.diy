@@ -1,13 +1,17 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { vi } from 'vitest';
 
-/** A fake Supabase client: auth events, a password check and one balance row. No network. */
+/**
+ * A fake Supabase client: auth events, a password check, one balance row and
+ * spend_credits (same errors as the SQL function). No network.
+ */
 export function fakeSupabase(options: { session?: unknown; balance?: number; confirmEmail?: boolean } = {}) {
   type Listener = (event: string, session: unknown) => void;
 
   const listeners = new Set<Listener>();
 
   let session = options.session ?? null;
+  let balance = options.balance ?? 20;
 
   const emit = (event: string) => listeners.forEach((listener) => listener(event, session));
   const userSession = (email: string) => ({ user: { id: 'user-1', email } });
@@ -51,12 +55,34 @@ export function fakeSupabase(options: { session?: unknown; balance?: number; con
     },
     from: vi.fn(() => ({
       select: () => ({
-        eq: () => ({ maybeSingle: async () => ({ data: { balance: options.balance ?? 20 }, error: null }) }),
+        eq: () => ({ maybeSingle: async () => ({ data: { balance }, error: null }) }),
       }),
     })),
   };
 
-  return client as unknown as SupabaseClient & { auth: typeof client.auth; from: typeof client.from };
+  const rpc = vi.fn(async (name: string, args: { amount: number; reason: string }) => {
+    if (name !== 'spend_credits') {
+      return { data: null, error: { message: `unknown function ${name}` } };
+    }
+
+    if (!session) {
+      return { data: null, error: { code: '28000', message: 'not logged in' } };
+    }
+
+    if (balance < args.amount) {
+      return { data: null, error: { code: 'P0001', message: 'not enough credits' } };
+    }
+
+    balance -= args.amount;
+
+    return { data: balance, error: null };
+  });
+
+  return Object.assign(client, { rpc }) as unknown as SupabaseClient & {
+    auth: typeof client.auth;
+    from: typeof client.from;
+    rpc: typeof rpc;
+  };
 }
 
 /** Lets the getSession promise and the deferred balance read finish. */

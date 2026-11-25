@@ -2,11 +2,13 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest';
 import { AccountMenu } from './AccountMenu.client';
 import { fakeSupabase, settle } from '~/lib/supabase/__fixtures__/fake-supabase';
-import { authState } from '~/lib/supabase/auth';
+import { authDialog, authState, outOfCreditsDialog } from '~/lib/supabase/auth';
 
 afterEach(() => {
   cleanup();
   authState.set({ status: 'loading', balance: null });
+  authDialog.set(null);
+  outOfCreditsDialog.set(false);
 });
 
 async function renderMenu(client: Parameters<typeof AccountMenu>[0]['client']) {
@@ -82,5 +84,28 @@ describe('AccountMenu', () => {
     await renderMenu(fakeSupabase({ session: { user: { id: 'user-1', email: 'a@b.co' } }, balance: 1 }));
 
     expect(screen.getByTestId('credits-badge').textContent).toBe('1 credit');
+  });
+
+  it('opens the log in dialog with a hint when a message needs it', async () => {
+    await renderMenu(fakeSupabase());
+
+    act(() => authDialog.set({ hint: 'Log in to send your message.' }));
+
+    expect((await screen.findByTestId('auth-dialog')).textContent).toContain('Log in to send your message.');
+  });
+
+  it('shows "You are out of credits." with a disabled buy button', async () => {
+    await renderMenu(fakeSupabase({ session: { user: { id: 'user-1', email: 'a@b.co' } }, balance: 0 }));
+
+    act(() => outOfCreditsDialog.set(true));
+
+    const dialog = await screen.findByTestId('out-of-credits-dialog');
+    expect(dialog.textContent).toContain('You are out of credits.');
+
+    const buy = screen.getByRole('button', { name: 'Buy credits (coming soon)' }) as HTMLButtonElement;
+    expect(buy.disabled).toBe(true);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(outOfCreditsDialog.get()).toBe(false);
   });
 });

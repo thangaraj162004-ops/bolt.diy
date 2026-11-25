@@ -36,6 +36,7 @@ import { usePluginStore } from '~/lib/stores/plugins';
 import { streamingState } from '~/lib/stores/streaming';
 import { supabaseConnection } from '~/lib/stores/supabase';
 import { workbenchStore } from '~/lib/stores/workbench';
+import { mayChargeAndSend } from '~/lib/supabase/credits';
 import type { LlmErrorAlertType } from '~/types/actions';
 import type { ProgressAnnotation } from '~/types/context';
 import { defaultDesignScheme, type DesignScheme } from '~/types/design-scheme';
@@ -619,13 +620,22 @@ export const ChatImpl = memo(
 
       if (prompt) {
         setSearchParams({});
-        runAnimation();
-        void sendChatMessage(
-          createMessage({
-            role: 'user',
-            text: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${prompt}`,
-          }) as any,
-        );
+
+        void (async () => {
+          // credits (test version): logged out or out of credits keeps the prompt in the input instead
+          if (!(await mayChargeAndSend())) {
+            setInput(prompt);
+            return;
+          }
+
+          runAnimation();
+          void sendChatMessage(
+            createMessage({
+              role: 'user',
+              text: `[Model: ${model}]\n\n[Provider: ${provider.name}]\n\n${prompt}`,
+            }) as any,
+          );
+        })();
       }
     }, [model, provider, searchParams]);
 
@@ -936,6 +946,14 @@ export const ChatImpl = memo(
         return;
       }
 
+      /*
+       * Credits (test version, see CLAUDE.md): spend CREDITS_PER_MESSAGE before
+       * sending. Logged out or out of credits opens a dialog and keeps the input.
+       */
+      if (!(await mayChargeAndSend())) {
+        return;
+      }
+
       let finalMessageContent = messageContent;
 
       if (selectedElement) {
@@ -1115,7 +1133,14 @@ export const ChatImpl = memo(
          * Markdown's quick-action buttons (__caQuickAction__) call append to
          * re-send a message. Without this they rendered but did nothing.
          */
-        append={(message) => sendChatMessage(message as UIMessage)}
+        append={(message) => {
+          void (async () => {
+            // quick actions send an AI message too, so they spend credits the same way
+            if (await mayChargeAndSend()) {
+              await sendChatMessage(message as UIMessage);
+            }
+          })();
+        }}
         enhancePrompt={() => {
           enhancePrompt(
             input,
