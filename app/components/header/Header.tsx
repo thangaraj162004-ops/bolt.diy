@@ -1,10 +1,16 @@
 import { useStore } from '@nanostores/react';
+import { lazy, Suspense } from 'react';
 import { ClientOnly } from 'remix-utils/client-only';
 import { HeaderActionButtons } from './HeaderActionButtons.client';
 import { BrandWordmark } from '~/components/ui/BrandWordmark';
 import { ChatDescription } from '~/lib/persistence/ChatDescription.client';
 import { chatStore } from '~/lib/stores/chat';
 import { classNames } from '~/utils/classNames';
+
+// loaded on its own so supabase-js stays out of the first page load; renders nothing without Supabase
+const AccountMenu = lazy(() =>
+  import('~/components/auth/AccountMenu.client').then((m) => ({ default: m.AccountMenu })),
+);
 
 export function Header() {
   const chat = useStore(chatStore);
@@ -36,6 +42,15 @@ export function Header() {
           </ClientOnly>
         </>
       )}
+      <div className={classNames('flex items-center', chat.started ? 'ml-2' : 'ml-auto')}>
+        <ClientOnly>
+          {() => (
+            <Suspense fallback={null}>
+              <AccountMenu />
+            </Suspense>
+          )}
+        </ClientOnly>
+      </div>
     </header>
   );
 }
