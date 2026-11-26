@@ -157,12 +157,17 @@ export function createSecurityHeaders() {
     // Content Security Policy - restrict to same origin and trusted sources
     'Content-Security-Policy': [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Allow inline scripts for React
+
+      // Allow inline scripts for React; Razorpay Checkout loads its script from checkout.razorpay.com
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com",
       "style-src 'self' 'unsafe-inline'", // Allow inline styles
       "img-src 'self' data: https: blob:", // Allow images from same origin, data URLs, and HTTPS
       "font-src 'self' data:", // Allow fonts from same origin and data URLs
-      "connect-src 'self' https://api.github.com https://api.netlify.com", // Allow connections to GitHub and Netlify APIs
-      "frame-src 'none'", // Prevent iframe embedding
+      // GitHub and Netlify APIs, and Razorpay Checkout's own calls
+      "connect-src 'self' https://api.github.com https://api.netlify.com https://api.razorpay.com https://lumberjack.razorpay.com",
+
+      // only Razorpay Checkout may be framed (its payment window)
+      'frame-src https://api.razorpay.com https://checkout.razorpay.com',
       "object-src 'none'", // Prevent object embedding
       "base-uri 'self'",
       "form-action 'self'",
@@ -172,7 +177,12 @@ export function createSecurityHeaders() {
     'Referrer-Policy': 'strict-origin-when-cross-origin',
 
     // Permissions Policy (formerly Feature Policy)
-    'Permissions-Policy': ['camera=()', 'microphone=()', 'geolocation=()', 'payment=()'].join(', '),
+    'Permissions-Policy': [
+      'camera=()',
+      'microphone=()',
+      'geolocation=()',
+      'payment=(self "https://api.razorpay.com" "https://checkout.razorpay.com")',
+    ].join(', '),
 
     // HSTS (HTTP Strict Transport Security) - only in production
     ...(process.env.NODE_ENV === 'production'

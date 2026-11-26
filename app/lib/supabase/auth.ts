@@ -29,6 +29,9 @@ export const authDialog = atom<{ hint?: string } | null>(null);
 /** The "You are out of credits." dialog. */
 export const outOfCreditsDialog = atom(false);
 
+/** The "Buy credits" dialog. */
+export const buyCreditsDialog = atom(false);
+
 /** Sets the balance shown in the header (after a spend). */
 export function setBalance(balance: number) {
   const current = authState.get();

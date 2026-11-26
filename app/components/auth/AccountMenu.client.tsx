@@ -2,8 +2,9 @@ import { useStore } from '@nanostores/react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useEffect } from 'react';
 import { AuthDialog } from './AuthDialog';
+import { BuyCreditsDialog } from './BuyCreditsDialog';
 import { OutOfCreditsDialog } from './OutOfCreditsDialog';
-import { authDialog, authState, outOfCreditsDialog, signOut, startAuth } from '~/lib/supabase/auth';
+import { authDialog, authState, buyCreditsDialog, outOfCreditsDialog, signOut, startAuth } from '~/lib/supabase/auth';
 import { supabase as defaultClient } from '~/lib/supabase/client';
 
 interface AccountMenuProps {
@@ -22,6 +23,7 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
   const state = useStore(authState);
   const loginDialog = useStore(authDialog);
   const outOfCredits = useStore(outOfCreditsDialog);
+  const buyOpen = useStore(buyCreditsDialog);
 
   useEffect(() => (client ? startAuth(client) : undefined), [client]);
 
@@ -54,10 +56,21 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
       >
         {state.balance === null ? '… credits' : `${state.balance} ${state.balance === 1 ? 'credit' : 'credits'}`}
       </span>
+      <button type="button" className={buttonClass} onClick={() => buyCreditsDialog.set(true)}>
+        Buy credits
+      </button>
       <button type="button" className={buttonClass} onClick={() => void signOut(client)}>
         Log out
       </button>
-      <OutOfCreditsDialog open={outOfCredits} onClose={() => outOfCreditsDialog.set(false)} />
+      <OutOfCreditsDialog
+        open={outOfCredits}
+        onClose={() => outOfCreditsDialog.set(false)}
+        onBuy={() => {
+          outOfCreditsDialog.set(false);
+          buyCreditsDialog.set(true);
+        }}
+      />
+      <BuyCreditsDialog open={buyOpen} email={state.email} onClose={() => buyCreditsDialog.set(false)} />
     </div>
   );
 }

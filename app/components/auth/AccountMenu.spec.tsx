@@ -2,13 +2,14 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest';
 import { AccountMenu } from './AccountMenu.client';
 import { fakeSupabase, settle } from '~/lib/supabase/__fixtures__/fake-supabase';
-import { authDialog, authState, outOfCreditsDialog } from '~/lib/supabase/auth';
+import { authDialog, authState, buyCreditsDialog, outOfCreditsDialog } from '~/lib/supabase/auth';
 
 afterEach(() => {
   cleanup();
   authState.set({ status: 'loading', balance: null });
   authDialog.set(null);
   outOfCreditsDialog.set(false);
+  buyCreditsDialog.set(false);
 });
 
 async function renderMenu(client: Parameters<typeof AccountMenu>[0]['client']) {
@@ -94,18 +95,38 @@ describe('AccountMenu', () => {
     expect((await screen.findByTestId('auth-dialog')).textContent).toContain('Log in to send your message.');
   });
 
-  it('shows "You are out of credits." with a disabled buy button', async () => {
+  it('"You are out of credits." has a Buy credits button that opens the packs', async () => {
     await renderMenu(fakeSupabase({ session: { user: { id: 'user-1', email: 'a@b.co' } }, balance: 0 }));
 
     act(() => outOfCreditsDialog.set(true));
 
     const dialog = await screen.findByTestId('out-of-credits-dialog');
     expect(dialog.textContent).toContain('You are out of credits.');
+    expect(screen.queryByText('Buy credits (coming soon)')).toBeNull();
 
-    const buy = screen.getByRole('button', { name: 'Buy credits (coming soon)' }) as HTMLButtonElement;
-    expect(buy.disabled).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Buy credits' }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(outOfCreditsDialog.get()).toBe(false);
+    expect(buyCreditsDialog.get()).toBe(true);
+    expect((await screen.findByTestId('buy-credits-dialog')).textContent).toContain('50 credits');
+  });
+
+  it('the header has Buy credits when logged in, listing every pack with its price in rupees', async () => {
+    await renderMenu(fakeSupabase({ session: { user: { id: 'user-1', email: 'a@b.co' } }, balance: 3 }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Buy credits' }));
+
+    const dialog = await screen.findByTestId('buy-credits-dialog');
+    const packs = [...dialog.querySelectorAll('li')].map((item) => item.textContent);
+
+    expect(packs).toEqual(['50 credits₹100', '350 credits₹2,000']);
+
+    // no key id seen yet, so no test-mode label
+    expect(screen.queryByTestId('test-mode-label')).toBeNull();
+  });
+
+  it('shows no Buy credits button when logged out', async () => {
+    await renderMenu(fakeSupabase());
+    expect(screen.queryByRole('button', { name: 'Buy credits' })).toBeNull();
   });
 });
