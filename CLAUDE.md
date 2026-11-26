@@ -41,7 +41,8 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
   client refuses a key that looks secret.
 - The database schema is in `supabase/migrations/`. Row Level Security is on
   for every table; the browser may only read its own rows, and credits change
-  only through `spend_credits` (and the signup trigger).
+  only through `spend_credits`, the signup trigger and
+  `grant_credits_for_payment` (payments, service_role only).
 - Each new AI message spends `CREDITS_PER_MESSAGE` (in
   `app/lib/supabase/credits-config.ts`). The check is on the server:
   `/api/chat` calls `spend_credits` as the logged-in user (their access token
@@ -51,6 +52,27 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
   never spends credits.
 - A credit is not given back when the AI call then fails. Refund-on-failure
   needs a server-only secret key (never a `VITE_*` variable) and is a later task.
+
+## Payments (Razorpay, test mode first)
+
+- Server routes: `POST /api/payments/create-order`, `/api/payments/verify` and
+  `/api/payments/webhook` (code in `app/lib/.server/payments.ts`). Credit packs
+  and prices are in `app/lib/payments/packs.ts` (amounts in paise).
+- They need four server **runtime** variables, set as Cloudflare Worker
+  secrets (Settings → Variables and Secrets, type "Secret"), never as build
+  variables and never with a `VITE_` prefix:
+  - `RAZORPAY_KEY_ID` (sent to the browser by create-order; Checkout needs it)
+  - `RAZORPAY_KEY_SECRET`
+  - `RAZORPAY_WEBHOOK_SECRET`
+  - `SUPABASE_SECRET_KEY` (the `sb_secret_...` key; only these routes use it)
+- They also use the `VITE_SUPABASE_URL` build variable. If a variable is
+  missing, the route returns 503 and changes nothing.
+- Never log secrets or request bodies. Credits for a payment are added only by
+  `grant_credits_for_payment`, which adds them once however often verify and
+  the webhook arrive.
+- In the Razorpay dashboard the webhook URL is
+  `https://<your domain>/api/payments/webhook`, event `payment.captured`, with
+  the same secret as `RAZORPAY_WEBHOOK_SECRET`.
 
 ## Deployment
 
