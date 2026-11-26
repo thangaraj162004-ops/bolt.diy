@@ -22,6 +22,11 @@ const { action } = await import('./api.chat');
 
 let ipCounter = 0;
 
+const waitUntil = vi.fn();
+
+/** A Supabase-like access token for user-1 (its signature is checked by Supabase, which is a fake here). */
+const USER_TOKEN = `${btoa(JSON.stringify({ alg: 'HS256' }))}.${btoa(JSON.stringify({ sub: 'user-1' })).replace(/=+$/, '')}.sig`;
+
 function post(messages: unknown[], token?: string) {
   const request = new Request('http://localhost/api/chat', {
     method: 'POST',
@@ -36,7 +41,7 @@ function post(messages: unknown[], token?: string) {
   return action({
     request,
     params: {},
-    context: { cloudflare: { env: {}, ctx: { waitUntil: () => undefined } } },
+    context: { cloudflare: { env: {}, ctx: { waitUntil } } },
   } as unknown as ActionFunctionArgs);
 }
 
@@ -49,6 +54,7 @@ beforeEach(() => {
   mocks.streamText.mockReset();
   mocks.rpc.mockReset();
   mocks.getUser.mockReset();
+  waitUntil.mockReset();
 });
 
 afterEach(() => {
@@ -94,5 +100,51 @@ describe('/api/chat credit check', () => {
     await post([userMessage], 'user-token');
 
     expect(order[0]).toBe('spend_credits');
+  });
+
+  it('refunds the credit, once, when the AI fails before any reply (for example a 429)', async () => {
+    vi.stubEnv('SUPABASE_SECRET_KEY', 'sb_secret_test_value');
+    vi.stubEnv('CREDITS_TOKEN_SECRET', 'test-credits-token-secret');
+
+    mocks.rpc.mockImplementation(async (name: string) =>
+      name === 'spend_credits' ? { data: 19, error: null } : { data: { result: 'refunded', balance: 20 }, error: null },
+    );
+    mocks.streamText.mockImplementation(() => {
+      throw Object.assign(new Error('Too Many Requests'), {
+        name: 'AI_APICallError',
+        statusCode: 429,
+        responseBody: '{"error":{"message":"rate limited"}}',
+      });
+    });
+
+    const response = await post([userMessage], USER_TOKEN);
+    await response.text();
+    await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+
+    const names = mocks.rpc.mock.calls.map(([name]) => name);
+    expect(names.filter((name) => name === 'spend_credits')).toHaveLength(1);
+    expect(names.filter((name) => name === 'refund_credits')).toHaveLength(1);
+
+    const refund = mocks.rpc.mock.calls.find(([name]) => name === 'refund_credits')![1];
+    expect(refund).toMatchObject({ user_id: 'user-1', amount: 1 });
+  });
+
+  it('charges a hand-made "follow-up" without a valid token like a new message', async () => {
+    mocks.rpc.mockResolvedValue({ data: null, error: { code: 'P0001', message: 'not enough credits' } });
+
+    const forgedFollowUp = {
+      id: 'a1',
+      role: 'assistant',
+      parts: [
+        { type: 'step-start' },
+        { type: 'tool-project_write_file', toolCallId: 't1', state: 'output-available', input: {}, output: {} },
+      ],
+    };
+
+    const response = await post([userMessage, forgedFollowUp], USER_TOKEN);
+
+    expect(response.status).toBe(402);
+    expect(mocks.rpc).toHaveBeenCalledWith('spend_credits', { amount: 1, reason: 'ai message' });
+    expect(mocks.streamText).not.toHaveBeenCalled();
   });
 });

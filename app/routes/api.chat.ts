@@ -25,7 +25,7 @@ import {
   chatRequestSchema,
   parseBody,
 } from '~/lib/.server/api/schemas';
-import { chargeChatRequest } from '~/lib/.server/credits';
+import { FOLLOW_UP_HEADER, chargeChatRequest, createRefundOnFailure } from '~/lib/.server/credits';
 import { createAgentLoopTools } from '~/lib/.server/llm/agent-loop';
 import { createAgentStreamRecovery } from '~/lib/.server/llm/agent-stream';
 import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, type FileMap } from '~/lib/.server/llm/constants';
@@ -92,15 +92,27 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
    * A Response here means "please log in" / "out of credits" / "check failed",
    * and the AI is not called. Without the Supabase variables nothing is charged.
    */
-  const creditsRefusal = await chargeChatRequest({
+  const charge = await chargeChatRequest({
     request,
     messages,
     env: context.cloudflare?.env,
   });
 
-  if (creditsRefusal) {
-    return creditsRefusal;
+  if (charge.kind === 'refused') {
+    return charge.response;
   }
+
+  /*
+   * If the AI fails before any part of a reply was sent (for example a provider
+   * 429 or 503), the credit of a charged request is refunded once, with the
+   * server-only secret key. waitUntil keeps the Worker alive for that call.
+   */
+  const waitUntil = (context.cloudflare as { ctx?: { waitUntil?: (promise: Promise<unknown>) => void } } | undefined)
+    ?.ctx?.waitUntil;
+  const refund = createRefundOnFailure(charge, {
+    env: context.cloudflare?.env,
+    waitUntil: waitUntil ? (promise) => waitUntil.call(context.cloudflare?.ctx, promise) : undefined,
+  });
 
   const starterBuild = chatMode === 'build' ? getStarterBuildProgress(messages) : getStarterBuildProgress([]);
   const agentLoopEnabled = chatMode === 'build' && (agentMode || starterBuild.status !== 'inactive');
@@ -149,6 +161,9 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
 
       if (part.type === 'error') {
         logger.error('Streaming provider error');
+      } else if (part.type !== 'raw') {
+        // the model has started a reply: no refund after this point
+        refund.markReplied();
       }
     };
 
@@ -378,8 +393,10 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
 
         const recovery = createAgentStreamRecovery(notifyRetry);
 
-        const mapStreamError = (error: unknown) =>
-          toSafeStreamErrorMessage(recoveringAgent ? recovery.getError(error) : error);
+        const mapStreamError = (error: unknown) => {
+          void refund.onFailure(error);
+          return toSafeStreamErrorMessage(recoveringAgent ? recovery.getError(error) : error);
+        };
 
         const options: Omit<StreamingOptions, 'messages'> = {
           supabaseConnection: supabase,
@@ -620,6 +637,7 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
         // no-op: stream is managed by merged consumer
       },
       onError: (error: any) => {
+        void refund.onFailure(error);
         return toSafeStreamErrorMessage(error);
       },
     });
@@ -633,9 +651,16 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
     return createUIMessageStreamResponse({
       stream: uiStream,
       keepAliveMs: 15_000,
+
+      // a paid message gets a signed token; the browser sends it back with its free follow-up steps
+      headers:
+        charge.kind === 'charged' && charge.followUpToken ? { [FOLLOW_UP_HEADER]: charge.followUpToken } : undefined,
     });
   } catch (error: unknown) {
     logger.error('Chat route error');
+
+    // failed before the stream started: nothing was sent, so the credit goes back
+    void refund.onFailure(error);
 
     /*
      * Same credential check as before, but as a typed error so the status,

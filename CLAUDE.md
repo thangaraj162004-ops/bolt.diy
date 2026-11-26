@@ -50,8 +50,8 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
   the AI, and refuses with "please log in" or "out of credits". The AI's own
   follow-up tool steps are free (`app/lib/.server/credits.ts`). The browser
   never spends credits.
-- A credit is not given back when the AI call then fails. Refund-on-failure
-  needs a server-only secret key (never a `VITE_*` variable) and is a later task.
+- If the AI fails before any reply is sent, the credit is refunded once per request (`refund_credits`, migration 0004, `SUPABASE_SECRET_KEY`).
+- Follow-up tool steps are free only with the server-signed `X-CA-Follow-Up` token for that paid message (runtime secret `CREDITS_TOKEN_SECRET`; without it they are charged).
 
 ## Payments (Razorpay, test mode first)
 

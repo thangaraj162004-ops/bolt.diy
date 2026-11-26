@@ -101,4 +101,45 @@ describe('browser credits', () => {
     expect(client.from).toHaveBeenCalledWith('credit_balances');
     expect(auth.authState.get().balance).toBe(7);
   });
+
+  it('remembers the follow-up token of a paid reply and sends it back with the next requests', async () => {
+    const { chatFetch, chatAuthHeaders, resetFollowUpToken, FOLLOW_UP_HEADER } = await loadWith(
+      fakeSupabase({ session: signedIn }),
+    );
+    resetFollowUpToken();
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('ok', { headers: { [FOLLOW_UP_HEADER]: 'signed.token' } })),
+    );
+
+    expect(await chatAuthHeaders()).toEqual({ Authorization: 'Bearer user-token' });
+
+    await chatFetch('/api/chat', { method: 'POST' });
+
+    expect(await chatAuthHeaders()).toEqual({ Authorization: 'Bearer user-token', [FOLLOW_UP_HEADER]: 'signed.token' });
+
+    // a free follow-up reply has no new token: the old one is kept
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('ok')),
+    );
+    await chatFetch('/api/chat', { method: 'POST' });
+    expect((await chatAuthHeaders())[FOLLOW_UP_HEADER]).toBe('signed.token');
+
+    vi.unstubAllGlobals();
+  });
+
+  it('never sends the follow-up token when logged out', async () => {
+    const { chatFetch, chatAuthHeaders, FOLLOW_UP_HEADER } = await loadWith(fakeSupabase());
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('ok', { headers: { [FOLLOW_UP_HEADER]: 'signed.token' } })),
+    );
+    await chatFetch('/api/chat');
+
+    expect(await chatAuthHeaders()).toEqual({});
+    vi.unstubAllGlobals();
+  });
 });

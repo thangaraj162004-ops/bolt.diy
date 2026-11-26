@@ -38,6 +38,7 @@ import { supabaseConnection } from '~/lib/stores/supabase';
 import { workbenchStore } from '~/lib/stores/workbench';
 import {
   chatAuthHeaders,
+  chatFetch,
   creditsErrorCode,
   mayTrySend,
   refreshCreditsBadge,
@@ -275,6 +276,9 @@ export const ChatImpl = memo(
 
         // the server spends credits as this user before calling the AI (app/lib/.server/credits.ts)
         headers: chatAuthHeaders,
+
+        // keeps the follow-up token the server sends with a paid reply (free tool steps)
+        fetch: chatFetch,
       }),
 
       /*

@@ -34,10 +34,42 @@ export async function getAccessToken(): Promise<string | undefined> {
   }
 }
 
-/** Headers for /api/chat: `Authorization: Bearer <token>` when logged in. */
+/**
+ * The follow-up token of the last paid message. The server sends it with a paid
+ * reply; the browser sends it back so the AI's follow-up tool steps of that
+ * message are free. The server checks it; the browser cannot make one up.
+ */
+export const FOLLOW_UP_HEADER = 'X-CA-Follow-Up';
+
+let followUpToken: string | undefined;
+
+/** Headers for /api/chat: `Authorization: Bearer <token>` when logged in, plus the follow-up token. */
 export async function chatAuthHeaders(): Promise<Record<string, string>> {
   const token = await getAccessToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+  if (token && followUpToken) {
+    headers[FOLLOW_UP_HEADER] = followUpToken;
+  }
+
+  return headers;
+}
+
+/** fetch for the chat transport: remembers the follow-up token of each paid reply. */
+export async function chatFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const response = await fetch(input, init);
+  const token = response.headers.get(FOLLOW_UP_HEADER);
+
+  if (token) {
+    followUpToken = token;
+  }
+
+  return response;
+}
+
+/** For tests. */
+export function resetFollowUpToken() {
+  followUpToken = undefined;
 }
 
 /**
