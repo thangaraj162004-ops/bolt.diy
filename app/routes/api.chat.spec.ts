@@ -147,4 +147,121 @@ describe('/api/chat credit check', () => {
     expect(mocks.rpc).toHaveBeenCalledWith('spend_credits', { amount: 1, reason: 'ai message' });
     expect(mocks.streamText).not.toHaveBeenCalled();
   });
+
+  describe('refunds for failures during streaming (the path real provider errors take)', () => {
+    /** Like streamText: `start` and `start-step` come first, then the given parts. */
+    function streamingAi(parts: unknown[]) {
+      mocks.streamText.mockImplementation(async ({ onChunk }: { onChunk?: (event: { chunk: unknown }) => void }) => {
+        const all = [{ type: 'start' }, { type: 'start-step', request: {}, warnings: [] }, ...parts];
+
+        return {
+          stream: new ReadableStream({
+            start(controller) {
+              for (const part of all) {
+                onChunk?.({ chunk: part });
+                controller.enqueue(part);
+              }
+
+              controller.close();
+            },
+          }),
+        };
+      });
+    }
+
+    let logs: string[];
+
+    beforeEach(() => {
+      vi.stubEnv('SUPABASE_SECRET_KEY', 'sb_secret_test_value');
+      vi.stubEnv('CREDITS_TOKEN_SECRET', 'test-credits-token-secret');
+      logs = [];
+
+      for (const method of ['log', 'error', 'warn'] as const) {
+        vi.spyOn(console, method).mockImplementation(
+          (...args: unknown[]) => void logs.push(args.map(String).join(' ')),
+        );
+      }
+
+      mocks.rpc.mockImplementation(async (name: string) =>
+        name === 'spend_credits'
+          ? { data: 19, error: null }
+          : { data: { result: 'refunded', balance: 20 }, error: null },
+      );
+    });
+
+    async function send() {
+      const response = await post([userMessage], USER_TOKEN);
+      await response.text();
+      await Promise.all(waitUntil.mock.calls.map(([promise]) => promise));
+
+      return mocks.rpc.mock.calls.map(([name]) => name);
+    }
+
+    const refundLines = () =>
+      logs.filter((line) => line.includes('"event":"credit_refund"')).map((line) => JSON.parse(line));
+
+    it.each([
+      [
+        'Google 400 "User location is not supported"',
+        Object.assign(new Error('User location is not supported for the API use.'), {
+          name: 'AI_APICallError',
+          statusCode: 400,
+        }),
+      ],
+      ['a network error', Object.assign(new TypeError('fetch failed'), { name: 'TypeError' })],
+      ['a 503', Object.assign(new Error('Service Unavailable'), { name: 'AI_APICallError', statusCode: 503 })],
+    ])('refunds once for %s before any text', async (_label, error) => {
+      streamingAi([{ type: 'error', error }]);
+
+      const calls = await send();
+
+      expect(calls.filter((name) => name === 'spend_credits')).toHaveLength(1);
+      expect(calls.filter((name) => name === 'refund_credits')).toHaveLength(1);
+      expect(mocks.rpc.mock.calls.find(([name]) => name === 'refund_credits')![1]).toMatchObject({
+        user_id: 'user-1',
+        amount: 1,
+      });
+
+      // one readable log line, with the AI error's status and name but not its message or any secret
+      const [line] = refundLines();
+      expect(line).toMatchObject({ event: 'credit_refund', result: 'refunded', ai_error: (error as Error).name });
+      expect(line.ai_status).toBe((error as { statusCode?: number }).statusCode);
+      expect(JSON.stringify(refundLines())).not.toMatch(/User location is not supported|fetch failed|Unavailable/);
+      expect(logs.join('\n')).not.toMatch(/sb_secret_test_value|test-credits-token-secret/);
+    });
+
+    it('does not refund once text has been shown, and logs why', async () => {
+      streamingAi([
+        { type: 'text-start', id: 't1' },
+        { type: 'text-delta', id: 't1', text: 'Here is your app' },
+        {
+          type: 'error',
+          error: Object.assign(new Error('Service Unavailable'), { name: 'AI_APICallError', statusCode: 503 }),
+        },
+      ]);
+
+      const calls = await send();
+
+      expect(calls).not.toContain('refund_credits');
+      expect(refundLines()).toEqual([
+        expect.objectContaining({ result: 'not_needed', reason: 'reply already started', ai_status: 503 }),
+      ]);
+    });
+
+    it('logs a failed refund with the database error code only', async () => {
+      mocks.rpc.mockImplementation(async (name: string) =>
+        name === 'spend_credits'
+          ? { data: 19, error: null }
+          : { data: null, error: { code: '42883', message: 'function refund_credits does not exist' } },
+      );
+      streamingAi([
+        { type: 'error', error: Object.assign(new Error('boom'), { name: 'AI_APICallError', statusCode: 503 }) },
+      ]);
+
+      await send();
+
+      expect(refundLines()).toEqual([expect.objectContaining({ result: 'failed', code: '42883', ai_status: 503 })]);
+      expect(logs.join('\n')).not.toContain('does not exist');
+    });
+  });
 });

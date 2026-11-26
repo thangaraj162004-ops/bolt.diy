@@ -25,7 +25,7 @@ import {
   chatRequestSchema,
   parseBody,
 } from '~/lib/.server/api/schemas';
-import { FOLLOW_UP_HEADER, chargeChatRequest, createRefundOnFailure } from '~/lib/.server/credits';
+import { FOLLOW_UP_HEADER, chargeChatRequest, createRefundOnFailure, isReplyChunk } from '~/lib/.server/credits';
 import { createAgentLoopTools } from '~/lib/.server/llm/agent-loop';
 import { createAgentStreamRecovery } from '~/lib/.server/llm/agent-stream';
 import { MAX_RESPONSE_SEGMENTS, MAX_TOKENS, type FileMap } from '~/lib/.server/llm/constants';
@@ -161,8 +161,8 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
 
       if (part.type === 'error') {
         logger.error('Streaming provider error');
-      } else if (part.type !== 'raw') {
-        // the model has started a reply: no refund after this point
+      } else if (isReplyChunk(part)) {
+        // the user can now see part of a reply: no refund after this point
         refund.markReplied();
       }
     };

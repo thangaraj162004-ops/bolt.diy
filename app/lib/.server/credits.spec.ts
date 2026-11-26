@@ -6,6 +6,7 @@ import {
   MAX_FREE_FOLLOW_UP_STEPS,
   chargeChatRequest,
   createRefundOnFailure,
+  isReplyChunk,
   paidMessageHash,
   readFollowUpToken,
   refundChatCredit,
@@ -431,5 +432,34 @@ describe('refund on failure', () => {
     expect(logs.join('\n')).toContain('42883');
     expect(logs.join('\n')).not.toContain(SECRET_KEY);
     expect(logs.join('\n')).not.toContain(TOKEN_SECRET);
+  });
+});
+
+describe('isReplyChunk (what counts as a reply the user saw)', () => {
+  it.each([
+    { type: 'start' },
+    { type: 'start-step', request: {}, warnings: [] },
+    { type: 'text-start', id: 't' },
+    { type: 'text-delta', id: 't', text: '' },
+    { type: 'text-delta', id: 't', text: '  \n' },
+    { type: 'reasoning-delta', id: 'r', text: 'thinking' },
+    { type: 'finish-step' },
+    { type: 'finish' },
+    { type: 'error', error: new Error('503') },
+    { type: 'raw', rawValue: {} },
+    undefined,
+  ])('%j is not a reply', (chunk) => {
+    expect(isReplyChunk(chunk)).toBe(false);
+  });
+
+  it.each([
+    { type: 'text-delta', id: 't', text: 'Here is' },
+    { type: 'tool-input-start', id: 'c', toolName: 'project_write_file' },
+    { type: 'tool-call', toolCallId: 'c', toolName: 'project_write_file', input: {} },
+    { type: 'tool-result', toolCallId: 'c', toolName: 'project_write_file', output: {} },
+    { type: 'file', file: {} },
+    { type: 'source', sourceType: 'url', id: 's', url: 'https://example.com' },
+  ])('%j is a reply', (chunk) => {
+    expect(isReplyChunk(chunk)).toBe(true);
   });
 });

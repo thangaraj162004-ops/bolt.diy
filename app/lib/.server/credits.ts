@@ -358,6 +358,43 @@ export async function chargeChatRequest({
 
 /* ---------------------------------------------------------------- refund */
 
+/* ---------------------------------------------------------------- refund logging */
+
+/**
+ * One plain JSON line per refund decision, easy to find in Cloudflare logs
+ * (search for "credit_refund"). Only codes and ids: never keys, tokens,
+ * messages or request bodies.
+ */
+export function logRefund(entry: {
+  result: 'refunded' | 'already_refunded' | 'skipped' | 'failed' | 'not_needed';
+  reason?: string;
+
+  /** Error code of a failed refund (Postgres / PostgREST code or error name). */
+  code?: string;
+
+  /** HTTP status and error name of the AI failure that caused the refund. */
+  ai_status?: number;
+  ai_error?: string;
+  requestId?: string;
+}) {
+  const line = JSON.stringify({ event: 'credit_refund', ...entry });
+
+  if (entry.result === 'failed') {
+    console.error(line);
+  } else {
+    console.log(line);
+  }
+}
+
+/** HTTP status and error name of an AI failure, for the log (never its message). */
+export function failureInfo(error: unknown): { ai_status?: number; ai_error: string } {
+  const record = typeof error === 'object' && error ? (error as Record<string, unknown>) : {};
+  const status = [record.statusCode, record.status].find((value) => typeof value === 'number') as number | undefined;
+  const name = typeof record.name === 'string' ? record.name : typeof error;
+
+  return { ai_status: status, ai_error: name.slice(0, 64) };
+}
+
 /**
  * Gives the credit of a charged request back (refund_credits, once per request
  * id). Uses the server-only SUPABASE_SECRET_KEY; without it nothing is refunded.
@@ -368,17 +405,26 @@ export async function refundChatCredit({
   userId,
   requestId,
   createSupabase = createClient,
+  failure = {},
 }: {
   env: Env;
   userId: string;
   requestId: string;
   createSupabase?: typeof createClient;
+
+  /** What the AI failure was (logged with the result). */
+  failure?: { ai_status?: number; ai_error?: string };
 }): Promise<'refunded' | 'already_refunded' | 'skipped' | 'failed'> {
   const url = getCreditsConfig(env)?.url;
   const secretKey = readRuntime('SUPABASE_SECRET_KEY', env);
 
   if (!url || !secretKey || !userId) {
-    logger.warn('refund skipped: SUPABASE_SECRET_KEY or the user id is missing');
+    const missing = [!url && 'VITE_SUPABASE_URL', !secretKey && 'SUPABASE_SECRET_KEY', !userId && 'user id']
+      .filter(Boolean)
+      .join(', ');
+
+    logRefund({ result: 'skipped', reason: `missing ${missing}`, ...failure, requestId });
+
     return 'skipped';
   }
 
@@ -393,13 +439,30 @@ export async function refundChatCredit({
     });
 
     if (error) {
-      logger.error(`refund_credits failed: ${error.code ?? 'no code'}`);
+      logRefund({
+        result: 'failed',
+        reason: 'refund_credits error',
+        code: error.code ?? 'no code',
+        ...failure,
+        requestId,
+      });
       return 'failed';
     }
 
-    return (data as { result?: string } | null)?.result === 'already_refunded' ? 'already_refunded' : 'refunded';
+    const result =
+      (data as { result?: string } | null)?.result === 'already_refunded' ? 'already_refunded' : 'refunded';
+    logRefund({ result, ...failure, requestId });
+
+    return result;
   } catch (error) {
-    logger.error(`refund failed: ${error instanceof Error ? error.name : 'unknown error'}`);
+    logRefund({
+      result: 'failed',
+      reason: 'refund request threw',
+      code: error instanceof Error ? error.name : 'unknown',
+      ...failure,
+      requestId,
+    });
+
     return 'failed';
   }
 }
@@ -407,6 +470,32 @@ export async function refundChatCredit({
 function isAbort(error: unknown): boolean {
   const name = typeof error === 'object' && error && 'name' in error ? String(error.name) : '';
   return name === 'AbortError' || name === 'ResponseAborted';
+}
+
+/**
+ * True for stream parts that show the user part of a reply: text (not just
+ * whitespace), a tool call or its result, a file or a source.
+ *
+ * Everything else (start, start-step, text-start, reasoning, finish-step,
+ * finish, error, raw, ...) is not a reply. streamText sends `start` and
+ * `start-step` before it even calls the provider, so treating every part as
+ * a reply meant no failure was ever refunded.
+ */
+export function isReplyChunk(chunk: unknown): boolean {
+  const part = (typeof chunk === 'object' && chunk ? chunk : {}) as { type?: unknown; text?: unknown };
+
+  switch (part.type) {
+    case 'text-delta':
+      return typeof part.text === 'string' && part.text.trim().length > 0;
+    case 'tool-input-start':
+    case 'tool-call':
+    case 'tool-result':
+    case 'file':
+    case 'source':
+      return true;
+    default:
+      return false;
+  }
 }
 
 /**
@@ -429,17 +518,31 @@ export function createRefundOnFailure(
 
     /** The AI call failed. Returns the refund promise, if one was started. */
     onFailure(error: unknown): Promise<unknown> | undefined {
-      if (done || replied || charge.kind !== 'charged' || isAbort(error)) {
+      if (done || charge.kind !== 'charged') {
         return undefined;
       }
 
+      const failure = failureInfo(error);
       done = true;
 
+      if (replied || isAbort(error)) {
+        logRefund({
+          result: 'not_needed',
+          reason: replied ? 'reply already started' : 'cancelled by the user',
+          ...failure,
+          requestId: charge.requestId,
+        });
+
+        return undefined;
+      }
+
+      // the AI failed before the user saw any reply: give the credit back (the result is logged)
       const promise = refundChatCredit({
         env: options.env,
         userId: charge.userId,
         requestId: charge.requestId,
         createSupabase: options.createSupabase,
+        failure,
       });
 
       options.waitUntil?.(promise);
