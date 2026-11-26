@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  isTestInrEnabled,
   createOrder,
   handleWebhook,
   hmacSha256Hex,
@@ -537,5 +538,59 @@ describe('older rupee orders', () => {
 
     expect(await webhook(captured('order_OldRupee2', 'pay_Old2', 10000, 'USD'))).toMatchObject({ ignored: 'amount' });
     expect(supabase.rpc).not.toHaveBeenCalled();
+  });
+});
+
+describe('PAYMENT_TEST_INR (temporary test switch)', () => {
+  async function orderWith(env: Record<string, string>, planId = 'pro') {
+    const response = await createOrder(
+      request('create-order', { planId }, { Authorization: 'Bearer token-A' }),
+      deps(env),
+    );
+
+    return json(response);
+  }
+
+  it('with "1" and a rzp_test_ key: INR at the fixed test amount, same credits', async () => {
+    const env = { ...ENV, PAYMENT_TEST_INR: '1' };
+
+    expect(await orderWith(env, 'pro')).toMatchObject({ status: 200, amount: 250000, currency: 'INR', credits: 350 });
+    expect(await orderWith(env, 'ultra')).toMatchObject({ status: 200, amount: 600000, currency: 'INR', credits: 900 });
+
+    expect(JSON.parse(String(razorpay.mock.calls[0][1].body))).toMatchObject({ amount: 250000, currency: 'INR' });
+    expect(supabase.payments).toEqual([
+      expect.objectContaining({ currency: 'INR', amount_minor: 250000, credits: 350, plan: 'pro' }),
+      expect.objectContaining({ currency: 'INR', amount_minor: 600000, credits: 900, plan: 'ultra' }),
+    ]);
+  });
+
+  it('an INR test order is credited once, with the plan, through verify and the webhook', async () => {
+    const env = { ...ENV, PAYMENT_TEST_INR: '1' };
+    const { orderId } = await orderWith(env);
+
+    expect(await webhook(captured(orderId as string, 'pay_Inr', 250000, 'INR'))).toMatchObject({ result: 'granted' });
+    expect(await verify(await checkout(orderId as string, 'pay_Inr'))).toMatchObject({
+      result: 'already_granted',
+      plan: 'pro',
+      balance: 370,
+    });
+  });
+
+  it('is never used with a live key', async () => {
+    const env = { ...ENV, RAZORPAY_KEY_ID: 'rzp_live_publicKeyId', PAYMENT_TEST_INR: '1' };
+
+    expect(await orderWith(env)).toMatchObject({ status: 200, amount: 2500, currency: 'USD' });
+    expect(isTestInrEnabled(env, 'rzp_live_publicKeyId')).toBe(false);
+    expect(logs.join('\n')).toContain('PAYMENT_TEST_INR is ignored');
+  });
+
+  it.each([undefined, '', '0', 'true', 'yes'])('keeps USD exactly as before when it is %j', async (value) => {
+    const env: Record<string, string> = { ...ENV };
+
+    if (value !== undefined) {
+      env.PAYMENT_TEST_INR = value;
+    }
+
+    expect(await orderWith(env)).toMatchObject({ status: 200, amount: 2500, currency: 'USD', credits: 350 });
   });
 });

@@ -69,6 +69,8 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
   create-order answers "Dollar payments are not enabled on this Razorpay
   account yet." Older rupee orders are still credited once (in their own
   currency) and set no plan.
+- Temporary test switch: runtime variable `PAYMENT_TEST_INR=1` with a `rzp_test_` key makes orders INR (Pro ₹2500, Ultra ₹6000);
+  it is ignored with a live key, and shown prices ($25, $60) and credits (350, 900) do not change. Remove it before launch.
 - They need four server **runtime** variables, set as Cloudflare Worker
   secrets (Settings → Variables and Secrets, type "Secret"), never as build
   variables and never with a `VITE_` prefix:

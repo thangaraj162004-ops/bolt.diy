@@ -23,6 +23,31 @@ import { createScopedLogger } from '~/utils/logger';
 const logger = createScopedLogger('payments');
 
 const RAZORPAY_ORDERS_URL = 'https://api.razorpay.com/v1/orders';
+
+/**
+ * TEMPORARY test switch: with PAYMENT_TEST_INR=1 (runtime variable) AND a
+ * Razorpay TEST key (rzp_test_...), orders are made in INR with these fixed
+ * amounts (in paise) instead of USD, for accounts without international
+ * payments. Never with a live key. Prices shown to users and credits granted
+ * do not change.
+ */
+const TEST_INR_AMOUNTS_PAISE: Record<string, number> = { pro: 2500 * 100, ultra: 6000 * 100 };
+
+/** True only when PAYMENT_TEST_INR is exactly "1" and the key id is a test key. */
+export function isTestInrEnabled(env: unknown, keyId: string): boolean {
+  if (readRuntime('PAYMENT_TEST_INR', env) !== '1') {
+    return false;
+  }
+
+  if (!keyId.startsWith('rzp_test_')) {
+    // never with a live (or unknown) key: real customers always pay the real price in USD
+    logger.warn('PAYMENT_TEST_INR is ignored: it only works with a rzp_test_ key');
+    return false;
+  }
+
+  return true;
+}
+
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_WEBHOOK_BYTES = 256 * 1024;
 
@@ -67,7 +92,8 @@ export function paymentsError(code: PaymentsErrorCode): Response {
 
 /* ---------------------------------------------------------------- configuration */
 
-type RuntimeName = 'RAZORPAY_KEY_ID' | 'RAZORPAY_KEY_SECRET' | 'RAZORPAY_WEBHOOK_SECRET' | 'SUPABASE_SECRET_KEY';
+type RuntimeName =
+  'RAZORPAY_KEY_ID' | 'RAZORPAY_KEY_SECRET' | 'RAZORPAY_WEBHOOK_SECRET' | 'SUPABASE_SECRET_KEY' | 'PAYMENT_TEST_INR';
 
 /** A runtime variable: the Worker env first, then process.env (local dev). Never import.meta.env. */
 function readRuntime(name: RuntimeName, env: unknown): string | undefined {
@@ -272,10 +298,16 @@ export async function createOrder(request: Request, deps: PaymentsDeps): Promise
 
   // the plan's price, credits and currency come from the server's list, never from the browser
   const plan = findBuyablePlan((await readJson(request))?.planId);
+  const testInrAmount = plan ? TEST_INR_AMOUNTS_PAISE[plan.id] : undefined;
 
   if (!plan) {
     return paymentsError('bad_request');
   }
+
+  // normally the plan's USD price; the INR test switch only changes what Razorpay charges
+  const inr = isTestInrEnabled(deps.env, RAZORPAY_KEY_ID) && testInrAmount !== undefined;
+  const amount = inr ? (testInrAmount as number) : plan.amountCents;
+  const currency = inr ? 'INR' : PAYMENT_CURRENCY;
 
   let order: { id?: unknown; amount?: unknown; currency?: unknown };
 
@@ -287,8 +319,8 @@ export async function createOrder(request: Request, deps: PaymentsDeps): Promise
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: plan.amountCents,
-        currency: PAYMENT_CURRENCY,
+        amount,
+        currency,
         receipt: `ca_${Date.now()}`,
         notes: { user_id: user.id, plan: plan.id, credits: String(plan.credits) },
       }),
@@ -312,8 +344,8 @@ export async function createOrder(request: Request, deps: PaymentsDeps): Promise
   if (
     typeof order.id !== 'string' ||
     !ORDER_ID.test(order.id) ||
-    order.amount !== plan.amountCents ||
-    order.currency !== PAYMENT_CURRENCY
+    order.amount !== amount ||
+    order.currency !== currency
   ) {
     logger.error('create-order: unexpected Razorpay order');
     return paymentsError('order_failed');
@@ -323,8 +355,8 @@ export async function createOrder(request: Request, deps: PaymentsDeps): Promise
     user_id: user.id,
     razorpay_order_id: order.id,
     credits: plan.credits,
-    amount_minor: plan.amountCents,
-    currency: PAYMENT_CURRENCY,
+    amount_minor: amount,
+    currency,
     plan: plan.id,
     status: 'created',
   });
@@ -337,8 +369,8 @@ export async function createOrder(request: Request, deps: PaymentsDeps): Promise
   // the key id is public (Razorpay Checkout needs it); the key secret never leaves the server
   return Response.json({
     orderId: order.id,
-    amount: plan.amountCents,
-    currency: PAYMENT_CURRENCY,
+    amount,
+    currency,
     keyId: RAZORPAY_KEY_ID,
     credits: plan.credits,
     planId: plan.id,
