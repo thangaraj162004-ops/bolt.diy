@@ -19,6 +19,7 @@ import { SettingsButton, OpenSourceNoticesLink } from '~/components/ui/SettingsB
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { db, deleteById, getAll, chatId, type ChatHistoryItem, useChatHistory } from '~/lib/persistence';
+import { sidebarEntry } from '~/lib/persistence/chatTitle';
 import { DEFAULT_AVATAR, profileStore } from '~/lib/stores/profile';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
@@ -89,7 +90,8 @@ export const Menu = () => {
   const loadEntries = useCallback(() => {
     if (db) {
       getAll(db)
-        .then((list) => list.filter((item) => item.urlId && item.description))
+        // every chat with messages, with a title and a link (also chats saved without them before)
+        .then((list) => list.map((item) => sidebarEntry(item)).filter((item): item is ChatHistoryItem => !!item))
         .then(setList)
         .catch((error) => toast.error(error.message));
     }

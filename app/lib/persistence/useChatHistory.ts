@@ -4,6 +4,7 @@ import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react
 import { useLoaderData, useNavigate, useParams, useSearchParams, type NavigateFunction } from 'react-router';
 import { toast } from 'react-toastify';
 import { getCachedMessages, getCachedSnapshot, invalidateChatCache } from './chatCache';
+import { chatTitle, isPlaceholderUrlId } from './chatTitle';
 import {
   getMessagesByIdRaw,
   getMessagesByUrlIdRaw,
@@ -554,9 +555,15 @@ ${value.content}
           return;
         }
 
-        let _urlId = urlId;
+        /*
+         * The link id. The restore artifact's id ("restored-project-setup") is
+         * never used: every reopened chat has it, so chats ended up sharing one
+         * link and opening it could load another chat. A missing or shared id
+         * is replaced by the chat's own id below.
+         */
+        let _urlId = isPlaceholderUrlId(urlId) ? undefined : urlId;
 
-        if (!urlId && firstArtifact?.id) {
+        if (!_urlId && firstArtifact?.id && !isPlaceholderUrlId(firstArtifact.id)) {
           _urlId = firstArtifact.id;
         }
 
@@ -574,8 +581,15 @@ ${value.content}
           }
         }
 
-        if (!description.get() && firstArtifact?.title) {
-          description.set(firstArtifact?.title);
+        /*
+         * The title: the first user message (or a real artifact title), also
+         * replacing the "Restored Project & Setup" placeholder of older chats.
+         * Without a title the sidebar hides the chat.
+         */
+        const title = chatTitle(description.get(), [...archivedMessages, ...messages], firstArtifact?.title);
+
+        if (title !== description.get()) {
+          description.set(title);
         }
 
         // Ensure chatId.get() is used here as well
@@ -595,7 +609,9 @@ ${value.content}
               _urlId,
               description.get(),
               chatMetadata.get(),
-              Boolean(_urlId),
+
+              // always give a new chat a link id (its own id when there is no artifact); the sidebar needs one
+              true,
             );
             pendingChatCreationRef.current = creationPromise;
           }
@@ -640,6 +656,15 @@ ${value.content}
           toast.error('Failed to save chat messages: Chat ID missing.');
 
           return;
+        }
+
+        // an existing chat without its own link id (or with the shared restore id) gets its chat id
+        if (!_urlId) {
+          _urlId = finalChatId;
+
+          if (!createdChat) {
+            setUrlId(_urlId);
+          }
         }
 
         if (!createdChat || !ownsChatCreation) {

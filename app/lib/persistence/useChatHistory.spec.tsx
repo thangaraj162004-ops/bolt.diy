@@ -51,10 +51,13 @@ vi.mock('./db', () => ({
  * chat that was just created gets a numeric id and is then routed to
  * /chat/<urlId>.
  */
-const records: Record<string, { id: string; urlId: string }> = {
+const records: Record<string, { id: string; urlId: string; description?: string }> = {
   'chat-a': { id: '1', urlId: 'chat-a' },
   'chat-b': { id: '2', urlId: 'chat-b' },
   3: { id: '3', urlId: '3' },
+
+  // a chat saved before the fix: named and linked after the snapshot-restore artifact
+  '7': { id: '7', urlId: 'restored-project-setup', description: 'Restored Project & Setup (fork)' },
 };
 
 vi.mock('./chatCache', () => ({
@@ -64,7 +67,7 @@ vi.mock('./chatCache', () => ({
     return {
       id: record?.id ?? routeId,
       urlId: record?.urlId ?? routeId,
-      description: routeId,
+      description: record?.description ?? routeId,
       messages: [
         { id: `${routeId}-user`, role: 'user', parts: [{ type: 'text', text: 'hi' }] },
         { id: `${routeId}-assistant`, role: 'assistant', parts: [{ type: 'text', text: 'hello' }] },
@@ -495,5 +498,60 @@ describe('useChatHistory chat switching', () => {
     });
     expect(result.current.chatChanged).toBe(false);
     expect(result.current.initialMessages).toEqual([]);
+  });
+
+  it('names a new chat after its first user message and gives it a link id, even without an artifact', async () => {
+    const useChatHistory = await importHook();
+    const { createChatWithNextId } = await import('./db');
+    vi.mocked(createChatWithNextId).mockClear();
+    routeId = undefined;
+
+    const { result } = renderHook(() => useChatHistory());
+    await waitFor(() => expect(result.current.ready).toBe(true));
+
+    await act(async () => {
+      await result.current.storeMessageHistory(
+        [
+          {
+            id: 'u1',
+            role: 'user',
+            parts: [{ type: 'text', text: '[Model: gemini]\n\n[Provider: Google]\n\nmake a simple landing page' }],
+          },
+          { id: 'a1', role: 'assistant', parts: [{ type: 'text', text: 'Done.' }] },
+        ] as UIMessage[],
+        false,
+      );
+    });
+
+    expect(createChatWithNextId).toHaveBeenCalledWith(
+      {},
+      expect.any(Array),
+      undefined,
+      'make a simple landing page',
+      undefined,
+      true,
+    );
+    expect(navigate).toHaveBeenCalledWith('/chat/3', { replace: true });
+  });
+
+  it('repairs a "Restored Project & Setup" chat: real title (fork kept) and its own link id', async () => {
+    const useChatHistory = await importHook();
+    routeId = '7';
+
+    const { result } = renderHook(() => useChatHistory());
+    await waitFor(() => expect(result.current.ready).toBe(true));
+
+    await act(async () => {
+      await result.current.storeMessageHistory(
+        [
+          { id: '7-user', role: 'user', parts: [{ type: 'text', text: 'hi' }] },
+          { id: '7-assistant', role: 'assistant', parts: [{ type: 'text', text: 'hello' }] },
+          { id: 'u2', role: 'user', parts: [{ type: 'text', text: 'make it blue' }] },
+        ] as UIMessage[],
+        true,
+      );
+    });
+
+    expect(setMessages).toHaveBeenLastCalledWith({}, '7', expect.any(Array), '7', 'hi (fork)', undefined, undefined);
   });
 });
