@@ -7,5 +7,12 @@
   "observability": {
     "enabled": true
   },
+  // Run the Worker in Mumbai, so calls to AI providers (Google) come from India and not from
+  // a region they refuse ("User location is not supported"). If a deploy rejects this region,
+  // use "aws:ap-south-1" (also Mumbai) instead.
+  "placement": {
+    "mode": "targeted",
+    "region": "gcp:asia-south1"
+  },
   "upload_source_maps": true
 }
