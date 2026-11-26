@@ -5,7 +5,14 @@ import { vi } from 'vitest';
  * A fake Supabase client: auth events, a password check, one balance row and
  * spend_credits (same errors as the SQL function). No network.
  */
-export function fakeSupabase(options: { session?: unknown; balance?: number; confirmEmail?: boolean } = {}) {
+export function fakeSupabase(
+  options: {
+    session?: unknown;
+    balance?: number;
+    confirmEmail?: boolean;
+    profile?: { plan: string | null; plan_until: string | null };
+  } = {},
+) {
   type Listener = (event: string, session: unknown) => void;
 
   const listeners = new Set<Listener>();
@@ -53,9 +60,14 @@ export function fakeSupabase(options: { session?: unknown; balance?: number; con
         return { error: null };
       }),
     },
-    from: vi.fn(() => ({
+    from: vi.fn((table: string) => ({
       select: () => ({
-        eq: () => ({ maybeSingle: async () => ({ data: { balance }, error: null }) }),
+        eq: () => ({
+          maybeSingle: async () =>
+            table === 'profiles'
+              ? { data: options.profile ?? { plan: null, plan_until: null }, error: null }
+              : { data: { balance }, error: null },
+        }),
       }),
     })),
   };

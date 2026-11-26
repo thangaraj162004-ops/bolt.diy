@@ -95,7 +95,7 @@ describe('AccountMenu', () => {
     expect((await screen.findByTestId('auth-dialog')).textContent).toContain('Log in to send your message.');
   });
 
-  it('"You are out of credits." has a Buy credits button that opens the packs', async () => {
+  it('"You are out of credits." has a Buy credits button that opens the plans', async () => {
     await renderMenu(fakeSupabase({ session: { user: { id: 'user-1', email: 'a@b.co' } }, balance: 0 }));
 
     act(() => outOfCreditsDialog.set(true));
@@ -108,18 +108,17 @@ describe('AccountMenu', () => {
 
     expect(outOfCreditsDialog.get()).toBe(false);
     expect(buyCreditsDialog.get()).toBe(true);
-    expect((await screen.findByTestId('buy-credits-dialog')).textContent).toContain('50 credits');
+    expect((await screen.findByTestId('buy-credits-dialog')).textContent).toContain('Choose a plan');
   });
 
-  it('the header has Buy credits when logged in, listing every pack with its price in rupees', async () => {
+  it('the header has Buy credits when logged in, opening the plan cards', async () => {
     await renderMenu(fakeSupabase({ session: { user: { id: 'user-1', email: 'a@b.co' } }, balance: 3 }));
 
     fireEvent.click(screen.getByRole('button', { name: 'Buy credits' }));
 
     const dialog = await screen.findByTestId('buy-credits-dialog');
-    const packs = [...dialog.querySelectorAll('li')].map((item) => item.textContent);
-
-    expect(packs).toEqual(['50 credits₹100', '350 credits₹2,000']);
+    expect(dialog.querySelectorAll('[data-testid^="plan-"]')).toHaveLength(3);
+    expect(screen.queryByTestId('plan-badge')).toBeNull();
 
     // no key id seen yet, so no test-mode label
     expect(screen.queryByTestId('test-mode-label')).toBeNull();
@@ -128,5 +127,29 @@ describe('AccountMenu', () => {
   it('shows no Buy credits button when logged out', async () => {
     await renderMenu(fakeSupabase());
     expect(screen.queryByRole('button', { name: 'Buy credits' })).toBeNull();
+  });
+
+  it('shows the active plan in the account menu', async () => {
+    await renderMenu(
+      fakeSupabase({
+        session: { user: { id: 'user-1', email: 'a@b.co' } },
+        balance: 350,
+        profile: { plan: 'pro', plan_until: new Date(Date.now() + 5 * 86_400_000).toISOString() },
+      }),
+    );
+
+    expect(screen.getByTestId('plan-badge').textContent).toBe('Pro');
+  });
+
+  it('shows no plan once it has ended', async () => {
+    await renderMenu(
+      fakeSupabase({
+        session: { user: { id: 'user-1', email: 'a@b.co' } },
+        profile: { plan: 'pro', plan_until: new Date(Date.now() - 86_400_000).toISOString() },
+      }),
+    );
+
+    expect(screen.getByTestId('credits-badge')).toBeTruthy();
+    expect(screen.queryByTestId('plan-badge')).toBeNull();
   });
 });

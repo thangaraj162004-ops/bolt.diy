@@ -19,6 +19,21 @@ export interface AuthState {
 
   /** The credit balance; null while loading or when it could not be read. */
   balance: number | null;
+
+  /** The active plan ('pro' or 'ultra') and when it ends; absent when there is none or it has ended. */
+  plan?: string;
+  planUntil?: string;
+}
+
+/** The plan from a profile row, only while it is still active. */
+export function activePlan(
+  row: { plan?: unknown; plan_until?: unknown } | null | undefined,
+  now = Date.now(),
+): { plan?: string; planUntil?: string } {
+  const plan = typeof row?.plan === 'string' ? row.plan : undefined;
+  const until = typeof row?.plan_until === 'string' ? row.plan_until : undefined;
+
+  return plan && until && new Date(until).getTime() > now ? { plan, planUntil: until } : {};
 }
 
 export const authState = atom<AuthState>({ status: 'loading', balance: null });
@@ -128,18 +143,24 @@ export async function refreshBalance(client: SupabaseClient): Promise<void> {
 
   const request = ++balanceRequest;
 
-  const { data, error } = await client
-    .from('credit_balances')
-    .select('balance')
-    .eq('user_id', current.userId)
-    .maybeSingle();
+  const [{ data, error }, profile] = await Promise.all([
+    client.from('credit_balances').select('balance').eq('user_id', current.userId).maybeSingle(),
+    client.from('profiles').select('plan, plan_until').eq('id', current.userId).maybeSingle(),
+  ]);
 
   // a newer request (or a log out) happened meanwhile
   if (request !== balanceRequest || authState.get().userId !== current.userId) {
     return;
   }
 
-  authState.set({ ...authState.get(), balance: error || !data ? null : Number(data.balance) });
+  // the plan is optional: a profile that cannot be read just shows no plan
+  const { plan: _oldPlan, planUntil: _oldUntil, ...rest } = authState.get();
+
+  authState.set({
+    ...rest,
+    balance: error || !data ? null : Number(data.balance),
+    ...activePlan(profile.error ? null : profile.data),
+  });
 }
 
 function applySession(client: SupabaseClient, session: Session | null) {

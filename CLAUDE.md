@@ -56,8 +56,19 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
 ## Payments (Razorpay, test mode first)
 
 - Server routes: `POST /api/payments/create-order`, `/api/payments/verify` and
-  `/api/payments/webhook` (code in `app/lib/.server/payments.ts`). Credit packs
-  and prices are in `app/lib/payments/packs.ts` (amounts in paise).
+  `/api/payments/webhook` (code in `app/lib/.server/payments.ts`).
+- Plans are in `app/lib/payments/packs.ts`: every name, price, credit amount and
+  feature shown to users. Prices are in US cents; the currency is the one
+  constant `PAYMENT_CURRENCY` (`USD`). Pro $25 = 350 credits, Ultra $60 = 900
+  credits, Enterprise "Contact us" (cannot be bought). The server takes the
+  price and credits from this file, never from the browser.
+- A plan is paid once and lasts 30 days (`profiles.plan`, `profiles.plan_until`);
+  buying again while active extends it by 30 days. Auto-renew is not built.
+  Project limits in the plan text are placeholders and are not enforced.
+- USD needs international payments enabled on the Razorpay account; otherwise
+  create-order answers "Dollar payments are not enabled on this Razorpay
+  account yet." Older rupee orders are still credited once (in their own
+  currency) and set no plan.
 - They need four server **runtime** variables, set as Cloudflare Worker
   secrets (Settings → Variables and Secrets, type "Secret"), never as build
   variables and never with a `VITE_` prefix:

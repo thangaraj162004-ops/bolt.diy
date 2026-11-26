@@ -32,7 +32,9 @@ interface PaymentRow {
   razorpay_order_id: string;
   razorpay_payment_id: string | null;
   credits: number;
-  amount_paise: number;
+  amount_minor: number;
+  currency: 'INR' | 'USD';
+  plan: 'pro' | 'ultra' | null;
   status: 'created' | 'paid';
 }
 
@@ -45,6 +47,7 @@ function fakeSupabase() {
   ]);
 
   const ledger: { user_id: string; change: number; reason: string }[] = [];
+  const plans = new Map<string, { plan: string; plan_until: string }>();
 
   const rpc = vi.fn(async (name: string, args: { order_id: string; payment_id: string }) => {
     if (name !== 'grant_credits_for_payment') {
@@ -60,7 +63,12 @@ function fakeSupabase() {
     if (row.status === 'paid') {
       return row.razorpay_payment_id === args.payment_id
         ? {
-            data: { result: 'already_granted', credits: row.credits, balance: balances.get(row.user_id) },
+            data: {
+              result: 'already_granted',
+              credits: row.credits,
+              balance: balances.get(row.user_id),
+              ...(plans.get(row.user_id) ?? { plan: null, plan_until: null }),
+            },
             error: null,
           }
         : { data: null, error: { code: 'P0001', message: 'order already paid by another payment' } };
@@ -71,7 +79,22 @@ function fakeSupabase() {
     balances.set(row.user_id, (balances.get(row.user_id) ?? 0) + row.credits);
     ledger.push({ user_id: row.user_id, change: row.credits, reason: 'purchase' });
 
-    return { data: { result: 'granted', credits: row.credits, balance: balances.get(row.user_id) }, error: null };
+    // same rule as the SQL: 30 days from the current end while active, else from now
+    if (row.plan) {
+      const current = plans.get(row.user_id);
+      const start = Math.max(Date.now(), current ? new Date(current.plan_until).getTime() : 0);
+      plans.set(row.user_id, { plan: row.plan, plan_until: new Date(start + 30 * 86_400_000).toISOString() });
+    }
+
+    return {
+      data: {
+        result: 'granted',
+        credits: row.credits,
+        balance: balances.get(row.user_id),
+        ...(plans.get(row.user_id) ?? { plan: null, plan_until: null }),
+      },
+      error: null,
+    };
   });
 
   const client = {
@@ -102,14 +125,31 @@ function fakeSupabase() {
 
   const createSupabase = vi.fn(() => client);
 
-  return { createSupabase, client, payments, balances, ledger, rpc };
+  return { createSupabase, client, payments, balances, ledger, plans, rpc };
 }
 
 let orderCounter = 0;
 
+/** Razorpay's answer when international payments (USD) are not enabled on the account. */
+const USD_NOT_ENABLED = {
+  error: {
+    code: 'BAD_REQUEST_ERROR',
+    description: 'Currency is not supported',
+    source: 'business',
+    step: 'payment_initiation',
+    reason: 'input_validation_failed',
+    metadata: {},
+    field: 'currency',
+  },
+};
+
 function fakeRazorpay(status = 200) {
   return vi.fn(async (_url: string, init: RequestInit) => {
     const body = JSON.parse(String(init.body)) as { amount: number; currency: string };
+
+    if (status === 400) {
+      return new Response(JSON.stringify(USD_NOT_ENABLED), { status });
+    }
 
     return new Response(
       JSON.stringify({
@@ -149,8 +189,8 @@ async function json(response: Response): Promise<{ status: number } & Record<str
   return { status: response.status, ...((await response.json()) as Record<string, unknown>) };
 }
 
-async function newOrder(token = 'token-A', packId = 'pack_50') {
-  const response = await createOrder(request('create-order', { packId }, { Authorization: `Bearer ${token}` }), deps());
+async function newOrder(token = 'token-A', planId = 'pro') {
+  const response = await createOrder(request('create-order', { planId }, { Authorization: `Bearer ${token}` }), deps());
   return json(response);
 }
 
@@ -173,9 +213,9 @@ async function webhook(event: unknown, secret = SECRETS.RAZORPAY_WEBHOOK_SECRET,
   return json(await handleWebhook(request('webhook', raw, { 'X-Razorpay-Signature': signature }), deps(env)));
 }
 
-const captured = (orderId: string, paymentId: string, amount = 10000) => ({
+const captured = (orderId: string, paymentId: string, amount = 2500, currency = 'USD') => ({
   event: 'payment.captured',
-  payload: { payment: { entity: { id: paymentId, order_id: orderId, amount, currency: 'INR', status: 'captured' } } },
+  payload: { payment: { entity: { id: paymentId, order_id: orderId, amount, currency, status: 'captured' } } },
 });
 
 beforeEach(() => {
@@ -209,14 +249,17 @@ describe('create-order', () => {
     expect(razorpay).not.toHaveBeenCalled();
   });
 
-  it('rejects an unknown pack', async () => {
-    expect(await newOrder('token-A', 'pack_free')).toMatchObject({ status: 400, code: 'bad_request' });
+  it('rejects an unknown plan, Enterprise and the old rupee packs', async () => {
+    for (const planId of ['free', 'enterprise', 'pack_50']) {
+      expect(await newOrder('token-A', planId)).toMatchObject({ status: 400, code: 'bad_request' });
+    }
+
     expect(razorpay).not.toHaveBeenCalled();
   });
 
   it('creates a Razorpay order, saves a "created" row and returns the key id but never the secret', async () => {
     const response = await createOrder(
-      request('create-order', { packId: 'pack_350' }, { Authorization: 'Bearer token-A' }),
+      request('create-order', { planId: 'ultra', amount: 1, currency: 'INR' }, { Authorization: 'Bearer token-A' }),
       deps(),
     );
 
@@ -225,11 +268,11 @@ describe('create-order', () => {
     expect(response.status).toBe(200);
     expect(JSON.parse(text)).toEqual({
       orderId: 'order_Test' + orderCounter,
-      amount: 200000,
-      currency: 'INR',
+      amount: 6000,
+      currency: 'USD',
       keyId: SECRETS.RAZORPAY_KEY_ID,
-      credits: 350,
-      packId: 'pack_350',
+      credits: 900,
+      planId: 'ultra',
     });
     expect(text).not.toContain(SECRETS.RAZORPAY_KEY_SECRET);
     expect(text).not.toContain(SECRETS.SUPABASE_SECRET_KEY);
@@ -239,11 +282,35 @@ describe('create-order', () => {
     expect(new Headers(init.headers).get('Authorization')).toBe(
       `Basic ${btoa(`${SECRETS.RAZORPAY_KEY_ID}:${SECRETS.RAZORPAY_KEY_SECRET}`)}`,
     );
-    expect(JSON.parse(String(init.body))).toMatchObject({ amount: 200000, currency: 'INR' });
+
+    // the price and currency come from the server's plan list, not from the browser's body
+    expect(JSON.parse(String(init.body))).toMatchObject({ amount: 6000, currency: 'USD' });
 
     expect(supabase.payments).toEqual([
-      expect.objectContaining({ user_id: 'user-A', credits: 350, amount_paise: 200000, status: 'created' }),
+      expect.objectContaining({
+        user_id: 'user-A',
+        credits: 900,
+        amount_minor: 6000,
+        currency: 'USD',
+        plan: 'ultra',
+        status: 'created',
+      }),
     ]);
+  });
+
+  it('says dollar payments are not enabled when Razorpay refuses USD, and logs only the error code', async () => {
+    razorpay = fakeRazorpay(400);
+
+    expect(await newOrder()).toMatchObject({
+      status: 422,
+      code: 'currency_not_enabled',
+      message: 'Dollar payments are not enabled on this Razorpay account yet.',
+    });
+    expect(supabase.payments).toEqual([]);
+
+    const allLogs = logs.join('\n');
+    expect(allLogs).toContain('BAD_REQUEST_ERROR');
+    expect(allLogs).not.toContain('Currency is not supported');
   });
 
   it('reports a Razorpay failure and saves nothing', async () => {
@@ -286,9 +353,15 @@ describe('verify', () => {
     const { orderId } = await newOrder();
     const body = await checkout(orderId as string, 'pay_One');
 
-    expect(await verify(body)).toMatchObject({ status: 200, result: 'granted', credits: 50, balance: 70 });
-    expect(await verify(body)).toMatchObject({ status: 200, result: 'already_granted', balance: 70 });
-    expect(supabase.ledger).toEqual([{ user_id: 'user-A', change: 50, reason: 'purchase' }]);
+    expect(await verify(body)).toMatchObject({
+      status: 200,
+      result: 'granted',
+      credits: 350,
+      balance: 370,
+      plan: 'pro',
+    });
+    expect(await verify(body)).toMatchObject({ status: 200, result: 'already_granted', balance: 370, plan: 'pro' });
+    expect(supabase.ledger).toEqual([{ user_id: 'user-A', change: 350, reason: 'purchase' }]);
   });
 
   it('refuses a second, different payment for a paid order', async () => {
@@ -299,7 +372,7 @@ describe('verify', () => {
       status: 409,
       code: 'already_paid',
     });
-    expect(supabase.balances.get('user-A')).toBe(70);
+    expect(supabase.balances.get('user-A')).toBe(370);
   });
 });
 
@@ -318,7 +391,7 @@ describe('webhook', () => {
     const { orderId } = await newOrder();
 
     expect(await webhook(captured(orderId as string, 'pay_One'))).toMatchObject({ status: 200, result: 'granted' });
-    expect(supabase.balances.get('user-A')).toBe(70);
+    expect(supabase.balances.get('user-A')).toBe(370);
   });
 
   it.each(['webhook first', 'verify first'])('credits one payment once with webhook and verify (%s)', async (order) => {
@@ -330,7 +403,7 @@ describe('webhook', () => {
       order === 'webhook first' ? [await runWebhook(), await runVerify()] : [await runVerify(), await runWebhook()];
 
     expect(results.map((result) => result.result)).toEqual(['granted', 'already_granted']);
-    expect(supabase.balances.get('user-A')).toBe(70);
+    expect(supabase.balances.get('user-A')).toBe(370);
     expect(supabase.ledger).toHaveLength(1);
   });
 
@@ -354,7 +427,7 @@ describe('missing variables', () => {
     vi.stubEnv(name, '');
 
     const order = await createOrder(
-      request('create-order', { packId: 'pack_50' }, { Authorization: 'Bearer token-A' }),
+      request('create-order', { planId: 'pro' }, { Authorization: 'Bearer token-A' }),
       deps(env),
     );
 
@@ -413,5 +486,56 @@ describe('timingSafeEqual', () => {
     expect(timingSafeEqual('abc', 'abd')).toBe(false);
     expect(timingSafeEqual('abc', 'abcd')).toBe(false);
     expect(timingSafeEqual('', 'a')).toBe(false);
+  });
+});
+
+describe('plans', () => {
+  it('a plan purchase sets the plan for 30 days, and a second purchase extends it', async () => {
+    const first = await newOrder('token-A', 'pro');
+    const firstGrant = await verify(await checkout(first.orderId as string, 'pay_One'));
+    const days = (until: string) => Math.round((new Date(until).getTime() - Date.now()) / 86_400_000);
+
+    expect(firstGrant).toMatchObject({ result: 'granted', plan: 'pro' });
+    expect(days(firstGrant.plan_until)).toBe(30);
+
+    const second = await newOrder('token-A', 'ultra');
+    const secondGrant = await verify(await checkout(second.orderId as string, 'pay_Two'));
+
+    expect(secondGrant).toMatchObject({ result: 'granted', plan: 'ultra', balance: 20 + 350 + 900 });
+    expect(days(secondGrant.plan_until)).toBe(60);
+  });
+});
+
+describe('older rupee orders', () => {
+  function oldRupeeOrder(orderId: string) {
+    supabase.payments.push({
+      user_id: 'user-A',
+      razorpay_order_id: orderId,
+      razorpay_payment_id: null,
+      credits: 50,
+      amount_minor: 10000,
+      currency: 'INR',
+      plan: null,
+      status: 'created',
+    });
+  }
+
+  it('are still credited once by the webhook (matched on their own currency) and set no plan', async () => {
+    oldRupeeOrder('order_OldRupee');
+
+    expect(await webhook(captured('order_OldRupee', 'pay_Old', 10000, 'INR'))).toMatchObject({ result: 'granted' });
+    expect(await verify(await checkout('order_OldRupee', 'pay_Old'))).toMatchObject({
+      result: 'already_granted',
+      plan: null,
+    });
+    expect(supabase.balances.get('user-A')).toBe(70);
+    expect(supabase.ledger).toHaveLength(1);
+  });
+
+  it('are not credited by a USD event for the same order', async () => {
+    oldRupeeOrder('order_OldRupee2');
+
+    expect(await webhook(captured('order_OldRupee2', 'pay_Old2', 10000, 'USD'))).toMatchObject({ ignored: 'amount' });
+    expect(supabase.rpc).not.toHaveBeenCalled();
   });
 });

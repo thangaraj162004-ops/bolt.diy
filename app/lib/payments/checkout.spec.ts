@@ -18,7 +18,7 @@ vi.mock('~/lib/supabase/credits', () => ({
   refreshCreditsBadge: mocks.refreshCreditsBadge,
 }));
 
-const { BUY_MESSAGES, RAZORPAY_CHECKOUT_URL, buyPack, formatRupees, isTestKey, resetRazorpayLoader } =
+const { BUY_MESSAGES, RAZORPAY_CHECKOUT_URL, buyPlan, formatPlanDate, formatPrice, isTestKey, resetRazorpayLoader } =
   await import('./checkout');
 
 type UserAction = 'pay' | 'close' | 'fail-then-close';
@@ -93,14 +93,24 @@ function fakeServer(answers: { createOrder?: ServerAnswer; verify?: ServerAnswer
             status: 200,
             body: {
               orderId: 'order_Test1',
-              amount: 10000,
-              currency: 'INR',
+              amount: 2500,
+              currency: 'USD',
               keyId: 'rzp_test_publicKeyId',
-              credits: 50,
-              packId: 'pack_50',
+              credits: 350,
+              planId: 'pro',
             },
           })
-        : (answers.verify ?? { status: 200, body: { ok: true, result: 'granted', credits: 50, balance: 70 } });
+        : (answers.verify ?? {
+            status: 200,
+            body: {
+              ok: true,
+              result: 'granted',
+              credits: 350,
+              balance: 370,
+              plan: 'pro',
+              plan_until: '2026-12-26T10:00:00.000Z',
+            },
+          });
 
     return new Response(JSON.stringify(answer.body), { status: answer.status });
   });
@@ -128,10 +138,12 @@ afterEach(() => {
 });
 
 describe('prices and labels', () => {
-  it('shows rupees from paise', () => {
-    expect(formatRupees(10000)).toBe('₹100');
-    expect(formatRupees(200000)).toBe('₹2,000');
-    expect(formatRupees(150)).toBe('₹1.5');
+  it('shows dollars from cents, and plan dates', () => {
+    expect(formatPrice(2500)).toBe('$25');
+    expect(formatPrice(6000)).toBe('$60');
+    expect(formatPrice(120050)).toBe('$1,200.50');
+    expect(formatPlanDate('2026-12-26T10:00:00.000Z')).toBe('26 Dec 2026');
+    expect(formatPlanDate(null)).toBeUndefined();
   });
 
   it('knows a test key', () => {
@@ -141,19 +153,19 @@ describe('prices and labels', () => {
   });
 });
 
-describe('buyPack', () => {
+describe('buyPlan', () => {
   it('pays: create-order, Checkout with the server values and the email, verify, badge refresh', async () => {
     const fetchMock = fakeServer();
     const hooks = { onCheckoutOpen: vi.fn(), onCheckoutClose: vi.fn() };
 
     expect(scriptLoads).toEqual([]);
 
-    const result = await buyPack('pack_50', 'a@b.co', hooks);
+    const result = await buyPlan('pro', 'a@b.co', hooks);
 
     expect(result).toEqual({
       kind: 'added',
-      message: 'Credits added: 50 credits are now in your account.',
-      credits: 50,
+      message: 'Credits added: 350 credits are now in your account. Your Pro plan is active until 26 Dec 2026.',
+      credits: 350,
       keyId: 'rzp_test_publicKeyId',
     });
 
@@ -164,15 +176,16 @@ describe('buyPack', () => {
     expect(opened[0]).toMatchObject({
       key: 'rzp_test_publicKeyId',
       order_id: 'order_Test1',
-      amount: 10000,
-      currency: 'INR',
+      amount: 2500,
+      currency: 'USD',
+      description: 'Pro plan, 350 credits',
       prefill: { email: 'a@b.co' },
     });
 
     const [createUrl, createInit] = fetchMock.mock.calls[0];
     expect(createUrl).toBe('/api/payments/create-order');
     expect(new Headers(createInit.headers).get('Authorization')).toBe('Bearer user-token');
-    expect(JSON.parse(String(createInit.body))).toEqual({ packId: 'pack_50' });
+    expect(JSON.parse(String(createInit.body))).toEqual({ planId: 'pro' });
 
     const [verifyUrl, verifyInit] = fetchMock.mock.calls[1];
     expect(verifyUrl).toBe('/api/payments/verify');
@@ -187,8 +200,8 @@ describe('buyPack', () => {
   it('loads the Checkout script only once', async () => {
     fakeServer();
 
-    await buyPack('pack_50');
-    await buyPack('pack_350');
+    await buyPlan('pro');
+    await buyPlan('ultra');
 
     expect(scriptLoads).toEqual([RAZORPAY_CHECKOUT_URL]);
     expect(opened).toHaveLength(2);
@@ -198,7 +211,7 @@ describe('buyPack', () => {
     const fetchMock = fakeServer();
     userAction = 'close';
 
-    expect(await buyPack('pack_50')).toMatchObject({ kind: 'cancelled', message: BUY_MESSAGES.cancelled });
+    expect(await buyPlan('pro')).toMatchObject({ kind: 'cancelled', message: BUY_MESSAGES.cancelled });
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(mocks.refreshCreditsBadge).not.toHaveBeenCalled();
   });
@@ -207,13 +220,13 @@ describe('buyPack', () => {
     fakeServer();
     userAction = 'fail-then-close';
 
-    expect(await buyPack('pack_50')).toMatchObject({ kind: 'failed', message: BUY_MESSAGES.failed });
+    expect(await buyPlan('pro')).toMatchObject({ kind: 'failed', message: BUY_MESSAGES.failed });
   });
 
   it('says credits will appear shortly when verify fails', async () => {
     fakeServer({ verify: { status: 500, body: { error: true, code: 'grant_failed' } } });
 
-    const result = await buyPack('pack_50');
+    const result = await buyPlan('pro');
 
     expect(result.kind).toBe('verify_failed');
     expect(result.message).toContain('If money was taken, your credits will appear shortly');
@@ -223,25 +236,44 @@ describe('buyPack', () => {
     const fetchMock = fakeServer({ createOrder: { status: 401, body: { code: 'login_required' } } });
 
     mocks.token = undefined;
-    expect(await buyPack('pack_50')).toMatchObject({
+    expect(await buyPlan('pro')).toMatchObject({
       kind: 'login_required',
       message: 'Please log in to buy credits.',
     });
     expect(fetchMock).not.toHaveBeenCalled();
 
     mocks.token = 'expired-token';
-    expect(await buyPack('pack_50')).toMatchObject({ kind: 'login_required' });
+    expect(await buyPlan('pro')).toMatchObject({ kind: 'login_required' });
+    expect(scriptLoads).toEqual([]);
+  });
+
+  it('says dollar payments are not enabled when Razorpay refuses USD', async () => {
+    fakeServer({
+      createOrder: {
+        status: 422,
+        body: {
+          error: true,
+          code: 'currency_not_enabled',
+          message: 'Dollar payments are not enabled on this Razorpay account yet.',
+        },
+      },
+    });
+
+    expect(await buyPlan('pro')).toEqual({
+      kind: 'currency_not_enabled',
+      message: 'Dollar payments are not enabled on this Razorpay account yet.',
+    });
     expect(scriptLoads).toEqual([]);
   });
 
   it('says buying is unavailable when the server is not set up or Checkout cannot load', async () => {
     fakeServer({ createOrder: { status: 503, body: { code: 'payments_unavailable' } } });
-    expect(await buyPack('pack_50')).toMatchObject({ kind: 'unavailable', message: BUY_MESSAGES.unavailable });
+    expect(await buyPlan('pro')).toMatchObject({ kind: 'unavailable', message: BUY_MESSAGES.unavailable });
 
     vi.unstubAllGlobals();
     fakeServer();
     scriptFails = true;
-    expect(await buyPack('pack_50')).toMatchObject({ kind: 'unavailable' });
+    expect(await buyPlan('pro')).toMatchObject({ kind: 'unavailable' });
   });
 });
 

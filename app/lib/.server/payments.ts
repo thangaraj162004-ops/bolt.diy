@@ -1,13 +1,13 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { readBodyText } from '~/lib/.server/api/read-body';
 import { getBearerToken } from '~/lib/.server/credits';
-import { findCreditPack } from '~/lib/payments/packs';
+import { PAYMENT_CURRENCY, findBuyablePlan } from '~/lib/payments/packs';
 import { createScopedLogger } from '~/utils/logger';
 
 /**
  * Razorpay payments that buy credits (server only).
  *
- *   POST /api/payments/create-order  logged-in user picks a pack -> Razorpay order + "created" row
+ *   POST /api/payments/create-order  logged-in user picks a plan -> Razorpay order (USD) + "created" row
  *   POST /api/payments/verify        browser sends Razorpay's checkout result -> signature check -> credits
  *   POST /api/payments/webhook       Razorpay sends payment.captured -> signature check -> credits
  *
@@ -44,6 +44,7 @@ export type PaymentsErrorCode =
   | 'wrong_user'
   | 'already_paid'
   | 'order_failed'
+  | 'currency_not_enabled'
   | 'grant_failed';
 
 const ERRORS: Record<PaymentsErrorCode, { status: number; message: string }> = {
@@ -55,6 +56,7 @@ const ERRORS: Record<PaymentsErrorCode, { status: number; message: string }> = {
   wrong_user: { status: 403, message: 'This order belongs to another account.' },
   already_paid: { status: 409, message: 'This order was already paid with another payment.' },
   order_failed: { status: 502, message: 'Could not create the order. Please try again.' },
+  currency_not_enabled: { status: 422, message: 'Dollar payments are not enabled on this Razorpay account yet.' },
   grant_failed: { status: 500, message: 'The payment was received but the credits could not be added yet.' },
 };
 
@@ -196,6 +198,24 @@ interface GrantResult {
   result: 'granted' | 'already_granted';
   credits: number;
   balance: number | null;
+  plan: string | null;
+  plan_until: string | null;
+}
+
+/**
+ * Razorpay's error code, and whether the error says this currency cannot be
+ * used (for USD: international payments are not enabled on the account).
+ */
+async function readRazorpayError(response: Response): Promise<{ code: string; currencyNotEnabled: boolean }> {
+  try {
+    const body = (await response.json()) as { error?: { code?: unknown; description?: unknown; field?: unknown } };
+    const code = typeof body.error?.code === 'string' ? body.error.code.slice(0, 64) : 'no code';
+    const text = `${String(body.error?.description ?? '')} ${String(body.error?.field ?? '')}`.toLowerCase();
+
+    return { code, currencyNotEnabled: /currency|international/.test(text) };
+  } catch {
+    return { code: 'no code', currencyNotEnabled: false };
+  }
 }
 
 async function grantCredits(
@@ -214,7 +234,16 @@ async function grantCredits(
 
   const grant = data as GrantResult;
 
-  return { ok: true, grant: { result: grant.result, credits: grant.credits, balance: grant.balance ?? null } };
+  return {
+    ok: true,
+    grant: {
+      result: grant.result,
+      credits: grant.credits,
+      balance: grant.balance ?? null,
+      plan: grant.plan ?? null,
+      plan_until: grant.plan_until ?? null,
+    },
+  };
 }
 
 /* ---------------------------------------------------------------- create-order */
@@ -241,9 +270,10 @@ export async function createOrder(request: Request, deps: PaymentsDeps): Promise
     return paymentsError('login_required');
   }
 
-  const pack = findCreditPack((await readJson(request))?.packId);
+  // the plan's price, credits and currency come from the server's list, never from the browser
+  const plan = findBuyablePlan((await readJson(request))?.planId);
 
-  if (!pack) {
+  if (!plan) {
     return paymentsError('bad_request');
   }
 
@@ -257,16 +287,20 @@ export async function createOrder(request: Request, deps: PaymentsDeps): Promise
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: pack.amountPaise,
-        currency: pack.currency,
+        amount: plan.amountCents,
+        currency: PAYMENT_CURRENCY,
         receipt: `ca_${Date.now()}`,
-        notes: { user_id: user.id, pack_id: pack.id, credits: String(pack.credits) },
+        notes: { user_id: user.id, plan: plan.id, credits: String(plan.credits) },
       }),
     });
 
     if (!response.ok) {
-      logger.error(`create-order: Razorpay answered ${response.status}`);
-      return paymentsError('order_failed');
+      const rejection = await readRazorpayError(response);
+
+      // only the status and Razorpay's error code are logged, never its full answer
+      logger.error(`create-order: Razorpay answered ${response.status} ${rejection.code}`);
+
+      return paymentsError(rejection.currencyNotEnabled ? 'currency_not_enabled' : 'order_failed');
     }
 
     order = (await response.json()) as typeof order;
@@ -275,7 +309,12 @@ export async function createOrder(request: Request, deps: PaymentsDeps): Promise
     return paymentsError('order_failed');
   }
 
-  if (typeof order.id !== 'string' || !ORDER_ID.test(order.id) || order.amount !== pack.amountPaise) {
+  if (
+    typeof order.id !== 'string' ||
+    !ORDER_ID.test(order.id) ||
+    order.amount !== plan.amountCents ||
+    order.currency !== PAYMENT_CURRENCY
+  ) {
     logger.error('create-order: unexpected Razorpay order');
     return paymentsError('order_failed');
   }
@@ -283,8 +322,10 @@ export async function createOrder(request: Request, deps: PaymentsDeps): Promise
   const { error } = await admin.from('payments').insert({
     user_id: user.id,
     razorpay_order_id: order.id,
-    credits: pack.credits,
-    amount_paise: pack.amountPaise,
+    credits: plan.credits,
+    amount_minor: plan.amountCents,
+    currency: PAYMENT_CURRENCY,
+    plan: plan.id,
     status: 'created',
   });
 
@@ -296,11 +337,11 @@ export async function createOrder(request: Request, deps: PaymentsDeps): Promise
   // the key id is public (Razorpay Checkout needs it); the key secret never leaves the server
   return Response.json({
     orderId: order.id,
-    amount: pack.amountPaise,
-    currency: pack.currency,
+    amount: plan.amountCents,
+    currency: PAYMENT_CURRENCY,
     keyId: RAZORPAY_KEY_ID,
-    credits: pack.credits,
-    packId: pack.id,
+    credits: plan.credits,
+    planId: plan.id,
   });
 }
 
@@ -446,7 +487,7 @@ export async function handleWebhook(request: Request, deps: PaymentsDeps): Promi
 
   const { data: payment, error } = await admin
     .from('payments')
-    .select('amount_paise')
+    .select('amount_minor, currency')
     .eq('razorpay_order_id', orderId)
     .maybeSingle();
 
@@ -461,7 +502,10 @@ export async function handleWebhook(request: Request, deps: PaymentsDeps): Promi
     return ignored('unknown_order');
   }
 
-  if (entity?.amount !== (payment as { amount_paise: number }).amount_paise || entity?.currency !== 'INR') {
+  // the saved order's own currency, so older rupee orders still match
+  const saved = payment as { amount_minor: number; currency: string };
+
+  if (entity?.amount !== saved.amount_minor || entity?.currency !== saved.currency) {
     logger.error(`webhook: amount or currency of ${paymentId} does not match ${orderId}; no credits added`);
     return ignored('amount');
   }

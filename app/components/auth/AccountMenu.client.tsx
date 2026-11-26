@@ -4,6 +4,8 @@ import { useEffect } from 'react';
 import { AuthDialog } from './AuthDialog';
 import { BuyCreditsDialog } from './BuyCreditsDialog';
 import { OutOfCreditsDialog } from './OutOfCreditsDialog';
+import { formatPlanDate } from '~/lib/payments/checkout';
+import { planName } from '~/lib/payments/packs';
 import { authDialog, authState, buyCreditsDialog, outOfCreditsDialog, signOut, startAuth } from '~/lib/supabase/auth';
 import { supabase as defaultClient } from '~/lib/supabase/client';
 
@@ -56,6 +58,15 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
       >
         {state.balance === null ? '… credits' : `${state.balance} ${state.balance === 1 ? 'credit' : 'credits'}`}
       </span>
+      {planName(state.plan) && (
+        <span
+          className="rounded-full border border-purple-500/40 px-2 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-300"
+          title={`${planName(state.plan)} plan until ${formatPlanDate(state.planUntil) ?? ''}`}
+          data-testid="plan-badge"
+        >
+          {planName(state.plan)}
+        </span>
+      )}
       <button type="button" className={buttonClass} onClick={() => buyCreditsDialog.set(true)}>
         Buy credits
       </button>
@@ -70,7 +81,13 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
           buyCreditsDialog.set(true);
         }}
       />
-      <BuyCreditsDialog open={buyOpen} email={state.email} onClose={() => buyCreditsDialog.set(false)} />
+      <BuyCreditsDialog
+        open={buyOpen}
+        email={state.email}
+        currentPlan={state.plan}
+        currentPlanUntil={state.planUntil}
+        onClose={() => buyCreditsDialog.set(false)}
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { CREDIT_PACKS, type CreditPack } from './packs';
+import { PAYMENT_CURRENCY, PLANS, planName, type Plan } from './packs';
 import { getAccessToken, refreshCreditsBadge } from '~/lib/supabase/credits';
 
 /**
@@ -15,14 +15,29 @@ export const RAZORPAY_CHECKOUT_URL = 'https://checkout.razorpay.com/v1/checkout.
 
 /* ---------------------------------------------------------------- prices */
 
-/** "₹100" or "₹2,000" (amounts are stored in paise). */
-export function formatRupees(amountPaise: number): string {
-  const rupees = amountPaise / 100;
-  return `₹${rupees.toLocaleString('en-IN', { maximumFractionDigits: rupees % 1 === 0 ? 0 : 2 })}`;
+/** "$25" or "$1,200.50" (amounts are stored in cents). */
+export function formatPrice(amountCents: number, currency: string = PAYMENT_CURRENCY): string {
+  const amount = amountCents / 100;
+
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
 }
 
-export function listPacks(): readonly CreditPack[] {
-  return CREDIT_PACKS;
+/** "26 Dec 2026", or undefined for a missing or bad date. */
+export function formatPlanDate(value: string | null | undefined): string | undefined {
+  const date = value ? new Date(value) : undefined;
+
+  return date && !Number.isNaN(date.getTime())
+    ? date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : undefined;
+}
+
+export function listPlans(): readonly Plan[] {
+  return PLANS;
 }
 
 /** True for Razorpay test keys: no real money moves. */
@@ -104,18 +119,21 @@ export function resetRazorpayLoader() {
 export type BuyResult =
   | { kind: 'added'; message: string; credits: number; keyId: string }
   | {
-      kind: 'cancelled' | 'failed' | 'verify_failed' | 'login_required' | 'unavailable';
+      kind: 'cancelled' | 'failed' | 'verify_failed' | 'login_required' | 'unavailable' | 'currency_not_enabled';
       message: string;
       keyId?: string;
     };
 
 export const BUY_MESSAGES = {
-  added: (credits: number) => `Credits added: ${credits} credits are now in your account.`,
+  added: (credits: number, plan?: string, until?: string) =>
+    `Credits added: ${credits} credits are now in your account.` +
+    (plan && until ? ` Your ${plan} plan is active until ${until}.` : ''),
   cancelled: 'Payment cancelled. No money was taken.',
   failed: 'The payment failed. No credits were added. Please try again or use another payment method.',
   verify_failed: 'We could not confirm your payment yet. If money was taken, your credits will appear shortly.',
   login_required: 'Please log in to buy credits.',
   unavailable: 'Buying credits is not available right now. Please try again later.',
+  currency_not_enabled: 'Dollar payments are not enabled on this Razorpay account yet.',
 } as const;
 
 interface OrderResponse {
@@ -124,6 +142,8 @@ interface OrderResponse {
   currency: string;
   keyId: string;
   credits: number;
+  planId?: string;
+  planName?: string;
 }
 
 async function postJson(url: string, token: string, body: unknown): Promise<Response> {
@@ -132,6 +152,20 @@ async function postJson(url: string, token: string, body: unknown): Promise<Resp
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
     body: JSON.stringify(body),
   });
+}
+
+/** The `code` of an error answer from our payment routes, if any. */
+async function errorCode(response: Response): Promise<string | undefined> {
+  if (response.ok) {
+    return undefined;
+  }
+
+  try {
+    const body = (await response.clone().json()) as { code?: unknown };
+    return typeof body.code === 'string' ? body.code : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 type CheckoutOutcome = { kind: 'success'; response: RazorpaySuccess } | { kind: 'cancelled' } | { kind: 'failed' };
@@ -151,7 +185,7 @@ function runCheckout(
       amount: order.amount,
       currency: order.currency,
       name: 'CodeApp AI',
-      description: `${order.credits} credits`,
+      description: order.planName ? `${order.planName} plan, ${order.credits} credits` : `${order.credits} credits`,
       prefill: email ? { email } : undefined,
       handler: (response) => resolve({ kind: 'success', response }),
       modal: {
@@ -177,8 +211,8 @@ export interface BuyHooks {
   onCheckoutClose?: () => void;
 }
 
-/** Buys one pack: create-order, Checkout, verify. Never throws. */
-export async function buyPack(packId: string, email?: string, hooks: BuyHooks = {}): Promise<BuyResult> {
+/** Buys one plan: create-order, Checkout, verify. Never throws. */
+export async function buyPlan(planId: string, email?: string, hooks: BuyHooks = {}): Promise<BuyResult> {
   const token = await getAccessToken();
 
   if (!token) {
@@ -188,10 +222,14 @@ export async function buyPack(packId: string, email?: string, hooks: BuyHooks = 
   let order: OrderResponse;
 
   try {
-    const response = await postJson('/api/payments/create-order', token, { packId });
+    const response = await postJson('/api/payments/create-order', token, { planId });
 
     if (response.status === 401) {
       return { kind: 'login_required', message: BUY_MESSAGES.login_required };
+    }
+
+    if ((await errorCode(response)) === 'currency_not_enabled') {
+      return { kind: 'currency_not_enabled', message: BUY_MESSAGES.currency_not_enabled };
     }
 
     if (!response.ok) {
@@ -199,6 +237,7 @@ export async function buyPack(packId: string, email?: string, hooks: BuyHooks = 
     }
 
     order = (await response.json()) as OrderResponse;
+    order.planName = planName(order.planId);
   } catch {
     return { kind: 'unavailable', message: BUY_MESSAGES.unavailable };
   }
@@ -231,12 +270,17 @@ export async function buyPack(packId: string, email?: string, hooks: BuyHooks = 
       return { kind: 'verify_failed', message: BUY_MESSAGES.verify_failed, keyId: order.keyId };
     }
 
-    const result = (await response.json()) as { credits?: number };
+    const result = (await response.json()) as { credits?: number; plan?: string | null; plan_until?: string | null };
     const credits = typeof result.credits === 'number' ? result.credits : order.credits;
 
     await refreshCreditsBadge();
 
-    return { kind: 'added', message: BUY_MESSAGES.added(credits), credits, keyId: order.keyId };
+    return {
+      kind: 'added',
+      message: BUY_MESSAGES.added(credits, planName(result.plan), formatPlanDate(result.plan_until)),
+      credits,
+      keyId: order.keyId,
+    };
   } catch {
     return { kind: 'verify_failed', message: BUY_MESSAGES.verify_failed, keyId: order.keyId };
   }
