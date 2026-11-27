@@ -1,5 +1,5 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // the chat title component reads chat history (IndexedDB); not needed for the logo
 vi.mock('~/lib/persistence/ChatDescription.client', () => ({ ChatDescription: () => null }));
@@ -10,6 +10,8 @@ vi.mock('./HeaderActionButtons.client', () => ({ HeaderActionButtons: () => null
 const { Header } = await import('./Header');
 import ChatAlert from '~/components/chat/ChatAlert';
 import DeployChatAlert from '~/components/deploy/DeployAlert';
+
+afterEach(cleanup);
 
 const OLD_BRAND = /\bCa\b|bolt\.diy|bolt\.new|StackBlitz/i;
 
@@ -37,6 +39,25 @@ describe('Header on a phone', () => {
 
     fireEvent.click(button);
     expect(sidebarOpen.get()).toBe(true);
+  });
+
+  it('the menu button is a toggle: it opens and closes the chat history every time', async () => {
+    const { sidebarOpen } = await import('~/lib/stores/layout');
+    sidebarOpen.set(false);
+    render(<Header />);
+
+    const [button] = screen.getAllByRole('button', { name: 'Open menu' });
+
+    for (let i = 0; i < 3; i++) {
+      fireEvent.click(button);
+      expect(sidebarOpen.get()).toBe(true);
+      expect(button.getAttribute('aria-label')).toBe('Close menu');
+      expect(button.getAttribute('aria-expanded')).toBe('true');
+
+      fireEvent.click(button);
+      expect(sidebarOpen.get()).toBe(false);
+      expect(button.getAttribute('aria-label')).toBe('Open menu');
+    }
   });
 });
 

@@ -28,7 +28,9 @@ const LazyWorkbench = lazy(() =>
   import('~/components/workbench/Workbench.client').then((m) => ({ default: m.Workbench })),
 );
 import { StickToBottom, useStickToBottomContext } from '~/lib/hooks';
+import { useIsPhone } from '~/lib/hooks/useIsPhone';
 import type { ModelInfo } from '~/lib/modules/llm/types';
+import { PHONE_TEXTAREA_MAX_HEIGHT, PHONE_TEXTAREA_MIN_HEIGHT } from '~/lib/stores/layout';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import { workbenchStore } from '~/lib/stores/workbench';
 import type { ActionAlert, DeployAlert, LlmErrorAlertType } from '~/types/actions';
@@ -137,7 +139,9 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     },
     ref,
   ) => {
-    const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
+    // phone: a one-line chat box that grows to about four lines
+    const isPhone = useIsPhone();
+    const TEXTAREA_MAX_HEIGHT = isPhone ? PHONE_TEXTAREA_MAX_HEIGHT : chatStarted ? 400 : 200;
     const [apiKeys, setApiKeys] = useState<Record<string, string>>(getApiKeysFromCookies());
     const [modelList, setModelList] = useState<ModelInfo[]>([]);
     const [isModelSettingsCollapsed, setIsModelSettingsCollapsed] = useState(false);
@@ -474,7 +478,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
                   input={input}
                   handleInputChange={handleInputChange}
                   handlePaste={handlePaste}
-                  TEXTAREA_MIN_HEIGHT={TEXTAREA_MIN_HEIGHT}
+                  TEXTAREA_MIN_HEIGHT={isPhone ? PHONE_TEXTAREA_MIN_HEIGHT : TEXTAREA_MIN_HEIGHT}
                   TEXTAREA_MAX_HEIGHT={TEXTAREA_MAX_HEIGHT}
                   isStreaming={isStreaming}
                   handleStop={handleStop}

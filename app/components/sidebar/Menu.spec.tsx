@@ -1,0 +1,76 @@
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+// chat history lives in IndexedDB; the sidebar's open/close logic does not need it
+vi.mock('~/lib/persistence', () => ({
+  db: undefined,
+  chatId: { get: () => undefined, subscribe: () => () => undefined },
+  getAll: vi.fn(),
+  deleteById: vi.fn(),
+  useChatHistory: () => ({ duplicateCurrentChat: vi.fn(), exportChat: vi.fn() }),
+}));
+
+// the chat rows; not shown here (no saved chats) and they pull in the workbench
+vi.mock('./HistoryItem', () => ({ HistoryItem: () => null }));
+
+const { Menu } = await import('./Menu.client');
+const { sidebarOpen } = await import('~/lib/stores/layout');
+
+function pointerMove(pointerType: string, x: number) {
+  const event = new Event('pointermove') as Event & { pointerType: string; pageX: number; clientX: number };
+  Object.assign(event, { pointerType, pageX: x, clientX: x });
+  act(() => {
+    window.dispatchEvent(event);
+  });
+}
+
+beforeEach(() => sidebarOpen.set(false));
+afterEach(cleanup);
+
+function renderMenu() {
+  return render(
+    <MemoryRouter>
+      <Menu />
+    </MemoryRouter>,
+  );
+}
+
+describe('sidebar on a phone', () => {
+  it('its own menu icon closes it, every time', () => {
+    renderMenu();
+
+    for (let i = 0; i < 3; i++) {
+      act(() => sidebarOpen.set(true));
+
+      const close = document.querySelector<HTMLButtonElement>('.side-menu button[aria-label="Close menu"]')!;
+      expect(close.className).toContain('md:hidden');
+      expect(close.className).toContain('h-11 w-11');
+
+      fireEvent.click(close);
+      expect(sidebarOpen.get()).toBe(false);
+    }
+  });
+
+  it('tapping the dark background closes it, every time', () => {
+    renderMenu();
+    expect(screen.queryByTestId('sidebar-backdrop')).toBeNull();
+
+    for (let i = 0; i < 3; i++) {
+      act(() => sidebarOpen.set(true));
+      fireEvent.click(screen.getByTestId('sidebar-backdrop'));
+      expect(sidebarOpen.get()).toBe(false);
+      expect(screen.queryByTestId('sidebar-backdrop')).toBeNull();
+    }
+  });
+
+  it('a tap near the left edge does not reopen it; a real mouse still does', () => {
+    renderMenu();
+
+    pointerMove('touch', 5);
+    expect(sidebarOpen.get()).toBe(false);
+
+    pointerMove('mouse', 5);
+    expect(sidebarOpen.get()).toBe(true);
+  });
+});

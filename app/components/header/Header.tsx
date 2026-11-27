@@ -15,6 +15,7 @@ const AccountMenu = lazy(() =>
 
 export function Header() {
   const chat = useStore(chatStore);
+  const isSidebarOpen = useStore(sidebarOpen);
 
   return (
     <header
@@ -23,12 +24,14 @@ export function Header() {
         'border-ca-elements-borderColor': chat.started,
       })}
     >
-      <div className="flex items-center gap-2 max-md:gap-0 min-w-0 z-logo text-ca-elements-textPrimary cursor-pointer">
-        {/* opens the chat history (the only way to open it on a phone: there is no mouse hover) */}
+      {/* phone: no z-logo, so the open sidebar covers the header (it has its own close button) */}
+      <div className="flex items-center gap-2 max-md:gap-0 min-w-0 z-logo max-md:!z-auto text-ca-elements-textPrimary cursor-pointer">
+        {/* opens and closes the chat history (the only way on a phone: there is no mouse hover) */}
         <button
           type="button"
-          aria-label="Open menu"
-          onClick={() => sidebarOpen.set(true)}
+          aria-label={isSidebarOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={isSidebarOpen}
+          onClick={() => sidebarOpen.set(!sidebarOpen.get())}
           className="flex items-center justify-center bg-transparent max-md:w-11 max-md:h-11 max-md:shrink-0"
         >
           <span className="i-ph:sidebar-simple-duotone text-xl" aria-hidden="true" />

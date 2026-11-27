@@ -11,6 +11,7 @@ import type { ElementInfo } from '~/components/workbench/Inspector';
 import { API_KEYS_UPDATED_EVENT, type ApiKeysUpdatedDetail } from '~/lib/api/apiKeys';
 import { isServerAgentTool } from '~/lib/common/agentLoop';
 import { useMessageParser, usePromptEnhancer, useShortcuts } from '~/lib/hooks';
+import { useIsPhone } from '~/lib/hooks/useIsPhone';
 import { useSettings } from '~/lib/hooks/useSettings';
 import { description, useChatHistory } from '~/lib/persistence';
 import {
@@ -30,6 +31,7 @@ import type { PluginManifest } from '~/lib/plugins/schema';
 import { pluginManifestSchema } from '~/lib/plugins/schema';
 import { callProjectMcpTool, PROJECT_TOOL_NAMES } from '~/lib/runtime/projectMcp';
 import { chatStore } from '~/lib/stores/chat';
+import { PHONE_TEXTAREA_MAX_HEIGHT } from '~/lib/stores/layout';
 import { logStore } from '~/lib/stores/logs';
 import { useMCPStore } from '~/lib/stores/mcp';
 import { usePluginStore } from '~/lib/stores/plugins';
@@ -665,7 +667,9 @@ export const ChatImpl = memo(
     const { parsedMessages, parseMessages, resetParsedMessages } = useMessageParser();
     pendingTemplateParserRef.current = parseMessages;
 
-    const TEXTAREA_MAX_HEIGHT = chatStarted ? 400 : 200;
+    // phone: the chat box grows to about four lines (BaseChat uses the same limit)
+    const isPhone = useIsPhone();
+    const TEXTAREA_MAX_HEIGHT = isPhone ? PHONE_TEXTAREA_MAX_HEIGHT : chatStarted ? 400 : 200;
 
     useEffect(() => {
       const sameChatRefresh = shouldPreserveChatMessagesOnRefresh({
@@ -891,6 +895,14 @@ export const ChatImpl = memo(
       const textarea = textareaRef.current;
 
       if (textarea) {
+        // an empty box is sized by CSS (one row and its minimum height), not by an early measurement
+        if (!textarea.value) {
+          textarea.style.height = '';
+          textarea.style.overflowY = 'hidden';
+
+          return;
+        }
+
         textarea.style.height = 'auto';
 
         const scrollHeight = textarea.scrollHeight;
@@ -898,7 +910,9 @@ export const ChatImpl = memo(
         textarea.style.height = `${Math.min(scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
         textarea.style.overflowY = scrollHeight > TEXTAREA_MAX_HEIGHT ? 'auto' : 'hidden';
       }
-    }, [input, textareaRef]);
+
+      // also when the limits change (a phone is detected after the first render)
+    }, [input, textareaRef, TEXTAREA_MAX_HEIGHT]);
 
     const runAnimation = async () => {
       if (chatStarted) {

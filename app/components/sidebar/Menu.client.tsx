@@ -307,8 +307,13 @@ export const Menu = () => {
     const enterThreshold = 20;
     const exitThreshold = 20;
 
-    function onMouseMove(event: MouseEvent) {
-      if (isSettingsOpen) {
+    function onMouseMove(event: PointerEvent) {
+      /*
+       * Only a real mouse opens and closes the sidebar by moving to the edge.
+       * A phone sends mouse events for every tap too: a tap on the menu button
+       * (near the left edge) used to reopen the sidebar right after it closed.
+       */
+      if (isSettingsOpen || event.pointerType !== 'mouse') {
         return;
       }
 
@@ -321,10 +326,10 @@ export const Menu = () => {
       }
     }
 
-    window.addEventListener('mousemove', onMouseMove);
+    window.addEventListener('pointermove', onMouseMove);
 
     return () => {
-      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('pointermove', onMouseMove);
     };
   }, [isSettingsOpen]);
 
@@ -368,7 +373,9 @@ export const Menu = () => {
       {open && !isSettingsOpen && (
         <button
           type="button"
-          aria-label="Close menu"
+          aria-hidden="true"
+          tabIndex={-1}
+          data-testid="sidebar-backdrop"
           className="md:hidden fixed inset-0 z-sidebar bg-black/40 cursor-default"
           onClick={() => setOpen(false)}
         />
@@ -387,8 +394,18 @@ export const Menu = () => {
           isSettingsOpen ? 'z-40' : 'z-sidebar',
         )}
       >
-        <div className="h-12 flex items-center justify-between px-4 border-b border-ca-elements-borderColor bg-ca-elements-background-depth-2 rounded-tr-2xl">
-          <div className="text-ca-elements-textPrimary font-medium"></div>
+        <div className="h-12 flex items-center justify-between px-4 max-md:pl-1 border-b border-ca-elements-borderColor bg-ca-elements-background-depth-2 rounded-tr-2xl">
+          <div className="text-ca-elements-textPrimary font-medium">
+            {/* phone: the same icon as the header's menu button closes the sidebar */}
+            <button
+              type="button"
+              aria-label="Close menu"
+              onClick={() => setOpen(false)}
+              className="md:hidden flex h-11 w-11 items-center justify-center bg-transparent text-ca-elements-textPrimary"
+            >
+              <span className="i-ph:sidebar-simple-duotone text-xl" aria-hidden="true" />
+            </button>
+          </div>
           <div className="flex items-center gap-3">
             <OpenSourceNoticesLink />
             <span className="font-medium text-sm text-ca-elements-textPrimary truncate">

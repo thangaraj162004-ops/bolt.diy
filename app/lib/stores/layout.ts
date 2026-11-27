@@ -15,3 +15,7 @@ export const sidebarOpen = atom(false);
 export function isPhoneWidth(): boolean {
   return typeof window !== 'undefined' && window.innerWidth < PHONE_MAX_WIDTH;
 }
+
+/** Chat box text area on a phone: one line to start, growing to about four lines. */
+export const PHONE_TEXTAREA_MIN_HEIGHT = 44;
+export const PHONE_TEXTAREA_MAX_HEIGHT = 112;

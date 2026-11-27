@@ -12,6 +12,7 @@ import { SendButton } from './SendButton.client';
 import { SupabaseConnection } from './SupabaseConnection';
 import { ToolAccessMenu } from './ToolAccessMenu';
 import { ModelSelector } from '~/components/chat/ModelSelector';
+import { ModelSheet } from '~/components/chat/ModelSheet';
 import { SpeechRecognitionButton } from '~/components/chat/SpeechRecognition';
 import { ColorSchemeDialog } from '~/components/ui/ColorSchemeDialog';
 import { IconButton } from '~/components/ui/IconButton';
@@ -158,10 +159,59 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
     supabaseConnected,
   ]);
 
+  // the provider, model and API key controls: inline on desktop, in a bottom sheet on a phone
+  const [isModelSheetOpen, setIsModelSheetOpen] = React.useState(false);
+
+  /*
+   * The size limits change once a phone is detected after the first render: fit
+   * the text area to them again (otherwise an empty box keeps its desktop height
+   * until the user types).
+   */
+  React.useEffect(() => {
+    const textarea = props.textareaRef?.current;
+
+    if (!textarea) {
+      return;
+    }
+
+    if (!textarea.value) {
+      textarea.style.height = '';
+      return;
+    }
+
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, props.TEXTAREA_MAX_HEIGHT)}px`;
+  }, [props.TEXTAREA_MIN_HEIGHT, props.TEXTAREA_MAX_HEIGHT, props.textareaRef]);
+
+  const modelSettings = () => (
+    <>
+      <ModelSelector
+        key={props.provider?.name}
+        model={props.model}
+        setModel={props.setModel}
+        modelList={props.modelList}
+        provider={props.provider}
+        setProvider={props.setProvider}
+        providerList={props.providerList || (PROVIDER_LIST as ProviderInfo[])}
+        apiKeys={props.apiKeys}
+        modelLoading={props.isModelLoading}
+      />
+      {(props.providerList || []).length > 0 && props.provider && !LOCAL_PROVIDERS.includes(props.provider.name) && (
+        <APIKeyManager
+          provider={props.provider}
+          apiKey={props.apiKeys[props.provider.name] || ''}
+          setApiKey={(key) => {
+            props.onApiKeysChange(props.provider.name, key);
+          }}
+        />
+      )}
+    </>
+  );
+
   return (
     <div
       className={classNames(
-        'relative bg-ca-elements-background-depth-2 backdrop-blur p-3 rounded-lg border border-ca-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
+        'relative bg-ca-elements-background-depth-2 backdrop-blur p-3 max-md:p-1.5 rounded-lg max-md:rounded-2xl border border-ca-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
 
         /*
          * {
@@ -199,30 +249,23 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
       <div>
         <ClientOnly>
           {() => (
-            <div className={props.isModelSettingsCollapsed ? 'hidden' : ''}>
-              <ModelSelector
-                key={props.provider?.name}
-                model={props.model}
-                setModel={props.setModel}
-                modelList={props.modelList}
-                provider={props.provider}
-                setProvider={props.setProvider}
-                providerList={props.providerList || (PROVIDER_LIST as ProviderInfo[])}
-                apiKeys={props.apiKeys}
-                modelLoading={props.isModelLoading}
-              />
-              {(props.providerList || []).length > 0 &&
-                props.provider &&
-                !LOCAL_PROVIDERS.includes(props.provider.name) && (
-                  <APIKeyManager
-                    provider={props.provider}
-                    apiKey={props.apiKeys[props.provider.name] || ''}
-                    setApiKey={(key) => {
-                      props.onApiKeysChange(props.provider.name, key);
-                    }}
-                  />
+            <>
+              {/* phone: hidden here; the model chip below opens them in a bottom sheet */}
+              <div className={classNames('max-md:hidden', { hidden: props.isModelSettingsCollapsed })}>
+                {modelSettings()}
+              </div>
+              <ModelSheet open={isModelSheetOpen} onOpenChange={setIsModelSheetOpen}>
+                {isModelSheetOpen && (
+                  <>
+                    {modelSettings()}
+                    <div className="mt-3 flex items-center justify-between gap-2 text-sm text-ca-elements-textSecondary">
+                      <span>Tool approval</span>
+                      <ToolAccessMenu />
+                    </div>
+                  </>
                 )}
-            </div>
+              </ModelSheet>
+            </>
           )}
         </ClientOnly>
       </div>
@@ -260,11 +303,16 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
           </button>
         </div>
       )}
-      <div className={classNames('relative shadow-xs border border-ca-elements-borderColor backdrop-blur rounded-lg')}>
+      <div
+        className={classNames(
+          'relative shadow-xs border border-ca-elements-borderColor backdrop-blur rounded-lg max-md:rounded-xl',
+        )}
+      >
         <textarea
           ref={props.textareaRef}
+          rows={1} // one line by default; the minimum height keeps desktop at its usual size
           className={classNames(
-            'w-full pl-4 pt-4 pr-16 outline-none resize-none text-ca-elements-textPrimary placeholder-ca-elements-textTertiary bg-transparent text-sm',
+            'w-full pl-4 pt-4 pr-16 max-md:pl-3 max-md:pt-3 max-md:pr-12 outline-none resize-none text-ca-elements-textPrimary placeholder-ca-elements-textTertiary bg-transparent text-sm max-md:text-base',
             'transition-all duration-200',
             'hover:border-ca-elements-focus',
           )}
@@ -350,8 +398,8 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
             />
           )}
         </ClientOnly>
-        <div className="flex justify-between items-center text-sm p-4 pt-2">
-          <div className="flex gap-1 items-center">
+        <div className="flex justify-between items-center text-sm p-4 pt-2 max-md:px-1 max-md:pt-0 max-md:pb-1">
+          <div className="flex gap-1 items-center max-md:gap-0 max-md:w-full">
             <ClientOnly>
               {() => (
                 <AttachmentMenu
@@ -378,7 +426,10 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
                 />
               )}
             </ClientOnly>
-            <ClientOnly>{() => <ToolAccessMenu />}</ClientOnly>
+            {/* phone: tool approval moves into the model sheet */}
+            <div className="max-md:hidden">
+              <ClientOnly>{() => <ToolAccessMenu />}</ClientOnly>
+            </div>
             {/* Hidden components for programmatic access from menu */}
             <div className="hidden">
               <ColorSchemeDialog designScheme={props.designScheme} setDesignScheme={props.setDesignScheme} />
@@ -390,8 +441,9 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
                 <button
                   type="button"
                   title={props.chatMode === 'discuss' ? 'Discuss Mode' : 'Agent Mode'}
+                  aria-label={props.chatMode === 'discuss' ? 'Mode: Discuss' : 'Mode: Agent'}
                   className={classNames(
-                    'transition-all flex items-center gap-1 rounded-md px-1.5 py-1 text-xs',
+                    'transition-all flex items-center gap-1 rounded-md px-1.5 py-1 text-xs max-md:min-h-11 max-md:min-w-11 max-md:justify-center',
                     props.chatMode === 'discuss'
                       ? 'bg-ca-elements-item-backgroundAccent text-ca-elements-item-contentAccent'
                       : props.agentMode
@@ -402,12 +454,12 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
                   {props.chatMode === 'discuss' ? (
                     <>
                       <div className="i-ph:chats text-lg" />
-                      <span>Discuss</span>
+                      <span className="max-md:hidden">Discuss</span>
                     </>
                   ) : (
                     <>
                       <div className="i-ph:robot text-lg" />
-                      <span>Agent</span>
+                      <span className="max-md:hidden">Agent</span>
                     </>
                   )}
                   <div className="i-ph:caret-down text-sm" />
@@ -472,9 +524,22 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
               onStop={props.stopListening}
               disabled={props.isStreaming}
             />
+            {/* phone: a small chip with the model name opens the provider, model and API key sheet */}
+            <button
+              type="button"
+              className="md:hidden ml-auto flex min-h-11 max-w-[45%] items-center gap-1 rounded-full bg-transparent px-2.5 text-xs text-ca-elements-textSecondary"
+              onClick={() => setIsModelSheetOpen(true)}
+              disabled={!props.providerList || props.providerList.length === 0}
+              aria-label={`Model: ${props.model || 'choose a model'}`}
+              data-testid="model-chip"
+            >
+              <span className="i-ph:sparkle text-base shrink-0" aria-hidden="true" />
+              <span className="truncate">{props.model || 'Choose model'}</span>
+              <span className="i-ph:caret-up text-sm shrink-0" aria-hidden="true" />
+            </button>
             <IconButton
               title="Model Settings"
-              className={classNames('transition-all flex items-center gap-1', {
+              className={classNames('max-md:hidden transition-all flex items-center gap-1', {
                 'bg-ca-elements-item-backgroundAccent text-ca-elements-item-contentAccent':
                   props.isModelSettingsCollapsed,
                 'bg-ca-elements-item-backgroundDefault text-ca-elements-item-contentDefault':

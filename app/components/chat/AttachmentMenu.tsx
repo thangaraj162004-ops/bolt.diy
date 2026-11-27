@@ -45,6 +45,7 @@ export function AttachmentMenu({
           title="Add attachment or connector"
           className={classNames(
             'flex items-center text-ca-elements-item-contentDefault bg-transparent',
+            'max-md:min-w-11 max-md:min-h-11 max-md:justify-center',
             'hover:text-ca-elements-item-contentActive rounded-md p-1',
             'hover:bg-ca-elements-item-backgroundActive',
             'focus:outline-none focus:ring-2 focus:ring-ca-elements-focus focus:ring-offset-1',
