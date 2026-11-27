@@ -100,10 +100,10 @@ const COLOR_PRIMITIVES = {
 
 export default defineConfig({
   /*
-   * `touch:` = the touch layout (narrow OR a finger); `mouse:` = everything
-   * else (wide with a mouse); `touch-wide:` = touch layout at 768 px and wider.
-   * See app/lib/touchLayout.ts. (Two media variants do not stack, so
-   * `touch:md:` would lose its width: use `touch-wide:`.)
+   * `touch:` = the phone layout (below 768 px); `mouse:` = the desktop layout
+   * (768 px and wider, any pointer); `touch-wide:` = the desktop layout used
+   * with a finger. See app/lib/touchLayout.ts. (Two media variants do not
+   * stack, so `touch:md:` would lose its width: use `touch-wide:`.)
    */
   variants: [
     (matcher) =>

@@ -50,6 +50,8 @@ const DOM_TESTS = [
   'app/components/projects/ProjectsPage.spec.tsx',
   'app/lib/projects/projects.spec.ts',
   'app/lib/hooks/useBackToClose.spec.ts',
+  'app/components/workbench/PhoneCodeView.spec.tsx',
+  'app/components/auth/AccountPopupMenu.spec.tsx',
   'app/components/@settings/tabs/plugins/PluginTab.spec.tsx',
   'app/components/ui/Dialog.phone.spec.tsx',
   'app/components/sidebar/HistoryItem.spec.tsx',

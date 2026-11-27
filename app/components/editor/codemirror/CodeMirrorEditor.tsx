@@ -44,6 +44,9 @@ export interface EditorSettings {
   fontSize?: string;
   gutterFontSize?: string;
   tabSize?: number;
+
+  /** Wrap long lines (phones: the code never scrolls sideways). */
+  lineWrapping?: boolean;
 }
 
 type TextEditorDocument = EditorDocument & {
@@ -397,6 +400,7 @@ function newEditorState(
       drawSelection(),
       bracketMatching(),
       EditorState.tabSize.of(settings?.tabSize ?? 2),
+      ...(settings?.lineWrapping ? [EditorView.lineWrapping] : []),
       indentOnInput(),
       editableTooltipField,
       editableStateField,

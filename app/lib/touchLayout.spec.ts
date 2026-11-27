@@ -3,23 +3,35 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { createGenerator } from 'unocss';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MOUSE_LAYOUT_QUERY, TOUCH_LAYOUT_QUERY, TOUCH_WIDE_QUERY, isTouchLayout } from './touchLayout';
+import {
+  MOUSE_LAYOUT_QUERY,
+  TOUCH_INPUT_QUERY,
+  TOUCH_LAYOUT_QUERY,
+  TOUCH_WIDE_QUERY,
+  isTouchInput,
+  isTouchLayout,
+  isTouchWide,
+} from './touchLayout';
 
-describe('one touch layout rule (Task 11F)', () => {
+describe('layout rules (Task 11G: the phone layout is below 768 px only again)', () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it('touch = narrower than 768 px OR a coarse pointer; mouse = exactly the rest', () => {
-    expect(TOUCH_LAYOUT_QUERY).toBe('(max-width: 767.9px), (pointer: coarse)');
-    expect(MOUSE_LAYOUT_QUERY).toBe('(min-width: 768px) and (pointer: fine), (min-width: 768px) and (pointer: none)');
+  it('phone layout = narrower than 768 px; desktop = 768 px and wider with any pointer', () => {
+    expect(TOUCH_LAYOUT_QUERY).toBe('(max-width: 767.9px)');
+    expect(MOUSE_LAYOUT_QUERY).toBe('(min-width: 768px)');
     expect(TOUCH_WIDE_QUERY).toBe('(min-width: 768px) and (pointer: coarse)');
+
+    // the 11F fixes (no edge gestures, Back closes overlays) still cover a finger on a wide screen
+    expect(TOUCH_INPUT_QUERY).toBe('(max-width: 767.9px), (pointer: coarse)');
   });
 
-  it('isTouchLayout asks the browser with that rule', () => {
-    const matchMedia = vi.fn((query: string) => ({ matches: query === TOUCH_LAYOUT_QUERY }));
+  it('a phone on "Desktop site" (wide, with a finger) is touch input and touch-wide, not the phone layout', () => {
+    const matchMedia = vi.fn((query: string) => ({ matches: query.includes('pointer: coarse') }));
     vi.stubGlobal('window', { matchMedia });
 
-    expect(isTouchLayout()).toBe(true);
-    expect(matchMedia).toHaveBeenCalledWith(TOUCH_LAYOUT_QUERY);
+    expect(isTouchLayout()).toBe(false);
+    expect(isTouchWide()).toBe(true);
+    expect(isTouchInput()).toBe(true);
   });
 
   it('the touch:, mouse: and touch-wide: CSS variants use the same media queries', async () => {
@@ -27,7 +39,7 @@ describe('one touch layout rule (Task 11F)', () => {
     const { default: config } = await import(/* @vite-ignore */ join(process.cwd(), 'uno.config.ts'));
     const uno = await createGenerator(config);
 
-    const { css } = await uno.generate('touch:hidden mouse:hidden touch-wide:pl-[340px] touch:placeholder:text-sm', {
+    const { css } = await uno.generate('touch:hidden mouse:hidden touch-wide:hidden touch:placeholder:text-sm', {
       preflights: false,
     });
 

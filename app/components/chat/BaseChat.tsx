@@ -30,7 +30,7 @@ const LazyWorkbench = lazy(() =>
 import { StickToBottom, useStickToBottomContext } from '~/lib/hooks';
 import { useIsPhone } from '~/lib/hooks/useIsPhone';
 import type { ModelInfo } from '~/lib/modules/llm/types';
-import { PHONE_TEXTAREA_MAX_HEIGHT, PHONE_TEXTAREA_MIN_HEIGHT, sidebarOpen } from '~/lib/stores/layout';
+import { PHONE_TEXTAREA_MAX_HEIGHT, PHONE_TEXTAREA_MIN_HEIGHT } from '~/lib/stores/layout';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import { workbenchStore } from '~/lib/stores/workbench';
 import type { ActionAlert, DeployAlert, LlmErrorAlertType } from '~/types/actions';
@@ -141,7 +141,6 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
   ) => {
     // phone: a one-line chat box that grows to about four lines
     const isPhone = useIsPhone();
-    const isChatListOpen = useStore(sidebarOpen);
     const TEXTAREA_MAX_HEIGHT = isPhone ? PHONE_TEXTAREA_MAX_HEIGHT : chatStarted ? 400 : 200;
     const [apiKeys, setApiKeys] = useState<Record<string, string>>(getApiKeysFromCookies());
     const [modelList, setModelList] = useState<ModelInfo[]>([]);
@@ -391,16 +390,7 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
         {chatStarted && showChat && !showWorkbench && (
           <WorkbenchReopenButton onClick={() => workbenchStore.showWorkbench.set(true)} />
         )}
-        {/*
-         * Touch layout, 768 px and wider: the open chat list sits beside the
-         * content instead of over it, so it never covers the chat box.
-         */}
-        <div
-          className={classNames('flex flex-col lg:flex-row overflow-y-auto w-full h-full', {
-            'touch-wide:pl-[340px]': isChatListOpen,
-          })}
-          data-testid="chat-content"
-        >
+        <div className="flex flex-col lg:flex-row overflow-y-auto w-full h-full" data-testid="chat-content">
           <div className={classNames(styles.Chat, 'flex flex-col flex-grow lg:min-w-[var(--chat-min-width)] h-full')}>
             {!chatStarted && (
               <div id="intro" className="mt-[16vh] max-w-2xl mx-auto text-center px-4 lg:px-0">

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { isTouchLayout } from '~/lib/touchLayout';
+import { isTouchInput } from '~/lib/touchLayout';
 
 /**
  * Touch layout: Back closes the open sheet, page or chat list first, and only
@@ -152,13 +152,13 @@ export function resetOverlayHistory() {
   queue = Promise.resolve();
 }
 
-/** Touch layout: while `open`, Back calls `close` instead of leaving the page. */
+/** Touch screens (phone or a finger): while `open`, Back calls `close` instead of leaving the page. */
 export function useBackToClose(open: boolean, close: () => void) {
   const closeRef = useRef(close);
   closeRef.current = close;
 
   useEffect(() => {
-    if (!open || !isTouchLayout()) {
+    if (!open || !isTouchInput()) {
       return undefined;
     }
 

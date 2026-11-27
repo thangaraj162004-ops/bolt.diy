@@ -277,3 +277,51 @@ describe('AccountMenu', () => {
     expect(authDialog.get()).toEqual({});
   });
 });
+
+describe('header on a wide touch screen (a phone on "Desktop site", Task 11G)', () => {
+  const original = window.matchMedia;
+
+  afterEach(() => {
+    window.matchMedia = original;
+  });
+
+  function wideTouch() {
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('pointer: coarse') || query === '(min-width: 768px)',
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    })) as unknown as typeof window.matchMedia;
+  }
+
+  it('shows only the credits chip and the letter avatar, which opens the account menu', async () => {
+    wideTouch();
+    await renderMenu(fakeSupabase({ session: { user: { id: 'user-1', email: 'priya@b.co' } }, balance: 1262 }));
+
+    expect(screen.getByTestId('credits-chip').textContent).toBe('1262');
+    expect(screen.queryByTestId('credits-badge')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Buy credits' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Log out' })).toBeNull();
+
+    const avatar = screen.getByRole('button', { name: 'Account menu' });
+    expect(avatar.querySelector('[data-testid="user-avatar"]')!.textContent).toBe('P');
+
+    await act(async () => {
+      fireEvent.keyDown(avatar, { key: 'Enter' });
+    });
+    expect((await screen.findByTestId('account-popup')).textContent).toContain('Sign out');
+    expect(screen.queryByTestId('account-sheet')).toBeNull();
+  });
+
+  it('a guest gets the avatar menu with Sign in, not a separate Log in button', async () => {
+    wideTouch();
+    await renderMenu(fakeSupabase());
+
+    expect(screen.queryByRole('button', { name: 'Log in' })).toBeNull();
+
+    await act(async () => {
+      fireEvent.keyDown(screen.getByRole('button', { name: 'Account menu' }), { key: 'Enter' });
+    });
+    expect((await screen.findByTestId('account-popup')).textContent).toContain('Sign in');
+  });
+});

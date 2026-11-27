@@ -1,11 +1,13 @@
 import { useStore } from '@nanostores/react';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';
+import { AccountPopupMenu } from './AccountPopupMenu.client';
 import { AccountSheet } from './AccountSheet';
 import { AuthDialog } from './AuthDialog';
 import { BuyCreditsDialog } from './BuyCreditsDialog';
 import { OutOfCreditsDialog } from './OutOfCreditsDialog';
 import { UserAvatar, displayName } from '~/components/ui/UserAvatar';
+import { useTouchWide } from '~/lib/hooks/useTouchWide';
 import { formatPlanDate } from '~/lib/payments/checkout';
 import { planName } from '~/lib/payments/packs';
 import { startProjectSync } from '~/lib/projects/sync';
@@ -26,6 +28,9 @@ const buttonClass =
  * Phone: a 44 px tap area around the 40 px circle; the right margin puts the
  * circle 12 px from the screen edge (header padding 4 + margin 6 + 2).
  */
+/** Wide touch screens: the 44 px avatar button that opens the account popup menu. */
+const wideAvatarButtonClass = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-transparent p-0';
+
 const avatarButtonClass =
   'mouse:hidden mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-transparent p-0';
 
@@ -45,6 +50,9 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
   const profile = useStore(profileStore);
   const [sheetOpen, setSheetOpen] = useState(false);
 
+  // a phone on "Desktop site" (wide, with a finger): only the credits chip and the avatar menu
+  const touchWide = useTouchWide();
+
   useEffect(() => (client ? startAuth(client) : undefined), [client]);
 
   // signed in: save projects online (does nothing for guests)
@@ -62,6 +70,28 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
     onProjects: () => projectsPageOpen.set(true),
     onSignOut: () => void signOut(client),
   };
+
+  const authDialogElement = (
+    <AuthDialog
+      client={client}
+      open={loginDialog !== null}
+      hint={loginDialog?.hint}
+      onClose={() => authDialog.set(null)}
+    />
+  );
+
+  if (state.status === 'signed-out' && touchWide) {
+    return (
+      <>
+        <AccountPopupMenu side="bottom" align="end" client={client}>
+          <button type="button" aria-label="Account menu" data-testid="avatar-button" className={wideAvatarButtonClass}>
+            <UserAvatar />
+          </button>
+        </AccountPopupMenu>
+        {authDialogElement}
+      </>
+    );
+  }
 
   if (state.status === 'signed-out') {
     return (
@@ -93,6 +123,47 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
   const plan = planName(state.plan);
   const planUntil = formatPlanDate(state.planUntil);
   const name = displayName(profile.username, state.email);
+
+  const purchaseDialogs = (
+    <>
+      <OutOfCreditsDialog
+        open={outOfCredits}
+        onClose={() => outOfCreditsDialog.set(false)}
+        onBuy={() => {
+          outOfCreditsDialog.set(false);
+          buyCreditsDialog.set(true);
+        }}
+      />
+      <BuyCreditsDialog
+        open={buyOpen}
+        email={state.email}
+        currentPlan={state.plan}
+        currentPlanUntil={state.planUntil}
+        onClose={() => buyCreditsDialog.set(false)}
+      />
+    </>
+  );
+
+  if (touchWide) {
+    return (
+      <div className="flex items-center gap-2">
+        <span
+          className="flex items-center gap-1 whitespace-nowrap rounded-full bg-purple-500/10 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-300"
+          aria-label={creditsLabel(state.balance)}
+          data-testid="credits-chip"
+        >
+          <span className="i-ph:coins text-base" aria-hidden="true" />
+          {state.balance === null ? '…' : state.balance}
+        </span>
+        <AccountPopupMenu side="bottom" align="end" client={client}>
+          <button type="button" aria-label="Account menu" data-testid="avatar-button" className={wideAvatarButtonClass}>
+            <UserAvatar name={name} />
+          </button>
+        </AccountPopupMenu>
+        {purchaseDialogs}
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-2 touch:gap-1">
@@ -149,21 +220,7 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
         }}
         {...sheetActions}
       />
-      <OutOfCreditsDialog
-        open={outOfCredits}
-        onClose={() => outOfCreditsDialog.set(false)}
-        onBuy={() => {
-          outOfCreditsDialog.set(false);
-          buyCreditsDialog.set(true);
-        }}
-      />
-      <BuyCreditsDialog
-        open={buyOpen}
-        email={state.email}
-        currentPlan={state.plan}
-        currentPlanUntil={state.planUntil}
-        onClose={() => buyCreditsDialog.set(false)}
-      />
+      {purchaseDialogs}
     </div>
   );
 }

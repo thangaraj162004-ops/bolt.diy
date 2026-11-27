@@ -15,7 +15,7 @@ body {
 }
 
 /*
- * Touch layout (the same media query as TOUCH_LAYOUT_QUERY in
+ * Touch screens (the same media query as TOUCH_INPUT_QUERY in
  * app/lib/touchLayout.ts): no sideways overscroll on the page or any scroll
  * panel, so a sideways scroll that reaches an edge never turns into Android's
  * edge "Back" gesture or a bounce. A desktop with a mouse is unchanged.

@@ -172,4 +172,43 @@ describe('sidebar on a phone', () => {
     act(() => screen.getByRole('button', { name: 'Back' }).click());
     expect(projectsPageOpen.get()).toBe(false);
   });
+
+  describe('on a wide touch screen (a phone on "Desktop site", Task 11G)', () => {
+    const original = window.matchMedia;
+
+    beforeEach(() => {
+      window.matchMedia = ((query: string) => ({
+        matches: query.includes('pointer: coarse') || query === '(min-width: 768px)',
+        media: query,
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      })) as unknown as typeof window.matchMedia;
+    });
+
+    afterEach(() => {
+      window.matchMedia = original;
+    });
+
+    it('one user row at the bottom replaces the top name, the settings and the moon icons', async () => {
+      renderMenu();
+
+      expect(screen.queryByTestId('sidebar-user-name')).toBeNull();
+      expect(document.querySelector('.side-menu [title="Toggle Theme"]')).toBeNull();
+      expect(document.querySelector('.side-menu [title="Preferences"]')).toBeNull();
+      expect(await screen.findByTestId('account-user-row', {}, { timeout: 3000 })).toBeTruthy();
+    });
+
+    it('no edge handle, and a tap outside the open list closes it', () => {
+      renderMenu();
+      expect(screen.queryByRole('button', { name: 'Open sidebar' })).toBeNull();
+
+      act(() => sidebarOpen.set(true));
+
+      // below the list (z-sidebar = 997), so taps inside the list still reach it
+      expect(screen.getByTestId('sidebar-outside').className).toContain('z-[996]');
+
+      fireEvent.click(screen.getByTestId('sidebar-outside'));
+      expect(sidebarOpen.get()).toBe(false);
+    });
+  });
 });

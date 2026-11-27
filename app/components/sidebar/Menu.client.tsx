@@ -16,12 +16,18 @@ const LazyControlPanel = lazy(() =>
 );
 import { ProjectsPage } from '~/components/projects/ProjectsPage';
 import { Button } from '~/components/ui/Button';
+
+// loaded on its own so supabase-js stays out of the first page load (like the header's account menu)
+const LazyAccountUserRow = lazy(() =>
+  import('~/components/auth/AccountPopupMenu.client').then((m) => ({ default: m.AccountUserRow })),
+);
 import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { SettingsButton, OpenSourceNoticesLink } from '~/components/ui/SettingsButton';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { UserAvatar, displayName } from '~/components/ui/UserAvatar';
 import { leaveOverlays, useBackToClose } from '~/lib/hooks/useBackToClose';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
+import { useTouchWide } from '~/lib/hooks/useTouchWide';
 import {
   db,
   deleteById,
@@ -50,6 +56,7 @@ import {
 } from '~/lib/stores/layout';
 import { profileStore } from '~/lib/stores/profile';
 import { authState } from '~/lib/supabase/auth';
+import { isTouchInput } from '~/lib/touchLayout';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
 
@@ -110,6 +117,7 @@ export const Menu = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isProjectsOpen = useStore(projectsPageOpen);
+  const touchWide = useTouchWide();
 
   // on a phone the sidebar covers the screen: close it (and the Projects page) after a chat is opened
   useEffect(() => {
@@ -485,8 +493,8 @@ export const Menu = () => {
        * A phone sends mouse events for every tap too: a tap on the menu button
        * (near the left edge) used to reopen the sidebar right after it closed.
        */
-      // never in the touch layout: there the menu button alone opens and closes the list
-      if (isSettingsOpen || event.pointerType !== 'mouse' || isPhoneWidth()) {
+      // never on touch screens (phone or a finger): there the menu button alone opens and closes the list
+      if (isSettingsOpen || event.pointerType !== 'mouse' || isTouchInput()) {
         return;
       }
 
@@ -553,7 +561,7 @@ export const Menu = () => {
           aria-hidden="true"
           tabIndex={-1}
           data-testid="sidebar-backdrop"
-          className="touch-wide:hidden mouse:hidden fixed inset-0 z-sidebar bg-black/40 cursor-default"
+          className="mouse:hidden fixed inset-0 z-sidebar bg-black/40 cursor-default"
           onClick={() => setOpen(false)}
         />
       )}
@@ -585,11 +593,21 @@ export const Menu = () => {
           </div>
           <div className="flex items-center gap-3">
             <OpenSourceNoticesLink />
-            {/* the signed-in name (or email prefix) and its letter, on every layout; "Guest" when signed out */}
-            <span className="font-medium text-sm text-ca-elements-textPrimary truncate" data-testid="sidebar-user-name">
-              {userName || 'Guest'}
-            </span>
-            <UserAvatar name={userName} className="h-8 w-8 text-sm" />
+            {/*
+             * the signed-in name (or email prefix) and its letter; "Guest" when signed out.
+             * Wide touch screens show them once, in the user row at the bottom.
+             */}
+            {!touchWide && (
+              <>
+                <span
+                  className="font-medium text-sm text-ca-elements-textPrimary truncate"
+                  data-testid="sidebar-user-name"
+                >
+                  {userName || 'Guest'}
+                </span>
+                <UserAvatar name={userName} className="h-8 w-8 text-sm" />
+              </>
+            )}
           </div>
         </div>
         <CurrentDateTime />
@@ -779,17 +797,44 @@ export const Menu = () => {
             <span className="flex-1">Projects</span>
             <span className="i-ph:caret-right text-ca-elements-textTertiary" aria-hidden="true" />
           </button>
-          <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 px-4 py-3">
-            <div className="flex items-center gap-3">
-              <SettingsButton onClick={handleSettingsClick} />
+          {/* wide touch screens: one user row; its menu has Settings, Appearance, Projects and more */}
+          {touchWide ? (
+            <div className="border-t border-ca-elements-borderColor p-2">
+              <Suspense fallback={null}>
+                <LazyAccountUserRow />
+              </Suspense>
             </div>
-            <ThemeSwitch />
-          </div>
+          ) : (
+            <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 px-4 py-3">
+              <div className="flex items-center gap-3">
+                <SettingsButton onClick={handleSettingsClick} />
+              </div>
+              <ThemeSwitch />
+            </div>
+          )}
         </div>
       </motion.div>
 
-      {/* Persistent sidebar trigger — always visible when sidebar is closed (phones use the header's menu button) */}
-      {!open && !isSettingsOpen && (
+      {/*
+       * Wide touch screens: no dark background, but a tap outside the list
+       * closes it (there is no mouse to move away).
+       */}
+      {touchWide && open && !isSettingsOpen && (
+        <button
+          type="button"
+          aria-hidden="true"
+          tabIndex={-1}
+          data-testid="sidebar-outside"
+          className="fixed inset-0 z-[996] cursor-default bg-transparent"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/*
+       * Persistent sidebar trigger — always visible when sidebar is closed. Not on
+       * touch screens: no edge handles there (phones and "Desktop site" use the header's menu button)
+       */}
+      {!open && !isSettingsOpen && !touchWide && (
         <button
           onClick={() => setOpen(true)}
           className={classNames(

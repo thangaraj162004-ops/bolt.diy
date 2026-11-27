@@ -59,7 +59,9 @@ describe('Projects page on a phone', () => {
     const { onClose } = renderPage();
 
     const page = screen.getByTestId('projects-page');
-    expect(page.className).toContain('mouse:hidden');
+
+    // opens only from touch entry points (phone, or the wide-touch account menu)
+    expect(page.className).not.toContain('mouse:hidden');
     expect(page.className).toContain('fixed inset-0');
 
     expect(cardTitles()).toEqual(['bakery landing page', 'Recipe finder', 'Kanban board']);
