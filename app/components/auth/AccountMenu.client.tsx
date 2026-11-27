@@ -8,6 +8,7 @@ import { OutOfCreditsDialog } from './OutOfCreditsDialog';
 import { UserAvatar, displayName } from '~/components/ui/UserAvatar';
 import { formatPlanDate } from '~/lib/payments/checkout';
 import { planName } from '~/lib/payments/packs';
+import { startProjectSync } from '~/lib/projects/sync';
 import { openSettings, projectsPageOpen, sidebarOpen } from '~/lib/stores/layout';
 import { profileStore } from '~/lib/stores/profile';
 import { authDialog, authState, buyCreditsDialog, outOfCreditsDialog, signOut, startAuth } from '~/lib/supabase/auth';
@@ -45,6 +46,9 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => (client ? startAuth(client) : undefined), [client]);
+
+  // signed in: save projects online (does nothing for guests)
+  useEffect(() => (client ? startProjectSync(client) : undefined), [client]);
 
   if (!client || state.status === 'loading') {
     return null;

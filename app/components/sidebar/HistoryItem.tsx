@@ -15,6 +15,12 @@ interface HistoryItemProps {
   selectionMode?: boolean;
   isSelected?: boolean;
   onToggleSelection?: (id: string) => void;
+
+  /** Shows a small cloud: there is a copy online. */
+  savedOnline?: boolean;
+
+  /** Opens it another way than the link (an online copy may be downloaded first). */
+  onOpen?: () => void;
 }
 
 export function HistoryItem({
@@ -25,6 +31,8 @@ export function HistoryItem({
   selectionMode = false,
   isSelected = false,
   onToggleSelection,
+  savedOnline = false,
+  onOpen,
 }: HistoryItemProps) {
   const { id: urlId } = useParams();
   const isActiveChat = urlId === item.urlId;
@@ -108,8 +116,26 @@ export function HistoryItem({
         <Link
           to={`/chat/${item.urlId}`}
           className="flex w-full relative truncate block"
-          onClick={selectionMode ? handleItemClick : undefined}
+          onClick={
+            selectionMode
+              ? handleItemClick
+              : onOpen
+                ? (event) => {
+                    event.preventDefault();
+                    onOpen();
+                  }
+                : undefined
+          }
         >
+          {savedOnline && (
+            <span
+              className="i-ph:cloud-check mr-1.5 shrink-0 self-center text-ca-elements-textTertiary"
+              role="img"
+              aria-label="Saved online"
+              title="Saved online"
+              data-testid="saved-online"
+            />
+          )}
           <WithTooltip tooltip={currentDescription}>
             <span className="truncate pr-24 max-md:pr-2">{currentDescription}</span>
           </WithTooltip>

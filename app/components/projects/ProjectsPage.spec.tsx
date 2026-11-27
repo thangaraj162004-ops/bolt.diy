@@ -207,4 +207,57 @@ describe('Projects page on a phone', () => {
     );
     expect(screen.queryByTestId('projects-page')).toBeNull();
   });
+
+  it('a cloud icon means "saved online"; Delete then asks "Delete here and online?"', async () => {
+    const { onDelete } = renderPage([
+      { ...PROJECTS[0], savedOnline: true, cloudId: 'c1' },
+      {
+        id: 'cloud:c2',
+        description: 'Only online',
+        messages: [],
+        timestamp: ago(60 * 60_000),
+        savedOnline: true,
+        onlineOnly: true,
+        cloudId: 'c2',
+      },
+      PROJECTS[1],
+    ]);
+
+    const cards = screen.getAllByTestId('project-card');
+    expect(within(cards[0]).getByRole('img', { name: 'Saved online' })).toBeTruthy();
+    expect(within(cards[1]).getByRole('img', { name: 'Saved online' })).toBeTruthy();
+    expect(within(cards[2]).queryByRole('img', { name: 'Saved online' })).toBeNull();
+
+    const sheet = await openSheetFor(0);
+    await act(async () => {
+      fireEvent.click(within(sheet).getByRole('button', { name: 'Delete' }));
+    });
+
+    const dialog = await screen.findByRole('dialog', { name: 'Delete here and online?' });
+    expect(dialog.textContent).toContain('from this browser and online');
+
+    await act(async () => {
+      fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+    });
+    expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id: '1', savedOnline: true }));
+  });
+
+  it('shows one tip when given (guests)', () => {
+    render(
+      <ProjectsPage
+        open
+        projects={[]}
+        tip="Sign in to keep your projects safe."
+        onClose={vi.fn()}
+        onOpen={vi.fn()}
+        onRename={vi.fn()}
+        onDuplicate={vi.fn()}
+        onExport={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    );
+
+    expect(screen.getAllByTestId('projects-tip')).toHaveLength(1);
+    expect(screen.getByTestId('projects-tip').textContent).toBe('Sign in to keep your projects safe.');
+  });
 });

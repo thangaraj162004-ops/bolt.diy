@@ -76,4 +76,24 @@ describe('chat row on a phone (no hover)', () => {
     });
     expect(toggleEditMode).toHaveBeenCalledTimes(1);
   });
+
+  it('shows "Saved online" and opens through onOpen (an online copy may be downloaded first)', () => {
+    const onOpen = vi.fn();
+
+    render(
+      <MemoryRouter>
+        <HistoryItem
+          item={{ id: 'c1', urlId: 'c1', description: 'Recipe finder', messages: [], timestamp: '' } as any}
+          exportChat={vi.fn()}
+          savedOnline
+          onOpen={onOpen}
+        />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByRole('img', { name: 'Saved online' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('link'));
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
 });

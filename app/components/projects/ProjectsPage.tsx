@@ -3,7 +3,7 @@ import { formatDistanceStrict } from 'date-fns';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ConfirmationDialog, Dialog, DialogTitle } from '~/components/ui/Dialog';
 import { avatarLetter } from '~/components/ui/UserAvatar';
-import type { ChatHistoryItem } from '~/lib/persistence';
+import type { ProjectEntry } from '~/lib/projects/merge';
 import { classNames } from '~/utils/classNames';
 
 export interface ProjectsPageProps {
@@ -11,12 +11,15 @@ export interface ProjectsPageProps {
   onClose: () => void;
 
   /** Saved chats (with titles and links); shown newest first. */
-  projects: ChatHistoryItem[];
-  onOpen: (project: ChatHistoryItem) => void;
-  onRename: (project: ChatHistoryItem, title: string) => void | Promise<void>;
-  onDuplicate: (project: ChatHistoryItem) => void | Promise<void>;
-  onExport: (project: ChatHistoryItem) => void | Promise<void>;
-  onDelete: (project: ChatHistoryItem) => void | Promise<void>;
+  projects: ProjectEntry[];
+  onOpen: (project: ProjectEntry) => void;
+  onRename: (project: ProjectEntry, title: string) => void | Promise<void>;
+  onDuplicate: (project: ProjectEntry) => void | Promise<void>;
+  onExport: (project: ProjectEntry) => void | Promise<void>;
+  onDelete: (project: ProjectEntry) => void | Promise<void>;
+
+  /** A short tip above the list (guests: "Sign in to keep your projects safe."). */
+  tip?: string;
 
   /** For tests: the current time. */
   now?: number;
@@ -38,7 +41,7 @@ export function timeAgo(timestamp: string | undefined, now = Date.now()): string
 }
 
 /** Newest first; the title filter ignores case. */
-export function visibleProjects(projects: ChatHistoryItem[], search: string): ChatHistoryItem[] {
+export function visibleProjects(projects: ProjectEntry[], search: string): ProjectEntry[] {
   const query = search.trim().toLowerCase();
 
   return projects
@@ -63,13 +66,14 @@ export function ProjectsPage({
   onDuplicate,
   onExport,
   onDelete,
+  tip,
   now,
 }: ProjectsPageProps) {
   const [searching, setSearching] = useState(false);
   const [search, setSearch] = useState('');
-  const [actionsFor, setActionsFor] = useState<ChatHistoryItem | null>(null);
-  const [renaming, setRenaming] = useState<ChatHistoryItem | null>(null);
-  const [deleting, setDeleting] = useState<ChatHistoryItem | null>(null);
+  const [actionsFor, setActionsFor] = useState<ProjectEntry | null>(null);
+  const [renaming, setRenaming] = useState<ProjectEntry | null>(null);
+  const [deleting, setDeleting] = useState<ProjectEntry | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const shown = useMemo(() => visibleProjects(projects, search), [projects, search]);
@@ -96,7 +100,7 @@ export function ProjectsPage({
   }
 
   // close the sheet first, then do the action
-  const fromSheet = (action: (project: ChatHistoryItem) => void) => () => {
+  const fromSheet = (action: (project: ProjectEntry) => void) => () => {
     const project = actionsFor;
     setActionsFor(null);
 
@@ -164,6 +168,16 @@ export function ProjectsPage({
         )}
       </div>
 
+      {tip && (
+        <p
+          className="mx-4 mt-3 flex items-center gap-2 rounded-xl bg-ca-elements-item-backgroundAccent px-3 py-2 text-sm text-ca-elements-item-contentAccent"
+          data-testid="projects-tip"
+        >
+          <span className="i-ph:cloud shrink-0 text-lg" aria-hidden="true" />
+          {tip}
+        </p>
+      )}
+
       {projects.length === 0 ? (
         <div
           className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center"
@@ -200,8 +214,17 @@ export function ProjectsPage({
                     <span className="line-clamp-2 break-words text-base font-medium text-ca-elements-textPrimary">
                       {project.description}
                     </span>
-                    <span className="block text-sm text-ca-elements-textSecondary">
-                      {timeAgo(project.timestamp, now)}
+                    <span className="flex items-center gap-1.5 text-sm text-ca-elements-textSecondary">
+                      {project.savedOnline && (
+                        <span
+                          className="i-ph:cloud-check shrink-0 text-base"
+                          role="img"
+                          aria-label="Saved online"
+                          title="Saved online"
+                          data-testid="saved-online"
+                        />
+                      )}
+                      <span data-testid="project-time">{timeAgo(project.timestamp, now)}</span>
                     </span>
                   </span>
                 </button>
@@ -275,8 +298,10 @@ export function ProjectsPage({
       <ConfirmationDialog
         isOpen={deleting !== null}
         onClose={() => setDeleting(null)}
-        title="Delete project?"
-        description={`“${deleting?.description ?? ''}” will be deleted from this browser. This cannot be undone.`}
+        title={deleting?.savedOnline ? 'Delete here and online?' : 'Delete project?'}
+        description={`“${deleting?.description ?? ''}” will be deleted ${
+          deleting?.onlineOnly ? 'online' : deleting?.savedOnline ? 'from this browser and online' : 'from this browser'
+        }. This cannot be undone.`}
         confirmLabel="Delete"
         variant="destructive"
         onConfirm={() => {
@@ -336,9 +361,9 @@ function RenameDialog({
   onClose,
   onSave,
 }: {
-  project: ChatHistoryItem | null;
+  project: ProjectEntry | null;
   onClose: () => void;
-  onSave: (project: ChatHistoryItem, title: string) => void;
+  onSave: (project: ProjectEntry, title: string) => void;
 }) {
   const [title, setTitle] = useState('');
 

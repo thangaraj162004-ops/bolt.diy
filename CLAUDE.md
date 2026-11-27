@@ -52,6 +52,7 @@ Rules for anyone (human or AI) working on this fork of bolt.diy.
   never spends credits.
 - If the AI fails before any reply is sent, the credit is refunded once per request (`refund_credits`, migration 0004, `SUPABASE_SECRET_KEY`).
 - Follow-up tool steps are free only with the server-signed `X-CA-Follow-Up` token for that paid message (runtime secret `CREDITS_TOKEN_SECRET`; without it they are charged).
+- Signed-in users' projects are also saved in `public.projects` (migration 0005, RLS: own rows only); limits in `app/lib/projects/limits.ts`. See `docs/online-projects.md`.
 
 ## Payments (Razorpay, test mode first)
 

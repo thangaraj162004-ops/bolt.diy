@@ -1,6 +1,6 @@
 import { useStore } from '@nanostores/react';
 import { motion, type Variants } from 'framer-motion';
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { HistoryItem } from './HistoryItem';
@@ -27,12 +27,18 @@ import {
   description as descriptionStore,
   duplicateChat,
   getAll,
+  getMessagesByUrlId,
+  getSnapshot,
+  setSnapshot,
   chatId,
   type ChatHistoryItem,
   updateChatDescription,
   useChatHistory,
 } from '~/lib/persistence';
 import { sidebarEntry } from '~/lib/persistence/chatTitle';
+import { projectLinks } from '~/lib/projects/links';
+import { isOnlineOnlyId, mergeProjects, type ProjectEntry } from '~/lib/projects/merge';
+import { getProjectSync, onlineProjects } from '~/lib/projects/sync';
 import {
   OPEN_SETTINGS_EVENT,
   isPhoneWidth,
@@ -92,7 +98,7 @@ function CurrentDateTime() {
 }
 
 export const Menu = () => {
-  const { duplicateCurrentChat, exportChat } = useChatHistory({ loadHistory: false });
+  const { exportChat } = useChatHistory({ loadHistory: false });
   const menuRef = useRef<HTMLDivElement>(null);
   const [list, setList] = useState<ChatHistoryItem[]>([]);
 
@@ -128,8 +134,18 @@ export const Menu = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
+  // the browser list merged with the signed-in user's online projects
+  const links = useStore(projectLinks);
+  const online = useStore(onlineProjects);
+  const userId = auth.status === 'signed-in' ? auth.userId : undefined;
+
+  const entries = useMemo(
+    () => mergeProjects(list, links, online.userId === userId ? online.items : [], userId),
+    [list, links, online, userId],
+  );
+
   const { filteredItems: filteredList, handleSearchChange } = useSearchFilter({
-    items: list,
+    items: entries,
     searchFields: ['description'],
   });
 
@@ -145,6 +161,13 @@ export const Menu = () => {
 
   const deleteChat = useCallback(
     async (id: string): Promise<void> => {
+      // signed in: the online copy goes first, so a failure keeps both copies
+      await getProjectSync()?.remove(id);
+
+      if (isOnlineOnlyId(id)) {
+        return;
+      }
+
       if (!db) {
         throw new Error('Database not available');
       }
@@ -321,26 +344,56 @@ export const Menu = () => {
   useEffect(() => {
     if (open || isProjectsOpen) {
       loadEntries();
+
+      // the online list, at most every 30 seconds
+      if (Date.now() - onlineProjects.get().loadedAt > 30_000) {
+        void getProjectSync()?.refreshList();
+      }
     }
   }, [open, isProjectsOpen, loadEntries]);
 
   // phone "Projects" page actions
   const openProject = useCallback(
-    (item: ChatHistoryItem) => {
-      projectsPageOpen.set(false);
-      navigate(`/chat/${item.urlId || item.id}`);
+    async (item: ProjectEntry) => {
+      try {
+        // an online-only project (or a newer online copy) is downloaded first
+        const local = (await getProjectSync()?.ensureLocal(item)) ?? item;
+
+        projectsPageOpen.set(false);
+        navigate(`/chat/${local.urlId || local.id}`);
+      } catch (error) {
+        toast.error('Could not open the project: ' + (error as Error).message);
+      }
     },
     [navigate],
   );
 
+  const exportProject = useCallback(
+    async (item: ProjectEntry) => {
+      try {
+        const local = (await getProjectSync()?.ensureLocal(item)) ?? item;
+        await exportChat(local.id);
+        loadEntries();
+      } catch (error) {
+        toast.error('Could not export the project: ' + (error as Error).message);
+      }
+    },
+    [exportChat, loadEntries],
+  );
+
   const renameProject = useCallback(
-    async (item: ChatHistoryItem, title: string) => {
+    async (item: ProjectEntry, title: string) => {
       if (!db) {
         return;
       }
 
       try {
-        await updateChatDescription(db, item.id, title);
+        if (!isOnlineOnlyId(item.id)) {
+          await updateChatDescription(db, item.id, title);
+        }
+
+        // signed in: the online copy too
+        await getProjectSync()?.rename(item.id, title);
 
         if (chatId.get() === item.id) {
           descriptionStore.set(title);
@@ -358,13 +411,30 @@ export const Menu = () => {
 
   // copies exactly this project (not the chat that is open), and stays on the page
   const duplicateProject = useCallback(
-    async (item: ChatHistoryItem) => {
+    async (item: ProjectEntry) => {
       if (!db) {
         return;
       }
 
       try {
-        await duplicateChat(db, item.id);
+        const sync = getProjectSync();
+        const source = (await sync?.ensureLocal(item)) ?? item;
+        const newUrlId = await duplicateChat(db, source.id);
+        const copy = await getMessagesByUrlId(db, newUrlId);
+
+        // the copy gets the files too
+        const snapshot = await getSnapshot(db, source.id);
+
+        if (copy && snapshot) {
+          await setSnapshot(db, copy.id, snapshot);
+        }
+
+        // signed in: save the copy online right away
+        if (copy && sync) {
+          sync.markChanged(copy.id);
+          void sync.flush();
+        }
+
         toast.success('Project duplicated');
       } catch (error) {
         console.error('Failed to duplicate project:', error);
@@ -439,11 +509,6 @@ export const Menu = () => {
       document.removeEventListener(OPEN_SETTINGS_EVENT, handleOpenSettings);
     };
   }, []);
-
-  const handleDuplicate = async (id: string) => {
-    await duplicateCurrentChat(id);
-    loadEntries(); // Reload the list after duplication
-  };
 
   const handleSettingsClick = () => {
     setIsSettingsOpen(true);
@@ -592,14 +657,16 @@ export const Menu = () => {
                       <HistoryItem
                         key={item.id}
                         item={item}
-                        exportChat={exportChat}
+                        savedOnline={(item as ProjectEntry).savedOnline}
+                        onOpen={(item as ProjectEntry).savedOnline ? () => void openProject(item) : undefined}
+                        exportChat={() => void exportProject(item)}
                         onDelete={(event) => {
                           event.preventDefault();
                           event.stopPropagation();
                           console.log('Delete triggered for item:', item);
                           setDialogContentWithLogging({ type: 'delete', item });
                         }}
-                        onDuplicate={() => handleDuplicate(item.id)}
+                        onDuplicate={() => void duplicateProject(item)}
                         selectionMode={selectionMode}
                         isSelected={selectedItems.includes(item.id)}
                         onToggleSelection={toggleItemSelection}
@@ -612,7 +679,9 @@ export const Menu = () => {
                 {dialogContent?.type === 'delete' && (
                   <>
                     <div className="p-6 bg-ca-elements-background-depth-1">
-                      <DialogTitle className="text-ca-elements-textPrimary">Delete Chat?</DialogTitle>
+                      <DialogTitle className="text-ca-elements-textPrimary">
+                        {(dialogContent.item as ProjectEntry).savedOnline ? 'Delete here and online?' : 'Delete Chat?'}
+                      </DialogTitle>
                       <DialogDescription className="mt-2 text-ca-elements-textSecondary">
                         <p>
                           You are about to delete{' '}
@@ -643,7 +712,11 @@ export const Menu = () => {
                 {dialogContent?.type === 'bulkDelete' && (
                   <>
                     <div className="p-6 bg-ca-elements-background-depth-1">
-                      <DialogTitle className="text-ca-elements-textPrimary">Delete Selected Chats?</DialogTitle>
+                      <DialogTitle className="text-ca-elements-textPrimary">
+                        {dialogContent.items.some((item) => (item as ProjectEntry).savedOnline)
+                          ? 'Delete here and online?'
+                          : 'Delete Selected Chats?'}
+                      </DialogTitle>
                       <DialogDescription className="mt-2 text-ca-elements-textSecondary">
                         <p>
                           You are about to delete {dialogContent.items.length}{' '}
@@ -733,11 +806,12 @@ export const Menu = () => {
       <ProjectsPage
         open={isProjectsOpen}
         onClose={() => projectsPageOpen.set(false)}
-        projects={list}
+        projects={entries}
+        tip={auth.status === 'signed-out' ? 'Sign in to keep your projects safe.' : undefined}
         onOpen={openProject}
         onRename={renameProject}
         onDuplicate={duplicateProject}
-        onExport={(item) => exportChat(item.id)}
+        onExport={exportProject}
         onDelete={(item) =>
           deleteItem({ preventDefault: noop, stopPropagation: noop } as unknown as React.UIEvent, item)
         }

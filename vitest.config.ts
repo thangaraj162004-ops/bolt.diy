@@ -48,6 +48,7 @@ const DOM_TESTS = [
   'app/components/sidebar/Menu.spec.tsx',
   'app/components/ui/UserAvatar.spec.tsx',
   'app/components/projects/ProjectsPage.spec.tsx',
+  'app/lib/projects/projects.spec.ts',
   'app/components/@settings/tabs/plugins/PluginTab.spec.tsx',
   'app/components/ui/Dialog.phone.spec.tsx',
   'app/components/sidebar/HistoryItem.spec.tsx',

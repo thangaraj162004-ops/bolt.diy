@@ -8,6 +8,8 @@ import {
   getMessages,
   updateChatDescription,
 } from '~/lib/persistence';
+import { isOnlineOnlyId } from '~/lib/projects/merge';
+import { getProjectSync } from '~/lib/projects/sync';
 
 interface EditChatDescriptionOptions {
   initialDescription?: string;
@@ -128,7 +130,13 @@ export function useEditChatDescription({
           return;
         }
 
-        await updateChatDescription(db, chatId, currentDescription);
+        // a project that is only online has no browser copy to rename
+        if (!isOnlineOnlyId(chatId)) {
+          await updateChatDescription(db, chatId, currentDescription);
+        }
+
+        // signed in: the online copy is renamed too
+        await getProjectSync()?.rename(chatId, currentDescription);
 
         if (syncWithGlobalStore) {
           descriptionStore.set(currentDescription);

@@ -19,6 +19,7 @@ import {
 import { createMessage, getMessageAnnotations, hasMessageFlag, type AnyPart } from './messageMigration';
 import type { Snapshot } from './types';
 import { PRODUCT_NAME } from '~/lib/brand';
+import { markProjectChanged } from '~/lib/projects/sync';
 import type { FileMap } from '~/lib/stores/files';
 import { logStore } from '~/lib/stores/logs'; // Import logStore
 import { workbenchStore } from '~/lib/stores/workbench';
@@ -707,6 +708,9 @@ ${value.content}
 
           await takeSnapshot(finalChatId, messages[messages.length - 1].id, workbenchStore.files.get(), chatSummary);
           invalidateChatCache(finalChatId);
+
+          // signed in: save it online a few seconds after the last change (never awaited)
+          markProjectChanged(finalChatId);
 
           if (_urlId) {
             invalidateChatCache(_urlId);
