@@ -158,8 +158,20 @@ function failure(error: unknown) {
   return { isError: true, content: [{ type: 'text' as const, text: message.slice(0, 4000) }] };
 }
 
+/** The preview's current build or runtime error, for the agent ("cartCount is not defined"). */
+export function currentPreviewError(): string | undefined {
+  const alert = workbenchStore.actionAlert.get();
+
+  if (alert?.source !== 'preview') {
+    return undefined;
+  }
+
+  return `${alert.title}: ${alert.description}`.replace(/\s+/g, ' ').trim().slice(0, 500);
+}
+
 function processResult(processId: string, record: ProcessRecord, reused = false) {
   const failed = record.exitCode !== undefined && record.exitCode !== 0;
+  const previewError = currentPreviewError();
 
   const data = {
     processId,
@@ -171,6 +183,7 @@ function processResult(processId: string, record: ProcessRecord, reused = false)
     outputStream: 'combined',
     truncated: record.truncated,
     previewReady: workbenchStore.previews.get().some((preview) => preview.ready),
+    ...(previewError ? { previewError } : {}),
     ...(reused ? { reused: true } : {}),
     ...(failed ? { isError: true, error: `Command exited with code ${record.exitCode}.` } : {}),
   };

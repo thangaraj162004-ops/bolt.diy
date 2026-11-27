@@ -19,6 +19,7 @@ import {
 import { createMessage, getMessageAnnotations, hasMessageFlag, type AnyPart } from './messageMigration';
 import type { Snapshot } from './types';
 import { PRODUCT_NAME } from '~/lib/brand';
+import { removeLink } from '~/lib/projects/links';
 import { markProjectChanged } from '~/lib/projects/sync';
 import type { FileMap } from '~/lib/stores/files';
 import { logStore } from '~/lib/stores/logs'; // Import logStore
@@ -636,6 +637,9 @@ ${value.content}
             _urlId = createdChat.urlId;
 
             chatId.set(nextId);
+
+            // a new chat may reuse the number of a deleted one: never inherit its online copy
+            removeLink(nextId);
 
             /*
              * Claimed before navigating: the messages on screen already belong to

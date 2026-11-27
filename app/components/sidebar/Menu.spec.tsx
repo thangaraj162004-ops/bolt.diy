@@ -12,6 +12,7 @@ vi.mock('~/lib/persistence', () => ({
   description: { get: () => undefined, set: vi.fn() },
   duplicateChat: vi.fn(),
   updateChatDescription: vi.fn(),
+  invalidateChatCache: vi.fn(),
 }));
 
 // the chat rows; not shown here (no saved chats) and they pull in the workbench

@@ -4,6 +4,11 @@ import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import type { WebContainer, WebContainerProcess } from '~/lib/webcontainer/types';
 import type { ITerminal } from '~/types/terminal';
 
+/** Longest wait for a running command to exit after Ctrl-C. */
+export const STOP_TIMEOUT_MS = 3_000;
+
+const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
 export async function newShellProcess(webcontainer: WebContainer, terminal: ITerminal) {
   const args: string[] = [];
 
@@ -229,13 +234,25 @@ export class CaShell {
     }
 
     state.abort?.();
-    this.terminal?.input('\x03');
+
+    /*
+     * Ctrl-C goes straight to the shell process. Sent through the on-screen
+     * terminal it was lost once the terminal was gone (going back to a new
+     * chat hides the workbench), so the dev server never stopped, the chat
+     * reset waited for ever and the old project's files stayed.
+     */
+    if (this.#shellInputStream) {
+      void this.#shellInputStream.write('\x03').catch(() => this.terminal?.input('\x03'));
+    } else {
+      this.terminal?.input('\x03');
+    }
 
     /*
      * The command reader owns the output stream. Wait for its exit signal
-     * before a chat reset removes files still watched by the dev server.
+     * before a chat reset removes files still watched by the dev server, but
+     * never for ever: a reset must always finish.
      */
-    await state.executionPrms;
+    await Promise.race([state.executionPrms, delay(STOP_TIMEOUT_MS)]);
   }
 
   async executeCommand(

@@ -1,5 +1,5 @@
 import { streamText as _streamText, type ModelMessage, type UIMessage } from 'ai';
-import { withAgentStreamDeadlines, withAgentToolCallRecovery } from './agent-stream';
+import { withAgentStreamDeadlines, withAgentToolCallRecovery, withoutRateLimitRetries } from './agent-stream';
 import { MAX_TOKENS, PROVIDER_COMPLETION_LIMITS, isReasoningModel, type FileMap } from './constants';
 import { prepareModelMessages } from './model-messages';
 import { withDevelopmentCommentaryWorkstyle } from './prompt-workstyle';
@@ -237,9 +237,9 @@ export async function streamText(props: {
 
 <agent_mode_workflow>
   The user enabled Agent Mode for this build request. Work autonomously through the available project tools, within the request's tool-step limit.
-  - Follow Plan -> edit -> run -> test -> repair. Record a short plan and explicit observable completion criteria with agent_plan, and explain it briefly to the user.
+  - Follow Plan -> edit -> run -> check the preview -> repair. Record a short plan and explicit observable completion criteria with agent_plan, and explain it briefly to the user.
   - Inspect the relevant project files before editing. For follow-ups, use small exact patches to relevant files and preserve unrelated code; replace entire files only with a concrete reason.
-  - Run the requested app/program, then the smallest relevant available checks. Inspect actual outputs and exit codes. If a check fails, patch its cause and rerun it; edits invalidate earlier passing checks.
+  - Run the requested app, then check that the preview builds and shows no error (previewReady, previewError). This is a browser preview: do not run lint, test or typecheck scripts; they cannot run here. If the preview shows an error, fix its cause once; if it still fails, stop and say so in one sentence.
   - Call agent_complete with successful tool evidence for every planned criterion. If blocked or the task limit is reached, clearly state unmet criteria and failed or missing checks.
   - Do not claim a task or check is complete without tool evidence. Keep the plan focused on the user's request and do not invent extra work.
 </agent_mode_workflow>`;
@@ -385,12 +385,15 @@ export async function streamText(props: {
     };
   }
 
-  const selectedModel = provider.getModelInstance({
-    model: modelDetails.name,
-    serverEnv,
-    apiKeys,
-    providerSettings,
-  });
+  // a 429 (rate limit or quota) stops at once with a clear message, without retries
+  const selectedModel = withoutRateLimitRetries(
+    provider.getModelInstance({
+      model: modelDetails.name,
+      serverEnv,
+      apiKeys,
+      providerSettings,
+    }),
+  );
   const boundedModel =
     forwardedOptions.streamRetries !== undefined ? withAgentStreamDeadlines(selectedModel) : selectedModel;
   const streamParams = {

@@ -417,3 +417,35 @@ export function createAgentStreamRecovery(onRetry: (reason: 'tool-call' | 'provi
     },
   };
 }
+
+/** True for an HTTP 429 (rate limit or free-tier quota) from the provider. */
+function isRateLimit(error: unknown): boolean {
+  return typeof error === 'object' && error !== null && (error as { statusCode?: unknown }).statusCode === 429;
+}
+
+/**
+ * A 429 (rate limit or quota) is never retried: retrying only spends more of
+ * the quota, and the user gets a clear "limit reached" message at once. Other
+ * errors (for example a 503) keep the SDK's normal retries.
+ */
+export function withoutRateLimitRetries(model: LanguageModel): LanguageModel {
+  if (typeof model === 'string') {
+    return model;
+  }
+
+  const noRetry = (error: unknown): never => {
+    if (isRateLimit(error)) {
+      Object.defineProperty(error, 'isRetryable', { value: false, configurable: true });
+    }
+
+    throw error;
+  };
+
+  return wrapLanguageModel({
+    model,
+    middleware: {
+      wrapGenerate: ({ doGenerate }) => Promise.resolve(doGenerate()).catch(noRetry),
+      wrapStream: ({ doStream }) => Promise.resolve(doStream()).catch(noRetry),
+    },
+  });
+}

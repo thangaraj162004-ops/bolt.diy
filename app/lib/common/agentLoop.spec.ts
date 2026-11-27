@@ -55,10 +55,13 @@ const complete = result('agent_complete', { completed: true });
 const verifiedMessages = [user, response(planned, edited, run, test)];
 
 describe('agent build loop', () => {
-  it('requires a recorded plan, real execution, passing verification and explicit completion', () => {
+  it('requires a recorded plan, a running preview without errors, and explicit completion', () => {
     const initial = getAgentLoopProgress([user, response({ type: 'text', text: 'I will build it.' })], true);
     expect(initial.status).toBe('pending');
-    expect(getAgentCompletionProblems(initial)).toHaveLength(3);
+
+    // a plan and a run; no lint or test check is required in the browser preview (Task 9F)
+    expect(getAgentCompletionProblems(initial)).toHaveLength(2);
+    expect(getAgentCompletionProblems(initial).join(' ')).not.toMatch(/purpose test|lint/);
 
     const verified = getAgentLoopProgress(verifiedMessages, true);
     expect(verified).toMatchObject({ status: 'pending', edited: true, ran: true, tested: true, previewReady: true });
@@ -66,7 +69,7 @@ describe('agent build loop', () => {
     expect(getAgentLoopProgress([...verifiedMessages, response(complete)], true).status).toBe('ready');
   });
 
-  it('does not treat a started check or an install as passing verification', () => {
+  it('does not treat a started check or an install as a passing check (checks are optional now)', () => {
     for (const output of [
       { processId: 'test', purpose: 'test', status: 'running' },
       { processId: 'install', purpose: 'install', status: 'exited', exitCode: 0 },
@@ -76,7 +79,9 @@ describe('agent build loop', () => {
         true,
       );
       expect(progress.tested).toBe(false);
-      expect(progress.status).toBe('pending');
+
+      // the running preview is enough to complete
+      expect(progress.status).toBe('ready');
     }
   });
 
@@ -112,7 +117,9 @@ describe('agent build loop', () => {
 
     const progress = getAgentLoopProgress([user, response(planned, started, edited, run, polled, complete)], true);
     expect(progress.tested).toBe(false);
-    expect(progress.status).toBe('pending');
+
+    // not a passing check, but checks are not required: the running preview completes it
+    expect(progress.status).toBe('ready');
   });
 
   it('requires a check after execution and does not complete after stopping the app', () => {
@@ -265,5 +272,100 @@ describe('agent build loop', () => {
     );
     expect(progress.status).toBe('pending');
     expect(getAgentCompletionProblems(progress)).toContain('Wait for pending project tool results before completing.');
+  });
+});
+
+describe('agent stops instead of looping (Task 9F)', () => {
+  const lint127 = (id: string) =>
+    result(
+      'project_run_command',
+      { processId: id, command: 'npm run lint', purpose: 'test', status: 'exited', exitCode: 127, isError: true },
+      id,
+    );
+
+  it('exit code 127 means "cannot run here": the agent stops with one short sentence, no retry', () => {
+    const progress = getAgentLoopProgress([user, response(planned, edited, run, lint127('lint'))], true);
+
+    expect(progress.status).toBe('stopped');
+    expect(progress.needsRepair).toBe(false);
+    expect(progress.stopReason).toBe('npm run lint cannot run in the browser preview, so I stopped here.');
+
+    const instructions = getAgentLoopInstructions(progress);
+    expect(instructions).toContain('Stop using tools and do not retry');
+    expect(instructions).toContain('one short sentence');
+  });
+
+  it('never asks for lint or test in the browser preview', () => {
+    const progress = getAgentLoopProgress([user, response(planned, edited, run)], true);
+    const instructions = getAgentLoopInstructions(progress);
+
+    expect(progress.status).toBe('pending');
+    expect(instructions).toContain('NEXT REQUIRED ACTION: Call agent_complete');
+    expect(instructions).toContain('Do not run lint, test, typecheck');
+    expect(getAgentCompletionProblems(progress)).toEqual([]);
+  });
+
+  it('stops after 2 identical failures', () => {
+    const failing = (id: string) =>
+      result('project_patch_file', { isError: true, error: 'The text to replace was not found in src/App.tsx.' }, id);
+
+    const once = getAgentLoopProgress([user, response(planned, edited, failing('p1'))], true);
+    expect(once.status).toBe('pending');
+    expect(once.needsRepair).toBe(true);
+
+    const twice = getAgentLoopProgress([user, response(planned, edited, failing('p1'), failing('p2'))], true);
+    expect(twice.status).toBe('stopped');
+    expect(twice.stopReason).toMatch(/^The same step failed twice/);
+  });
+
+  it('a preview runtime error must be fixed once; if it is still there after the fix, the agent stops', () => {
+    const withError = (id: string) =>
+      result(
+        'project_get_process_output',
+        {
+          processId: 'server',
+          purpose: 'run',
+          status: 'running',
+          previewReady: true,
+          previewError: 'Uncaught Exception: ReferenceError: cartCount is not defined',
+        },
+        id,
+      );
+    const clean = result(
+      'project_get_process_output',
+      { processId: 'server', purpose: 'run', status: 'running', previewReady: true },
+      'clean',
+    );
+
+    // the error blocks completion and asks for one fix
+    const first = getAgentLoopProgress([user, response(planned, edited, run, withError('e1'), complete)], true);
+    expect(first.status).toBe('pending');
+    expect(first.previewError).toContain('cartCount is not defined');
+    expect(getAgentLoopInstructions(first)).toContain('Fix its cause once');
+    expect(getAgentCompletionProblems(first).join(' ')).toContain('Fix the preview error first');
+
+    // fixed: completes
+    const fixed = getAgentLoopProgress(
+      [user, response(planned, edited, run, withError('e1'), edited, clean, complete)],
+      true,
+    );
+    expect(fixed.status).toBe('ready');
+
+    // still failing after the one fix: stops
+    const stillFailing = getAgentLoopProgress(
+      [user, response(planned, edited, run, withError('e1'), edited, withError('e2'))],
+      true,
+    );
+    expect(stillFailing.status).toBe('stopped');
+    expect(stillFailing.stopReason).toMatch(/^The preview still shows an error after one fix/);
+  });
+
+  it('has a limit of 25 agent steps per message', () => {
+    expect(MAX_AGENT_STEPS).toBe(25);
+
+    const steps = Array.from({ length: MAX_AGENT_STEPS }, (_, i) =>
+      response({ type: 'step-start' }, result('project_read_file', { content: 'x' }, `read-${i}`)),
+    );
+    expect(getAgentLoopProgress([user, response(planned), ...steps], true).status).toBe('limited');
   });
 });

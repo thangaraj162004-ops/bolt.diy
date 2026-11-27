@@ -1,7 +1,21 @@
-import { isStepCount, jsonSchema, streamText, tool, toUIMessageStream, type ToolSet, type TextStreamPart } from 'ai';
+import {
+  APICallError,
+  isStepCount,
+  jsonSchema,
+  streamText,
+  tool,
+  toUIMessageStream,
+  type ToolSet,
+  type TextStreamPart,
+} from 'ai';
 import { MockLanguageModelV4 } from 'ai/test';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createAgentStreamRecovery, withAgentStreamDeadlines, withAgentToolCallRecovery } from './agent-stream';
+import {
+  createAgentStreamRecovery,
+  withAgentStreamDeadlines,
+  withAgentToolCallRecovery,
+  withoutRateLimitRetries,
+} from './agent-stream';
 import { toSafeStreamErrorMessage } from '~/lib/.server/api/errors';
 
 const usage = {
@@ -529,4 +543,45 @@ describe('agent model wrappers keep the model (Task 9E)', () => {
 
     expect(text).toBe('Hello');
   });
+});
+
+describe('HTTP 429 is never retried (Task 9F)', () => {
+  it('stops at once on a rate limit, but still retries a 503', async () => {
+    const failingModel = (statusCode: number) => {
+      let calls = 0;
+
+      const model = new MockLanguageModelV4({
+        doStream: async () => {
+          calls++;
+          throw new APICallError({
+            message: statusCode === 429 ? 'Resource has been exhausted' : 'Service Unavailable',
+            url: 'https://example.test',
+            requestBodyValues: {},
+            statusCode,
+            isRetryable: true,
+          });
+        },
+      });
+
+      return { model: withoutRateLimitRetries(model), calls: () => calls };
+    };
+
+    for (const [statusCode, expectedCalls] of [
+      [429, 1],
+      [503, 3],
+    ] as const) {
+      const { model, calls } = failingModel(statusCode);
+      const result = streamText({ model, prompt: 'hi', maxRetries: 2 });
+      const errors: unknown[] = [];
+
+      for await (const part of result.stream) {
+        if (part.type === 'error') {
+          errors.push(part.error);
+        }
+      }
+
+      expect(errors).toHaveLength(1);
+      expect(calls()).toBe(expectedCalls);
+    }
+  }, 20_000);
 });

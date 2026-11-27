@@ -100,7 +100,7 @@ export const projectToolDefinitions: Record<ProjectToolName, { description: stri
   },
   project_run_command: {
     description:
-      'Run a command in the project and stream its output to the CodeApp AI Terminal. Set purpose to run, test, install, or other. A test passes only when it exits with code 0; poll project_get_process_output for running commands before dependent work. Returns process ID, command, purpose, output, exit status, and previewReady. Commands require user approval.',
+      'Run a command in the project and stream its output to the CodeApp AI Terminal. Set purpose to run, test, install, or other. A test passes only when it exits with code 0; poll project_get_process_output for running commands before dependent work. Returns process ID, command, purpose, output, exit status, previewReady and previewError (the current build or runtime error of the preview, if any). Exit code 127 means the command cannot run in the browser preview. Commands require user approval.',
     inputSchema: objectSchema(
       {
         command: { type: 'string', minLength: 1, maxLength: 4000 },
@@ -111,7 +111,7 @@ export const projectToolDefinitions: Record<ProjectToolName, { description: stri
   },
   project_get_process_output: {
     description:
-      'Get current or final combined output, exit status, and previewReady for a project command. Poll a running installation before starting dependent commands, and poll a dev server until previewReady is true.',
+      'Get current or final combined output, exit status, previewReady and previewError for a project command. Poll a running installation before starting dependent commands, and poll a dev server until previewReady is true.',
     inputSchema: objectSchema({ processId: { type: 'string', minLength: 1 } }, ['processId']),
   },
   project_stop_process: {

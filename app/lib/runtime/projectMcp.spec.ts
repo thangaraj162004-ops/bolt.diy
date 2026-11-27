@@ -18,6 +18,7 @@ vi.mock('~/lib/stores/workbench', () => ({
   workbenchStore: {
     projectGeneration: atom(1),
     previews: atom([]),
+    actionAlert: atom(undefined),
     files: atom({}),
     saveFileContent,
     createFile,
@@ -42,6 +43,7 @@ afterEach(async () => {
   workbenchStore.projectGeneration.set(workbenchStore.projectGeneration.get() + 1);
   workbenchStore.previews.set([]);
   workbenchStore.files.set({});
+  workbenchStore.actionAlert.set(undefined);
 });
 
 function processWithOutput(output: string, exitCode: number | Promise<number>) {
@@ -182,6 +184,26 @@ describe('project command tools', () => {
 
     expect(result.structuredContent).toMatchObject({ status: 'running', previewReady: true });
     expect(process.kill).not.toHaveBeenCalled();
+  });
+
+  it("reports the preview's runtime error to the agent (Task 9F)", async () => {
+    spawn.mockResolvedValueOnce(processWithOutput('server-listening\n', new Promise<number>(() => undefined)));
+    workbenchStore.previews.set([{ port: 5173, ready: true, baseUrl: 'https://preview.example' }]);
+    workbenchStore.actionAlert.set({
+      type: 'preview',
+      title: 'Uncaught Exception',
+      description: 'ReferenceError: cartCount is not defined',
+      content: 'stack',
+      source: 'preview',
+    });
+    bridge = await createProjectMcpBridge();
+
+    const result = await bridge.callTool('project_run_command', { command: 'npm run dev' });
+
+    expect(result.structuredContent).toMatchObject({
+      previewReady: true,
+      previewError: 'Uncaught Exception: ReferenceError: cartCount is not defined',
+    });
   });
 
   it('preserves verification purpose and the exact command through output polling', async () => {

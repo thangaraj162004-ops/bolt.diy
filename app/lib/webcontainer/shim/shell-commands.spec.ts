@@ -11,7 +11,7 @@ import {
 import { PREVIEW_PORT, PREVIEW_URL, WebContainerShim } from './shim';
 import type { WebContainer, WebContainerProcess } from '~/lib/webcontainer/types';
 import type { ITerminal } from '~/types/terminal';
-import { CaShell } from '~/utils/shell';
+import { CaShell, STOP_TIMEOUT_MS } from '~/utils/shell';
 
 /*
  * No network: React and other packages become esm.sh URLs that are never fetched.
@@ -578,6 +578,28 @@ describe('shell marker protocol', () => {
 
     await expect(dev).resolves.toMatchObject({ exitCode: 130 });
     expect(next).toMatchObject({ exitCode: 0, output: expect.stringContaining('after') });
+    expect(shim.previewRuntime).toBeUndefined();
+  });
+
+  it('stop() ends a dev server even when the on-screen terminal is gone (Task 9F)', async () => {
+    const shim = await createShim(REACT_PROJECT);
+    const ready = vi.fn();
+    shim.on('server-ready', ready);
+
+    const { shell, terminal } = await createCaShell(shim);
+
+    const dev = shell.executeCommand('dev', 'npm install && npm run dev');
+    await waitFor(() => ready.mock.calls.length === 1);
+
+    // going back to a new chat hides the workbench: its terminal no longer passes keys on
+    terminal.input = () => undefined;
+
+    const started = Date.now();
+    await shell.stop('dev');
+
+    // Ctrl-C reached the shell itself: the dev server ended, well before the time limit
+    await expect(dev).resolves.toMatchObject({ exitCode: 130 });
+    expect(Date.now() - started).toBeLessThan(STOP_TIMEOUT_MS);
     expect(shim.previewRuntime).toBeUndefined();
   });
 

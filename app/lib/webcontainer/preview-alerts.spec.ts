@@ -75,3 +75,30 @@ describe('reportPreviewUpdate', () => {
     expect(alert.get()).toBe(other);
   });
 });
+
+describe('a new build clears an old runtime error (Task 9F)', () => {
+  it('so a fixed "x is not defined" is not reported to the agent as still failing', () => {
+    const alert = atom<ActionAlert | undefined>(undefined);
+
+    reportPreviewMessage(
+      { ...base, type: 'PREVIEW_UNCAUGHT_EXCEPTION', message: 'cartCount is not defined', stack: '' },
+      alert,
+    );
+    expect(alert.get()?.title).toBe('Uncaught Exception');
+
+    reportPreviewUpdate({ port: 5173, kind: 'rebuilt', version: 3, durationMs: 20 }, alert);
+    expect(alert.get()).toBeUndefined();
+
+    // terminal alerts are not preview errors and stay
+    const terminal = {
+      type: 'error',
+      title: 'Command failed',
+      description: 'x',
+      content: 'x',
+      source: 'terminal',
+    } as const;
+    alert.set(terminal);
+    reportPreviewUpdate({ port: 5173, kind: 'rebuilt', version: 3, durationMs: 20 }, alert);
+    expect(alert.get()).toEqual(terminal);
+  });
+});

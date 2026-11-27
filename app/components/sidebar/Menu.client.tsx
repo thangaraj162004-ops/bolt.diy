@@ -28,6 +28,7 @@ import {
   duplicateChat,
   getAll,
   getMessagesByUrlId,
+  invalidateChatCache,
   getSnapshot,
   setSnapshot,
   chatId,
@@ -183,6 +184,9 @@ export const Menu = () => {
 
       // Delete the chat from the database
       await deleteById(db, id);
+
+      // a new chat may get this number again: it must not find the deleted chat in the cache
+      invalidateChatCache();
       console.log('Successfully deleted chat:', id);
     },
     [db],

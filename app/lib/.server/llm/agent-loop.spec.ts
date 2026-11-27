@@ -70,7 +70,7 @@ describe('agent plan and completion tools', () => {
     expect(loop.prepareStep({ steps: [] }).activeTools).toEqual(['project_read_file', 'agent_plan', 'agent_complete']);
   });
 
-  it('rejects completion without actual run and test evidence', async () => {
+  it('rejects completion without an actual run', async () => {
     const loop = createAgentLoopTools(
       [
         user,
@@ -85,7 +85,7 @@ describe('agent plan and completion tools', () => {
     expect(await loop.tools.agent_complete.execute!(completion, executeOptions)).toMatchObject({
       isError: true,
       completed: false,
-      error: expect.stringContaining('purpose test'),
+      error: expect.stringContaining('Run the app or requested program'),
     });
   });
 
@@ -202,5 +202,41 @@ describe('agent plan and completion tools', () => {
     expect(model.doGenerateCalls[1].prompt[0]).toMatchObject({
       content: expect.stringContaining('Base project instructions.'),
     });
+  });
+});
+
+describe('stopping (Task 9F)', () => {
+  it('a stopped loop gets no more tools, only the one-sentence reason', () => {
+    const loop = createAgentLoopTools(
+      [
+        user,
+        {
+          role: 'assistant',
+          parts: [
+            part('agent_plan', { plan }),
+            part('project_patch_file', { patched: true }, 'edit'),
+            part(
+              'project_run_command',
+              {
+                processId: 'l',
+                command: 'npm run test',
+                purpose: 'test',
+                status: 'exited',
+                exitCode: 127,
+                isError: true,
+              },
+              'lint',
+            ),
+          ],
+        },
+      ],
+      true,
+      true,
+      ['project_read_file', 'project_run_command'],
+    );
+
+    const step = loop.prepareStep({ steps: [], initialInstructions: 'system' });
+    expect(step.toolChoice).toBe('none');
+    expect(String(step.instructions)).toContain('npm run test cannot run in the browser preview, so I stopped here.');
   });
 });

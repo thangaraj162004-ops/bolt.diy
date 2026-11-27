@@ -36,7 +36,7 @@ export function createAgentLoopTools<TaskToolName extends string = never>(
     }),
     agent_complete: tool({
       description:
-        'Finish the current task only after running it and passing relevant checks after the latest edit. Report every planned criterion by its exact ID. The server attaches evidence from successful project tool calls automatically; do not provide process IDs, command names, or guessed evidence IDs. Use outcome blocked with a concrete reason if completion is impossible.',
+        'Finish the current task only after running it and confirming the preview builds and shows no error after the latest edit. Report every planned criterion by its exact ID. The server attaches evidence from successful project tool calls automatically; do not provide process IDs, command names, or guessed evidence IDs. Use outcome blocked with a concrete reason if completion is impossible.',
       inputSchema: z.object({
         outcome: z.enum(['complete', 'blocked']),
         summary: z.string().min(1).max(1000),
@@ -160,7 +160,7 @@ export function createAgentLoopTools<TaskToolName extends string = never>(
                     ],
             };
 
-      if (['blocked', 'limited', 'ready'].includes(progress.status)) {
+      if (['blocked', 'stopped', 'limited', 'ready'].includes(progress.status)) {
         return { ...instructions, toolChoice: 'none' as const };
       }
 

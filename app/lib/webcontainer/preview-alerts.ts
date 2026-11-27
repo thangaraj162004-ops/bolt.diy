@@ -43,7 +43,12 @@ export function reportPreviewUpdate(update: PreviewUpdate, actionAlert: Writable
       source: 'preview',
     });
   } else if (update.kind === 'ready' || update.kind === 'rebuilt') {
-    if (actionAlert.get()?.title === PREVIEW_BUILD_ERROR_TITLE) {
+    /*
+     * A new build replaces the old page, so its errors (build or runtime) are
+     * gone; a runtime error that is still there is reported again by the new
+     * page. Otherwise the agent kept seeing a fixed error as still failing.
+     */
+    if (actionAlert.get()?.source === 'preview') {
       actionAlert.set(undefined);
     }
   }
