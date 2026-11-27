@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 // the chat title component reads chat history (IndexedDB); not needed for the logo
@@ -58,6 +58,23 @@ describe('Header on a phone', () => {
       expect(sidebarOpen.get()).toBe(false);
       expect(button.getAttribute('aria-label')).toBe('Open menu');
     }
+  });
+});
+
+describe('Header with Settings open', () => {
+  it('keeps the logo under Settings, so it cannot cover "Back to project"', async () => {
+    const { settingsPanelOpen } = await import('~/lib/stores/layout');
+    render(<Header />);
+
+    const logo = screen.getByTestId('header-logo');
+    expect(logo.className).toContain('z-logo');
+    expect(logo.className.split(' ')).not.toContain('!z-auto');
+
+    act(() => settingsPanelOpen.set(true));
+    expect(logo.className.split(' ')).toContain('!z-auto');
+
+    act(() => settingsPanelOpen.set(false));
+    expect(logo.className.split(' ')).not.toContain('!z-auto');
   });
 });
 

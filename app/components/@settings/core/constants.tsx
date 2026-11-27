@@ -13,6 +13,7 @@ import {
   Blocks,
 } from 'lucide-react';
 import type { TabType } from './types';
+import { PLUGINS_ENABLED } from '~/lib/plugins/flags';
 
 // GitLab icon component
 const GitLabIcon = () => (
@@ -105,7 +106,7 @@ export const TAB_DESCRIPTIONS: Record<TabType, string> = {
   supabase: 'Setup Supabase database connection',
   'event-logs': 'View system events and logs',
   mcp: 'Configure MCP (Model Context Protocol) servers',
-  plugins: 'Discover, install, and manage plugins',
+  plugins: PLUGINS_ENABLED ? 'Discover, install, and manage plugins' : 'Plugins are coming soon',
 };
 
 export const DEFAULT_TAB_CONFIG = [

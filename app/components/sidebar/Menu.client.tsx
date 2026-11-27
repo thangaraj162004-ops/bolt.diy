@@ -22,7 +22,7 @@ import { UserAvatar, displayName } from '~/components/ui/UserAvatar';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { db, deleteById, getAll, chatId, type ChatHistoryItem, useChatHistory } from '~/lib/persistence';
 import { sidebarEntry } from '~/lib/persistence/chatTitle';
-import { OPEN_SETTINGS_EVENT, isPhoneWidth, sidebarOpen } from '~/lib/stores/layout';
+import { OPEN_SETTINGS_EVENT, isPhoneWidth, settingsPanelOpen, sidebarOpen } from '~/lib/stores/layout';
 import { DEFAULT_AVATAR, profileStore } from '~/lib/stores/profile';
 import { authState } from '~/lib/supabase/auth';
 import { classNames } from '~/utils/classNames';
@@ -94,6 +94,14 @@ export const Menu = () => {
   const [dialogContent, setDialogContent] = useState<DialogContent>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<string | undefined>(undefined);
+
+  // the header keeps its logo under Settings while it is open
+  useEffect(() => {
+    settingsPanelOpen.set(isSettingsOpen);
+
+    return () => settingsPanelOpen.set(false);
+  }, [isSettingsOpen]);
+
   const profile = useStore(profileStore);
   const auth = useStore(authState);
   const phoneName = displayName(profile?.username, auth.status === 'signed-in' ? auth.email : undefined);

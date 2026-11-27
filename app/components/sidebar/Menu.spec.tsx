@@ -99,4 +99,16 @@ describe('sidebar on a phone', () => {
     act(() => openSettings());
     expect(sidebarOpen.get()).toBe(false);
   });
+
+  it('tells the header while Settings is open', async () => {
+    const { settingsPanelOpen } = await import('~/lib/stores/layout');
+    renderMenu();
+    expect(settingsPanelOpen.get()).toBe(false);
+
+    act(() => openSettings());
+    expect(settingsPanelOpen.get()).toBe(true);
+
+    cleanup();
+    expect(settingsPanelOpen.get()).toBe(false);
+  });
 });

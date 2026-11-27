@@ -47,6 +47,7 @@ const DOM_TESTS = [
   'app/components/chat/ChatBox.phone.spec.tsx',
   'app/components/sidebar/Menu.spec.tsx',
   'app/components/ui/UserAvatar.spec.tsx',
+  'app/components/@settings/tabs/plugins/PluginTab.spec.tsx',
   'app/components/ui/Dialog.phone.spec.tsx',
   'app/components/sidebar/HistoryItem.spec.tsx',
   'app/components/@settings/core/ControlPanel.phone.spec.tsx',

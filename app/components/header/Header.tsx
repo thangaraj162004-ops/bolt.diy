@@ -5,7 +5,7 @@ import { HeaderActionButtons } from './HeaderActionButtons.client';
 import { BrandWordmark } from '~/components/ui/BrandWordmark';
 import { ChatDescription } from '~/lib/persistence/ChatDescription.client';
 import { chatStore } from '~/lib/stores/chat';
-import { sidebarOpen } from '~/lib/stores/layout';
+import { settingsPanelOpen, sidebarOpen } from '~/lib/stores/layout';
 import { classNames } from '~/utils/classNames';
 
 // loaded on its own so supabase-js stays out of the first page load; renders nothing without Supabase
@@ -16,6 +16,7 @@ const AccountMenu = lazy(() =>
 export function Header() {
   const chat = useStore(chatStore);
   const isSidebarOpen = useStore(sidebarOpen);
+  const isSettingsOpen = useStore(settingsPanelOpen);
 
   return (
     <header
@@ -25,7 +26,14 @@ export function Header() {
       })}
     >
       {/* phone: no z-logo, so the open sidebar covers the header (it has its own close button) */}
-      <div className="flex items-center gap-2 max-md:gap-0 min-w-0 z-logo max-md:!z-auto text-ca-elements-textPrimary cursor-pointer">
+      {/* while Settings is open the logo stays under it (it covered "Back to project" on short screens) */}
+      <div
+        className={classNames(
+          'flex items-center gap-2 max-md:gap-0 min-w-0 z-logo max-md:!z-auto text-ca-elements-textPrimary cursor-pointer',
+          { '!z-auto': isSettingsOpen },
+        )}
+        data-testid="header-logo"
+      >
         {/* opens and closes the chat history (the only way on a phone: there is no mouse hover) */}
         <button
           type="button"

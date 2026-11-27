@@ -28,3 +28,6 @@ export function openSettings() {
     document.dispatchEvent(new Event(OPEN_SETTINGS_EVENT));
   }
 }
+
+/** Whether Settings (the Control Panel) is open; the header logo then stays under it. */
+export const settingsPanelOpen = atom(false);

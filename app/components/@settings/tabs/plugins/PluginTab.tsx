@@ -16,6 +16,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { PRODUCT_NAME } from '~/lib/brand';
 import { getPluginToolName } from '~/lib/plugins/adapters';
+import { PLUGINS_ENABLED } from '~/lib/plugins/flags';
 import type { MarketplaceSnapshot, MarketplacePlugin } from '~/lib/plugins/marketplace';
 import { pluginCategorySchema, pluginManifestSchema, type PluginManifest } from '~/lib/plugins/schema';
 import {
@@ -114,7 +115,27 @@ function PluginCard({
   );
 }
 
-export default function PluginTab() {
+/** Settings > Plugins: "coming soon" until the marketplace is ready (PLUGINS_ENABLED). */
+export default function PluginTab({ enabled = PLUGINS_ENABLED }: { enabled?: boolean }) {
+  return enabled ? <PluginMarketplace /> : <PluginsComingSoon />;
+}
+
+function PluginsComingSoon() {
+  return (
+    <div
+      className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-ca-elements-borderColor px-6 py-16 text-center"
+      data-testid="plugins-coming-soon"
+    >
+      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-ca-elements-background-depth-3 text-ca-elements-textSecondary">
+        <Blocks className="h-6 w-6" aria-hidden="true" />
+      </span>
+      <h2 className="text-lg font-semibold text-ca-elements-textPrimary">Plugins are coming soon.</h2>
+    </div>
+  );
+}
+
+/** The plugin marketplace, catalog and developer tools; only used when PLUGINS_ENABLED is on. */
+function PluginMarketplace() {
   const plugins = usePluginStore((state) => state.plugins);
   const storeBusy = usePluginStore((state) => state.busy);
   const storeError = usePluginStore((state) => state.error);

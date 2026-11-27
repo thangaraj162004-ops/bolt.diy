@@ -90,4 +90,82 @@ describe('brand', () => {
     ]);
     expect(visibleStrings("export const meta = () => [{ title: 'Bolt' }];")).toEqual(['Bolt']);
   });
+
+  it('no string anywhere in the app says Bolt, bolt.diy, bolt.new or StackBlitz (server code, prompts and errors too)', () => {
+    // the credits (MIT license) and the names of old chat markers that are still read from saved chats
+    const allowed = new Set([...ALLOWED_FILES, 'lib/persistence/legacyTags.ts']);
+    const offenders: string[] = [];
+
+    const files = allSourceFiles(APP_DIR);
+
+    // really covers the server code and the AI prompts
+    expect(files.some((file) => file.includes('/.server/'))).toBe(true);
+    expect(files.some((file) => file.includes('/prompts/'))).toBe(true);
+
+    for (const file of files) {
+      const name = relative(APP_DIR, file);
+
+      if (allowed.has(name)) {
+        continue;
+      }
+
+      for (const text of stringLiterals(readFileSync(file, 'utf-8'))) {
+        if (isOldName(text)) {
+          offenders.push(`${name}: ${text}`);
+        }
+      }
+    }
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('no file the app serves from public/ says Bolt or StackBlitz', () => {
+    const publicDir = fileURLToPath(new URL('../../public', import.meta.url));
+
+    const offenders = allFiles(publicDir)
+      .filter((file) => /\.(html|svg|json|js|txt|webmanifest|css)$/.test(file))
+      .filter((file) => isOldName(readFileSync(file, 'utf-8')))
+      .map((file) => relative(publicDir, file));
+
+    expect(offenders).toEqual([]);
+  });
+
+  it('the string scan finds old names but not lower-case code names like template repositories', () => {
+    expect(stringLiterals(`const a = 'Ask Bolt'; // Bolt in a comment\nconst b = "x"; /* StackBlitz */`)).toEqual([
+      'Ask Bolt',
+      'x',
+    ]);
+    expect(isOldName('Built with bolt.diy')).toBe(true);
+    expect(isOldName('StackBlitz')).toBe(true);
+    expect(isOldName('blueberry-llm/bolt-vite-react-ts-template')).toBe(false);
+  });
 });
+
+function allFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const path = join(dir, name);
+
+    return statSync(path).isDirectory() ? allFiles(path) : [path];
+  });
+}
+
+/** Every .ts/.tsx file of the app except tests and test fixtures. */
+function allSourceFiles(dir: string): string[] {
+  return allFiles(dir).filter(
+    (path) => /\.tsx?$/.test(path) && !/\.(spec|test)\.tsx?$/.test(path) && !/__fixtures__|__snapshots__/.test(path),
+  );
+}
+
+/** The contents of every quoted string and template literal, without comments. */
+function stringLiterals(source: string): string[] {
+  const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`\\])\/\/.*$/gm, '$1');
+
+  return [...code.matchAll(/'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g)].map(
+    (match) => match[1] ?? match[2] ?? match[3],
+  );
+}
+
+/** "Bolt" as a word (any case of the product names), not lower-case code like "bolt-vite-template". */
+function isOldName(text: string): boolean {
+  return /\bBolt\b|\bBOLT\b/.test(text) || /bolt\.(diy|new)|stack\s?blitz/i.test(text);
+}
