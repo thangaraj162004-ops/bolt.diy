@@ -84,16 +84,16 @@ export default function ProfileTab() {
         {/* Personal Information Section */}
         <div>
           {/* Avatar Upload */}
-          <div className="flex items-start gap-6 max-md:gap-4 mb-8">
+          <div className="flex items-start gap-6 touch:gap-4 mb-8">
             {/* phone: the same simple letter circle as the header, no pictures */}
-            <UserAvatar name={phoneName} className="md:hidden h-16 w-16 text-2xl" />
+            <UserAvatar name={phoneName} className="mouse:hidden h-16 w-16 text-2xl" />
             <button
               type="button"
               aria-label="Change profile avatar"
               aria-expanded={isAvatarPickerOpen}
               onClick={() => setIsAvatarPickerOpen((open) => !open)}
               className={classNames(
-                'max-md:hidden w-24 h-24 rounded-full overflow-hidden',
+                'touch:hidden w-24 h-24 rounded-full overflow-hidden',
                 'bg-ca-elements-background-depth-2',
                 'ring-1 ring-ca-elements-borderColor',
                 'relative group transition-all duration-300 ease-out',
@@ -116,17 +116,17 @@ export default function ProfileTab() {
 
             <div className="flex-1 min-w-0 pt-1">
               <label className="block text-base font-medium text-ca-elements-textPrimary mb-1">Profile Picture</label>
-              <p className="max-md:hidden text-sm text-ca-elements-textSecondary">
+              <p className="touch:hidden text-sm text-ca-elements-textSecondary">
                 Choose a default avatar or upload one from your computer.
               </p>
-              <p className="md:hidden text-sm text-ca-elements-textSecondary">
+              <p className="mouse:hidden text-sm text-ca-elements-textSecondary">
                 Your avatar shows the first letter of your username.
               </p>
             </div>
           </div>
 
           {isAvatarPickerOpen && (
-            <div className="max-md:hidden mb-8 rounded-xl border border-ca-elements-borderColor bg-ca-elements-background-depth-1 p-4">
+            <div className="touch:hidden mb-8 rounded-xl border border-ca-elements-borderColor bg-ca-elements-background-depth-1 p-4">
               <h3 className="mb-3 text-sm font-medium text-ca-elements-textPrimary">Choose your avatar</h3>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {DEFAULT_AVATARS.map((avatar) => {

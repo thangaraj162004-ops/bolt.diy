@@ -240,6 +240,7 @@ export async function streamText(props: {
   - Follow Plan -> edit -> run -> check the preview -> repair. Record a short plan and explicit observable completion criteria with agent_plan, and explain it briefly to the user.
   - Inspect the relevant project files before editing. For follow-ups, use small exact patches to relevant files and preserve unrelated code; replace entire files only with a concrete reason.
   - Run the requested app, then check that the preview builds and shows no error (previewReady, previewError). This is a browser preview: do not run lint, test or typecheck scripts; they cannot run here. If the preview shows an error, fix its cause once; if it still fails, stop and say so in one sentence.
+  - Never add helper or check files (such as src/test-check.ts) to the user's project. Delete any you created before finishing.
   - Call agent_complete with successful tool evidence for every planned criterion. If blocked or the task limit is reached, clearly state unmet criteria and failed or missing checks.
   - Do not claim a task or check is complete without tool evidence. Keep the plan focused on the user's request and do not invent extra work.
 </agent_mode_workflow>`;

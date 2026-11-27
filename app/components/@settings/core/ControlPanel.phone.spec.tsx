@@ -39,16 +39,16 @@ describe('Settings on a phone', () => {
     render(<ControlPanel open onClose={onClose} />);
 
     const frame = screen.getByRole('dialog').firstElementChild!;
-    expect(frame.className).toContain('max-md:w-screen');
-    expect(frame.className).toContain('max-md:h-[100dvh]');
+    expect(frame.className).toContain('touch:w-screen');
+    expect(frame.className).toContain('touch:h-[100dvh]');
 
     // the desktop side menu and the tile grid are hidden on a phone
-    expect(document.querySelector('aside')!.className).toContain('max-md:hidden');
+    expect(document.querySelector('aside')!.className).toContain('touch:hidden');
 
     expect(screen.getByTestId('settings-title').textContent).toBe('Settings');
 
     const list = screen.getByTestId('settings-list');
-    expect(list.className).toContain('md:hidden');
+    expect(list.className).toContain('mouse:hidden');
 
     const rows = within(list).getAllByTestId('settings-row');
     expect(rows.map((row) => row.getAttribute('data-tab'))).toEqual(
@@ -94,7 +94,7 @@ describe('Settings on a phone', () => {
     });
 
     const wrapper = screen.getByTestId('page-profile').parentElement!;
-    expect(wrapper.className).toContain('max-md:p-4');
-    expect(wrapper.className).toContain('max-md:break-words');
+    expect(wrapper.className).toContain('touch:p-4');
+    expect(wrapper.className).toContain('touch:break-words');
   });
 });

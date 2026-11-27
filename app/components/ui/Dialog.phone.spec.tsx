@@ -16,17 +16,17 @@ describe('dialogs on a phone', () => {
     );
 
     const dialog = screen.getByRole('dialog');
-    expect(dialog.className).toContain('max-md:max-w-[calc(100vw-32px)]');
-    expect(dialog.className).toContain('max-md:max-h-[calc(100dvh-32px)]');
-    expect(dialog.className).toContain('max-md:overflow-y-auto');
-    expect(dialog.className).toContain('max-md:break-words');
+    expect(dialog.className).toContain('touch:max-w-[calc(100vw-32px)]');
+    expect(dialog.className).toContain('touch:max-h-[calc(100dvh-32px)]');
+    expect(dialog.className).toContain('touch:overflow-y-auto');
+    expect(dialog.className).toContain('touch:break-words');
 
     // still centered; the desktop width is unchanged
     expect(dialog.className).toContain('left-1/2');
     expect(dialog.className).toContain('w-[520px]');
 
     for (const name of ['Cancel', 'Delete']) {
-      expect(screen.getByRole('button', { name }).className).toContain('max-md:min-h-11');
+      expect(screen.getByRole('button', { name }).className).toContain('touch:min-h-11');
     }
   });
 
@@ -42,7 +42,7 @@ describe('dialogs on a phone', () => {
     );
 
     for (const name of ['Cancel', 'Confirm']) {
-      expect(screen.getByRole('button', { name }).className).toContain('max-md:min-h-11');
+      expect(screen.getByRole('button', { name }).className).toContain('touch:min-h-11');
     }
   });
 });

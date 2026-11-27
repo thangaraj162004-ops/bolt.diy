@@ -240,3 +240,40 @@ describe('stopping (Task 9F)', () => {
     expect(String(step.instructions)).toContain('npm run test cannot run in the browser preview, so I stopped here.');
   });
 });
+
+describe('cleaning up before stopping (Task 11F)', () => {
+  it('a stopped agent may first only delete the helper files it created', () => {
+    const loop = createAgentLoopTools(
+      [
+        user,
+        {
+          role: 'assistant',
+          parts: [
+            part('agent_plan', { plan }),
+            part('project_write_file', { path: 'src/test-check.ts', written: true, created: true }, 'helper'),
+            part(
+              'project_run_command',
+              {
+                processId: 'l',
+                command: 'npm run test',
+                purpose: 'test',
+                status: 'exited',
+                exitCode: 127,
+                isError: true,
+              },
+              'test',
+            ),
+          ],
+        },
+      ],
+      true,
+      true,
+      ['project_read_file', 'project_run_command', 'project_delete_path'],
+    );
+
+    const step = loop.prepareStep({ steps: [], initialInstructions: 'system' });
+    expect(step.toolChoice).toBe('required');
+    expect(step.activeTools).toEqual(['project_delete_path']);
+    expect(String(step.instructions)).toContain('First delete the helper files you created (src/test-check.ts)');
+  });
+});

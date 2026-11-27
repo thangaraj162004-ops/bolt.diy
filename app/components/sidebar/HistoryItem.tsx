@@ -77,7 +77,7 @@ export function HistoryItem({
   return (
     <div
       className={classNames(
-        'group rounded-lg text-sm text-ca-elements-textSecondary hover:text-ca-elements-textPrimary hover:bg-ca-elements-item-backgroundActive overflow-hidden flex justify-between items-center px-3 py-2 max-md:py-0 max-md:pr-0 max-md:min-h-11 transition-colors',
+        'group rounded-lg text-sm text-ca-elements-textSecondary hover:text-ca-elements-textPrimary hover:bg-ca-elements-item-backgroundActive overflow-hidden flex justify-between items-center px-3 py-2 touch:py-0 touch:pr-0 touch:min-h-11 transition-colors',
         { 'text-ca-elements-textPrimary bg-ca-elements-item-backgroundActive': isActiveChat },
         { 'cursor-pointer': selectionMode },
       )}
@@ -137,14 +137,14 @@ export function HistoryItem({
             />
           )}
           <WithTooltip tooltip={currentDescription}>
-            <span className="truncate pr-24 max-md:pr-2">{currentDescription}</span>
+            <span className="truncate pr-24 touch:pr-2">{currentDescription}</span>
           </WithTooltip>
           <div
             className={classNames(
               'absolute right-0 top-0 bottom-0 flex items-center bg-transparent px-2 transition-colors',
             )}
           >
-            <div className="max-md:hidden flex items-center gap-2.5 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="touch:hidden flex items-center gap-2.5 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
               <ChatActionButton
                 toolTipContent="Export"
                 icon="i-ph:download-simple h-4 w-4"
@@ -188,7 +188,7 @@ export function HistoryItem({
           <DropdownMenu.Trigger
             aria-label={`Actions for ${currentDescription}`}
             data-testid="chat-actions"
-            className="md:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-transparent text-ca-elements-textSecondary"
+            className="mouse:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-transparent text-ca-elements-textSecondary"
           >
             <span className="i-ph:dots-three-bold text-xl" aria-hidden="true" />
           </DropdownMenu.Trigger>

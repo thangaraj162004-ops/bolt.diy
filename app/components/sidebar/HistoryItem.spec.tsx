@@ -39,7 +39,7 @@ async function openActions() {
   );
 
   const trigger = screen.getByRole('button', { name: 'Actions for Recipe finder' });
-  expect(trigger.className).toContain('md:hidden');
+  expect(trigger.className).toContain('mouse:hidden');
   expect(trigger.className).toContain('h-11 w-11');
 
   await act(async () => {

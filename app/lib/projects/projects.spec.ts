@@ -475,3 +475,11 @@ describe('signing out', () => {
     expect(isVisibleTo('1', 'bob')).toBe(false);
   });
 });
+
+describe('unexpected online answers (Task 11F)', () => {
+  it('a non-list online answer never breaks the merged list', () => {
+    const local = [chat('1', '2026-01-01T10:00:00Z')];
+
+    expect(mergeProjects(local, {}, {} as unknown as OnlineProject[], 'alice').map((entry) => entry.id)).toEqual(['1']);
+  });
+});

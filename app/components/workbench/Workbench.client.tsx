@@ -20,8 +20,8 @@ import {
 import { IconButton } from '~/components/ui/IconButton';
 import { Slider, type SliderOptions } from '~/components/ui/Slider';
 import useViewport from '~/lib/hooks';
+import { useIsPhone } from '~/lib/hooks/useIsPhone';
 import { chatStore } from '~/lib/stores/chat';
-import { PHONE_MAX_WIDTH } from '~/lib/stores/layout';
 import { usePreviewStore } from '~/lib/stores/previews';
 import { streamingState } from '~/lib/stores/streaming';
 import { workbenchStore, type WorkbenchViewType } from '~/lib/stores/workbench';
@@ -321,7 +321,7 @@ export const Workbench = memo(
     const canHideChat = showWorkbench || !showChat;
 
     const isSmallViewport = useViewport(1024);
-    const isPhone = useViewport(PHONE_MAX_WIDTH);
+    const isPhone = useIsPhone();
 
     // phone: the terminal starts collapsed (the "Terminal" button opens it)
     useEffect(() => {
@@ -441,7 +441,7 @@ export const Workbench = memo(
               'fixed top-[calc(var(--header-height)+1.2rem)] bottom-6 w-[var(--workbench-inner-width)] z-0 transition-[left,width] duration-200 ca-ease-cubic-bezier',
 
               // phone: full screen between the header and the bottom tab bar
-              'max-md:top-[var(--header-height)] max-md:bottom-[calc(3.5rem+env(safe-area-inset-bottom))]',
+              'touch:top-[var(--header-height)] touch:bottom-[calc(3.5rem+env(safe-area-inset-bottom))]',
               {
                 'w-full': isSmallViewport,
                 'left-0': showWorkbench && isSmallViewport,
@@ -450,17 +450,17 @@ export const Workbench = memo(
               },
             )}
           >
-            <div className="absolute inset-0 px-2 lg:px-4 max-md:px-0">
-              <div className="h-full flex flex-col bg-ca-elements-background-depth-2 border border-ca-elements-borderColor shadow-sm rounded-lg overflow-hidden max-md:rounded-none max-md:border-0 max-md:shadow-none">
+            <div className="absolute inset-0 px-2 lg:px-4 touch:px-0">
+              <div className="h-full flex flex-col bg-ca-elements-background-depth-2 border border-ca-elements-borderColor shadow-sm rounded-lg overflow-hidden touch:rounded-none touch:border-0 touch:shadow-none">
                 {/* phone: this toolbar only holds the code tools, so it is hidden for the preview */}
                 <div
                   className={classNames(
-                    'flex items-center px-3 py-2 max-md:px-2 max-md:py-1 border-b border-ca-elements-borderColor gap-1.5',
-                    { 'max-md:hidden': selectedView === 'preview' },
+                    'flex items-center px-3 py-2 touch:px-2 touch:py-1 border-b border-ca-elements-borderColor gap-1.5',
+                    { 'touch:hidden': selectedView === 'preview' },
                   )}
                 >
                   <button
-                    className={`${showChat ? 'i-ph:sidebar-simple-fill' : 'i-ph:sidebar-simple'} max-md:hidden text-lg text-ca-elements-textSecondary mr-1`}
+                    className={`${showChat ? 'i-ph:sidebar-simple-fill' : 'i-ph:sidebar-simple'} touch:hidden text-lg text-ca-elements-textSecondary mr-1`}
                     disabled={!canHideChat || isSmallViewport}
                     onClick={() => {
                       if (canHideChat) {
@@ -469,7 +469,7 @@ export const Workbench = memo(
                     }}
                   />
                   {/* phone: the bottom tab bar switches Code and Preview instead */}
-                  <div className="max-md:hidden">
+                  <div className="touch:hidden">
                     <Slider selected={selectedView} options={sliderOptions} setSelected={setSelectedView} />
                   </div>
                   <div className="ml-auto" />
@@ -527,7 +527,7 @@ export const Workbench = memo(
                   )}
                   <IconButton
                     icon="i-ph:x-circle"
-                    className="-mr-1 max-md:hidden"
+                    className="-mr-1 touch:hidden"
                     size="xl"
                     onClick={() => {
                       workbenchStore.showWorkbench.set(false);

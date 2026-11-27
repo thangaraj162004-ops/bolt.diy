@@ -51,7 +51,7 @@ export function mergeProjects(
   online: OnlineProject[],
   userId: string | undefined,
 ): ProjectEntry[] {
-  const onlineById = new Map(userId ? online.map((project) => [project.id, project]) : []);
+  const onlineById = new Map(userId && Array.isArray(online) ? online.map((project) => [project.id, project]) : []);
   const matched = new Set<string>();
   const entries: ProjectEntry[] = [];
 

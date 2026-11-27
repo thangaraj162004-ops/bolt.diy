@@ -59,7 +59,7 @@ describe('Projects page on a phone', () => {
     const { onClose } = renderPage();
 
     const page = screen.getByTestId('projects-page');
-    expect(page.className).toContain('md:hidden');
+    expect(page.className).toContain('mouse:hidden');
     expect(page.className).toContain('fixed inset-0');
 
     expect(cardTitles()).toEqual(['bakery landing page', 'Recipe finder', 'Kanban board']);
@@ -159,7 +159,7 @@ describe('Projects page on a phone', () => {
 
     const dialog = await screen.findByRole('dialog', { name: 'Delete project?' });
     expect(dialog.textContent).toContain('Kanban board');
-    expect(dialog.className).toContain('max-md:max-w-[calc(100vw-32px)]');
+    expect(dialog.className).toContain('touch:max-w-[calc(100vw-32px)]');
     expect(onDelete).not.toHaveBeenCalled();
 
     // Cancel keeps it
@@ -175,7 +175,7 @@ describe('Projects page on a phone', () => {
 
     const confirm = await screen.findByRole('dialog', { name: 'Delete project?' });
     const deleteButton = within(confirm).getByRole('button', { name: 'Delete' });
-    expect(deleteButton.className).toContain('max-md:min-h-11');
+    expect(deleteButton.className).toContain('touch:min-h-11');
 
     await act(async () => {
       fireEvent.click(deleteButton);

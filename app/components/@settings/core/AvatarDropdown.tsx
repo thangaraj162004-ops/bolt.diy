@@ -2,7 +2,9 @@ import { useStore } from '@nanostores/react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { motion } from 'framer-motion';
 import type { TabType, Profile } from './types';
-import { DEFAULT_AVATAR, profileStore } from '~/lib/stores/profile';
+import { UserAvatar, displayName } from '~/components/ui/UserAvatar';
+import { profileStore } from '~/lib/stores/profile';
+import { authState } from '~/lib/supabase/auth';
 import { classNames } from '~/utils/classNames';
 
 interface AvatarDropdownProps {
@@ -11,28 +13,24 @@ interface AvatarDropdownProps {
 
 export const AvatarDropdown = ({ onSelectTab }: AvatarDropdownProps) => {
   const profile = useStore(profileStore) as Profile;
+  const auth = useStore(authState);
+
+  // the signed-in user's name or email prefix and its letter; "Guest" when signed out
+  const userName = auth.status === 'signed-in' ? displayName(profile?.username, auth.email) : '';
 
   return (
     <DropdownMenu.Root>
       <DropdownMenu.Trigger asChild>
         <motion.button
           type="button"
-          aria-label={`Open profile menu for ${profile?.username || 'Guest User'}`}
+          aria-label={`Open profile menu for ${userName || 'Guest'}`}
           className="flex h-12 w-full min-w-0 items-center justify-start gap-3 rounded-lg bg-transparent px-2 text-left transition-colors hover:bg-ca-elements-background-depth-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          <span className="h-10 w-10 shrink-0 overflow-hidden rounded-full bg-ca-elements-background-depth-4 text-ca-elements-textSecondary">
-            <img
-              src={profile?.avatar || DEFAULT_AVATAR}
-              alt=""
-              className="h-full w-full object-cover"
-              loading="eager"
-              decoding="sync"
-            />
-          </span>
+          <UserAvatar name={userName} />
           <span className="min-w-0 truncate text-sm font-medium text-ca-elements-textPrimary">
-            {profile?.username?.trim() || 'Guest User'}
+            {userName || 'Guest'}
           </span>
         </motion.button>
       </DropdownMenu.Trigger>
@@ -56,19 +54,9 @@ export const AvatarDropdown = ({ onSelectTab }: AvatarDropdownProps) => {
               'border-b border-gray-200/50 dark:border-gray-800/50',
             )}
           >
-            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-white dark:bg-gray-800 shadow-sm">
-              <img
-                src={profile?.avatar || DEFAULT_AVATAR}
-                alt={profile?.username || 'Profile'}
-                className={classNames('w-full h-full', 'object-cover', 'transform-gpu', 'image-rendering-crisp')}
-                loading="eager"
-                decoding="sync"
-              />
-            </div>
+            <UserAvatar name={userName} />
             <div className="flex-1 min-w-0">
-              <div className="font-medium text-sm text-gray-900 dark:text-white truncate">
-                {profile?.username || 'Guest User'}
-              </div>
+              <div className="font-medium text-sm text-gray-900 dark:text-white truncate">{userName || 'Guest'}</div>
               {profile?.bio && <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{profile.bio}</div>}
             </div>
           </div>

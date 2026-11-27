@@ -160,6 +160,19 @@ export function createAgentLoopTools<TaskToolName extends string = never>(
                     ],
             };
 
+      // before stopping, the agent may only delete the helper files it created itself
+      if (
+        ['blocked', 'stopped', 'limited'].includes(progress.status) &&
+        progress.helperFiles.length > 0 &&
+        taskToolNames?.includes('project_delete_path' as TaskToolName)
+      ) {
+        return {
+          ...instructions,
+          toolChoice: 'required' as const,
+          activeTools: ['project_delete_path' as TaskToolName],
+        };
+      }
+
       if (['blocked', 'stopped', 'limited', 'ready'].includes(progress.status)) {
         return { ...instructions, toolChoice: 'none' as const };
       }

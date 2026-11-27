@@ -164,10 +164,10 @@ describe('AccountMenu', () => {
     );
 
     // desktop controls are hidden below 768 px; the phone ones from 768 px up
-    expect(screen.getByTestId('credits-badge').className).toContain('max-md:hidden');
+    expect(screen.getByTestId('credits-badge').className).toContain('touch:hidden');
 
     const chip = screen.getByTestId('credits-chip');
-    expect(chip.className).toContain('md:hidden');
+    expect(chip.className).toContain('mouse:hidden');
     expect(chip.className).toContain('whitespace-nowrap');
     expect(chip.textContent).toBe('1262');
     expect(chip.getAttribute('aria-label')).toBe('1262 credits');
@@ -252,7 +252,7 @@ describe('AccountMenu', () => {
     await renderMenu(fakeSupabase());
 
     // the desktop "Log in" button stays, hidden on a phone
-    expect(screen.getByRole('button', { name: 'Log in' }).className).toContain('max-md:hidden');
+    expect(screen.getByRole('button', { name: 'Log in' }).className).toContain('touch:hidden');
 
     const trigger = screen.getByRole('button', { name: 'Account menu' });
     expect(trigger.querySelector('[data-testid="user-avatar"] .i-ph\\:user')).toBeTruthy();

@@ -22,7 +22,7 @@ export const DialogButton = memo(({ type, children, onClick, disabled }: DialogB
   return (
     <button
       className={classNames(
-        'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors max-md:min-h-11 max-md:justify-center',
+        'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors touch:min-h-11 touch:justify-center',
         type === 'primary'
           ? 'bg-purple-500 text-white hover:bg-purple-600 dark:bg-purple-500 dark:hover:bg-purple-600'
           : type === 'secondary'
@@ -125,7 +125,7 @@ export const Dialog = memo(
               className,
 
               // phone: never wider or taller than the screen (16 px each side), text wraps
-              'max-md:max-w-[calc(100vw-32px)] max-md:max-h-[calc(100dvh-32px)] max-md:overflow-y-auto max-md:break-words max-md:rounded-2xl',
+              'touch:max-w-[calc(100vw-32px)] touch:max-h-[calc(100dvh-32px)] touch:overflow-y-auto touch:break-words touch:rounded-2xl',
             )}
             initial="closed"
             animate="open"
@@ -138,7 +138,7 @@ export const Dialog = memo(
                 <RadixDialog.Close asChild onClick={onClose}>
                   <IconButton
                     icon="i-ph:x"
-                    className="absolute top-3 right-3 max-md:top-1 max-md:right-1 max-md:min-w-11 max-md:min-h-11 max-md:justify-center text-ca-elements-textTertiary hover:text-ca-elements-textSecondary"
+                    className="absolute top-3 right-3 touch:top-1 touch:right-1 touch:min-w-11 touch:min-h-11 touch:justify-center text-ca-elements-textTertiary hover:text-ca-elements-textSecondary"
                   />
                 </RadixDialog.Close>
               )}
@@ -221,7 +221,7 @@ export function ConfirmationDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription className="mb-4">{description}</DialogDescription>
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={onClose} disabled={isLoading} className="max-md:min-h-11">
+            <Button variant="outline" onClick={onClose} disabled={isLoading} className="touch:min-h-11">
               {cancelLabel}
             </Button>
             <Button
@@ -229,7 +229,7 @@ export function ConfirmationDialog({
               onClick={onConfirm}
               disabled={isLoading}
               className={classNames(
-                'max-md:min-h-11',
+                'touch:min-h-11',
                 variant === 'destructive'
                   ? 'bg-red-500 text-white hover:bg-red-600'
                   : 'bg-ca-elements-item-backgroundAccent text-ca-elements-item-contentAccent hover:bg-ca-elements-button-primary-backgroundHover',
@@ -407,7 +407,7 @@ export function SelectionDialog({
                 variant="ghost"
                 size="sm"
                 onClick={handleSelectAll}
-                className="text-xs h-8 max-md:h-11 px-2 text-ca-elements-textPrimary hover:text-ca-elements-item-contentAccent hover:bg-ca-elements-item-backgroundAccent bg-ca-elements-bg-depth-2 dark:bg-transparent"
+                className="text-xs h-8 touch:h-11 px-2 text-ca-elements-textPrimary hover:text-ca-elements-item-contentAccent hover:bg-ca-elements-item-backgroundAccent bg-ca-elements-bg-depth-2 dark:bg-transparent"
               >
                 {selectAll ? 'Deselect All' : 'Select All'}
               </Button>
@@ -438,14 +438,14 @@ export function SelectionDialog({
             <Button
               variant="outline"
               onClick={onClose}
-              className="max-md:min-h-11 border-ca-elements-borderColor text-ca-elements-textPrimary hover:bg-ca-elements-item-backgroundActive"
+              className="touch:min-h-11 border-ca-elements-borderColor text-ca-elements-textPrimary hover:bg-ca-elements-item-backgroundActive"
             >
               Cancel
             </Button>
             <Button
               onClick={handleConfirm}
               disabled={selectedItems.length === 0}
-              className="max-md:min-h-11 bg-accent-500 text-white hover:bg-accent-600 disabled:opacity-50 disabled:pointer-events-none"
+              className="touch:min-h-11 bg-accent-500 text-white hover:bg-accent-600 disabled:opacity-50 disabled:pointer-events-none"
             >
               {confirmLabel}
             </Button>

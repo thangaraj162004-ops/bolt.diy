@@ -27,11 +27,11 @@ afterEach(() => {
 });
 
 describe('useIsPhone', () => {
-  it('is true below 768 px and follows resizes', () => {
+  it('is true in the touch layout (below 768 px or a finger) and follows changes', () => {
     const media = fakeMatchMedia(true);
     const { result, unmount } = renderHook(() => useIsPhone());
 
-    expect(window.matchMedia).toHaveBeenCalledWith('(max-width: 767.9px)');
+    expect(window.matchMedia).toHaveBeenCalledWith('(max-width: 767.9px), (pointer: coarse)');
     expect(result.current).toBe(true);
 
     media.change(false);

@@ -3,6 +3,7 @@ import { formatDistanceStrict } from 'date-fns';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ConfirmationDialog, Dialog, DialogTitle } from '~/components/ui/Dialog';
 import { avatarLetter } from '~/components/ui/UserAvatar';
+import { useBackToClose } from '~/lib/hooks/useBackToClose';
 import type { ProjectEntry } from '~/lib/projects/merge';
 import { classNames } from '~/utils/classNames';
 
@@ -78,6 +79,10 @@ export function ProjectsPage({
 
   const shown = useMemo(() => visibleProjects(projects, search), [projects, search]);
 
+  // touch layout: Back closes the "..." sheet first, then this page
+  useBackToClose(open, onClose);
+  useBackToClose(open && actionsFor !== null, () => setActionsFor(null));
+
   // a fresh page every time it opens
   useEffect(() => {
     if (!open) {
@@ -115,7 +120,7 @@ export function ProjectsPage({
       aria-modal="true"
       aria-label="Projects"
       data-testid="projects-page"
-      className="md:hidden fixed inset-0 z-[1000] flex flex-col bg-ca-elements-background-depth-1 text-ca-elements-textPrimary"
+      className="mouse:hidden fixed inset-0 z-[1000] flex flex-col bg-ca-elements-background-depth-1 text-ca-elements-textPrimary"
     >
       {/* top bar: back arrow, title (or the search box) and a search button */}
       <div className="flex h-14 shrink-0 items-center gap-1 border-b border-ca-elements-borderColor px-1">
@@ -257,10 +262,10 @@ export function ProjectsPage({
       {/* "..." sheet */}
       <RadixDialog.Root open={actionsFor !== null} onOpenChange={(value) => !value && setActionsFor(null)}>
         <RadixDialog.Portal>
-          <RadixDialog.Overlay className="md:hidden fixed inset-0 z-[9998] bg-black/50" />
+          <RadixDialog.Overlay className="mouse:hidden fixed inset-0 z-[9998] bg-black/50" />
           <RadixDialog.Content
             data-testid="project-sheet"
-            className="md:hidden fixed inset-x-0 bottom-0 z-[9999] max-h-[85dvh] overflow-y-auto rounded-t-2xl border-t border-ca-elements-borderColor bg-ca-elements-background-depth-1 px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] text-ca-elements-textPrimary shadow-2xl focus:outline-none"
+            className="mouse:hidden fixed inset-x-0 bottom-0 z-[9999] max-h-[85dvh] overflow-y-auto rounded-t-2xl border-t border-ca-elements-borderColor bg-ca-elements-background-depth-1 px-3 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] text-ca-elements-textPrimary shadow-2xl focus:outline-none"
           >
             <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-ca-elements-borderColor" aria-hidden="true" />
             <RadixDialog.Title className="truncate px-3 pb-1 text-sm font-medium text-ca-elements-textSecondary">

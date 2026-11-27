@@ -49,7 +49,7 @@ describe('sidebar on a phone', () => {
       act(() => sidebarOpen.set(true));
 
       const close = document.querySelector<HTMLButtonElement>('.side-menu button[aria-label="Close menu"]')!;
-      expect(close.className).toContain('md:hidden');
+      expect(close.className).toContain('mouse:hidden');
       expect(close.className).toContain('h-11 w-11');
 
       fireEvent.click(close);
@@ -79,20 +79,57 @@ describe('sidebar on a phone', () => {
     expect(sidebarOpen.get()).toBe(true);
   });
 
-  it('shows the letter avatar (not the guest picture) on a phone', () => {
+  it('shows the signed-in name and letter avatar on every layout, never "Guest User" or a picture (Task 11F)', () => {
     authState.set({ status: 'signed-in', email: 'priya@b.co', balance: 1 });
 
     try {
       renderMenu();
 
+      expect(screen.getByTestId('sidebar-user-name').textContent).toBe('priya');
+
       const avatar = document.querySelector('.side-menu [data-testid="user-avatar"]')!;
       expect(avatar.textContent).toBe('P');
-      expect(avatar.className).toContain('md:hidden');
-
-      // the picture is kept for desktop only
-      expect(document.querySelector('.side-menu img')!.parentElement!.className).toContain('max-md:hidden');
+      expect(avatar.className).not.toMatch(/touch:hidden|mouse:hidden/);
+      expect(document.querySelector('.side-menu img')).toBeNull();
+      expect(document.querySelector('.side-menu')!.textContent).not.toContain('Guest');
     } finally {
       authState.set({ status: 'loading', balance: null });
+    }
+  });
+
+  it('says "Guest" (with the person icon) only when signed out', () => {
+    authState.set({ status: 'signed-out', balance: null });
+
+    try {
+      renderMenu();
+
+      expect(screen.getByTestId('sidebar-user-name').textContent).toBe('Guest');
+      expect(document.querySelector('.side-menu [data-testid="user-avatar"] .i-ph\\:user')).toBeTruthy();
+    } finally {
+      authState.set({ status: 'loading', balance: null });
+    }
+  });
+
+  it('the close button is an X; in the touch layout the screen edge never opens the list (Task 11F)', () => {
+    const original = window.matchMedia;
+    window.matchMedia = ((query: string) => ({
+      matches: query.includes('pointer: coarse'),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    })) as unknown as typeof window.matchMedia;
+
+    try {
+      renderMenu();
+
+      const close = document.querySelector('.side-menu button[aria-label="Close menu"] span')!;
+      expect(close.className).toContain('i-ph:x');
+
+      // a real mouse at the left edge, but a touch screen: nothing opens
+      pointerMove('mouse', 5);
+      expect(sidebarOpen.get()).toBe(false);
+    } finally {
+      window.matchMedia = original;
     }
   });
 
@@ -124,7 +161,7 @@ describe('sidebar on a phone', () => {
     const row = [...document.querySelectorAll<HTMLButtonElement>('.side-menu button')].find(
       (button) => button.textContent === 'Projects',
     )!;
-    expect(row.className).toContain('md:hidden');
+    expect(row.className).toContain('mouse:hidden');
     expect(row.className).toContain('min-h-11');
 
     act(() => row.click());

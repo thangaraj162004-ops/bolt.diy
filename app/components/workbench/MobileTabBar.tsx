@@ -47,7 +47,7 @@ export function MobileTabBar() {
   return (
     <nav
       aria-label="Switch view"
-      className="md:hidden fixed inset-x-0 bottom-0 z-[50] flex border-t border-ca-elements-borderColor bg-ca-elements-background-depth-1 pb-[env(safe-area-inset-bottom)]"
+      className="mouse:hidden fixed inset-x-0 bottom-0 z-[50] flex border-t border-ca-elements-borderColor bg-ca-elements-background-depth-1 pb-[env(safe-area-inset-bottom)]"
       data-testid="mobile-tab-bar"
     >
       {TABS.map((tab) => (

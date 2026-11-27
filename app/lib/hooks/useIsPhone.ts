@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { PHONE_MAX_WIDTH } from '~/lib/stores/layout';
+import { TOUCH_LAYOUT_QUERY } from '~/lib/touchLayout';
 
 /**
- * True below PHONE_MAX_WIDTH (768 px). Safe during server rendering: it starts
- * false and updates after mounting, then follows window resizes.
+ * True in the touch layout: below 768 px OR with a coarse pointer (a phone on
+ * "Desktop site" too); see ~/lib/touchLayout. Safe during server rendering: it
+ * starts false and updates after mounting, then follows changes.
  */
 export function useIsPhone(): boolean {
   const [isPhone, setIsPhone] = useState(false);
@@ -13,7 +14,7 @@ export function useIsPhone(): boolean {
       return undefined;
     }
 
-    const query = window.matchMedia(`(max-width: ${PHONE_MAX_WIDTH - 0.1}px)`);
+    const query = window.matchMedia(TOUCH_LAYOUT_QUERY);
     const update = () => setIsPhone(query.matches);
 
     update();

@@ -211,7 +211,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
   return (
     <div
       className={classNames(
-        'relative bg-ca-elements-background-depth-2 backdrop-blur p-3 max-md:p-1.5 rounded-lg max-md:rounded-2xl border border-ca-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
+        'relative bg-ca-elements-background-depth-2 backdrop-blur p-3 touch:p-1.5 rounded-lg touch:rounded-2xl border border-ca-elements-borderColor relative w-full max-w-chat mx-auto z-prompt',
 
         /*
          * {
@@ -251,7 +251,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
           {() => (
             <>
               {/* phone: hidden here; the model chip below opens them in a bottom sheet */}
-              <div className={classNames('max-md:hidden', { hidden: props.isModelSettingsCollapsed })}>
+              <div className={classNames('touch:hidden', { hidden: props.isModelSettingsCollapsed })}>
                 {modelSettings()}
               </div>
               <ModelSheet open={isModelSheetOpen} onOpenChange={setIsModelSheetOpen}>
@@ -305,14 +305,14 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
       )}
       <div
         className={classNames(
-          'relative shadow-xs border border-ca-elements-borderColor backdrop-blur rounded-lg max-md:rounded-xl',
+          'relative shadow-xs border border-ca-elements-borderColor backdrop-blur rounded-lg touch:rounded-xl',
         )}
       >
         <textarea
           ref={props.textareaRef}
           rows={1} // one line by default; the minimum height keeps desktop at its usual size
           className={classNames(
-            'w-full pl-4 pt-4 pr-16 max-md:pl-3 max-md:pt-3 max-md:pr-12 outline-none resize-none text-ca-elements-textPrimary placeholder-ca-elements-textTertiary bg-transparent text-sm max-md:text-base',
+            'w-full pl-4 pt-4 pr-16 touch:pl-3 touch:pt-3 touch:pr-12 outline-none resize-none text-ca-elements-textPrimary placeholder-ca-elements-textTertiary bg-transparent text-sm touch:text-base touch:placeholder:text-sm',
             'transition-all duration-200',
             'hover:border-ca-elements-focus',
           )}
@@ -398,8 +398,8 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
             />
           )}
         </ClientOnly>
-        <div className="flex justify-between items-center text-sm p-4 pt-2 max-md:px-1 max-md:pt-0 max-md:pb-1">
-          <div className="flex gap-1 items-center max-md:gap-0 max-md:w-full">
+        <div className="flex justify-between items-center text-sm p-4 pt-2 touch:px-1 touch:pt-0 touch:pb-1">
+          <div className="flex gap-1 items-center touch:gap-0 touch:w-full">
             <ClientOnly>
               {() => (
                 <AttachmentMenu
@@ -427,7 +427,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
               )}
             </ClientOnly>
             {/* phone: tool approval moves into the model sheet */}
-            <div className="max-md:hidden">
+            <div className="touch:hidden">
               <ClientOnly>{() => <ToolAccessMenu />}</ClientOnly>
             </div>
             {/* Hidden components for programmatic access from menu */}
@@ -443,7 +443,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
                   title={props.chatMode === 'discuss' ? 'Discuss Mode' : 'Agent Mode'}
                   aria-label={props.chatMode === 'discuss' ? 'Mode: Discuss' : 'Mode: Agent'}
                   className={classNames(
-                    'transition-all flex items-center gap-1 rounded-md px-1.5 py-1 text-xs max-md:min-h-11 max-md:min-w-11 max-md:justify-center',
+                    'transition-all flex items-center gap-1 rounded-md px-1.5 py-1 text-xs touch:min-h-11 touch:min-w-11 touch:justify-center',
                     props.chatMode === 'discuss'
                       ? 'bg-ca-elements-item-backgroundAccent text-ca-elements-item-contentAccent'
                       : props.agentMode
@@ -454,12 +454,12 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
                   {props.chatMode === 'discuss' ? (
                     <>
                       <div className="i-ph:chats text-lg" />
-                      <span className="max-md:hidden">Discuss</span>
+                      <span className="touch:hidden">Discuss</span>
                     </>
                   ) : (
                     <>
                       <div className="i-ph:robot text-lg" />
-                      <span className="max-md:hidden">Agent</span>
+                      <span className="touch:hidden">Agent</span>
                     </>
                   )}
                   <div className="i-ph:caret-down text-sm" />
@@ -527,7 +527,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
             {/* phone: a small chip with the model name opens the provider, model and API key sheet */}
             <button
               type="button"
-              className="md:hidden ml-auto flex min-h-11 max-w-[45%] items-center gap-1 rounded-full bg-transparent px-2.5 text-xs text-ca-elements-textSecondary"
+              className="mouse:hidden ml-auto flex min-h-11 max-w-[45%] items-center gap-1 rounded-full bg-transparent px-2.5 text-xs text-ca-elements-textSecondary"
               onClick={() => setIsModelSheetOpen(true)}
               disabled={!props.providerList || props.providerList.length === 0}
               aria-label={`Model: ${props.model || 'choose a model'}`}
@@ -539,7 +539,7 @@ export const ChatBox: React.FC<ChatBoxProps> = (props) => {
             </button>
             <IconButton
               title="Model Settings"
-              className={classNames('max-md:hidden transition-all flex items-center gap-1', {
+              className={classNames('touch:hidden transition-all flex items-center gap-1', {
                 'bg-ca-elements-item-backgroundAccent text-ca-elements-item-contentAccent':
                   props.isModelSettingsCollapsed,
                 'bg-ca-elements-item-backgroundDefault text-ca-elements-item-contentDefault':

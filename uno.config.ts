@@ -1,7 +1,8 @@
-import { globSync } from 'fast-glob';
 import fs from 'node:fs/promises';
 import { basename } from 'node:path';
+import { globSync } from 'fast-glob';
 import { defineConfig, presetIcons, presetUno, transformerDirectives } from 'unocss';
+import { MOUSE_LAYOUT_QUERY, TOUCH_LAYOUT_QUERY, TOUCH_WIDE_QUERY } from './app/lib/touchLayout';
 
 const iconPaths = globSync('./icons/*.svg');
 
@@ -98,6 +99,22 @@ const COLOR_PRIMITIVES = {
 };
 
 export default defineConfig({
+  /*
+   * `touch:` = the touch layout (narrow OR a finger); `mouse:` = everything
+   * else (wide with a mouse); `touch-wide:` = touch layout at 768 px and wider.
+   * See app/lib/touchLayout.ts. (Two media variants do not stack, so
+   * `touch:md:` would lose its width: use `touch-wide:`.)
+   */
+  variants: [
+    (matcher) =>
+      matcher.startsWith('touch-wide:')
+        ? { matcher: matcher.slice(11), parent: `@media ${TOUCH_WIDE_QUERY}` }
+        : undefined,
+    (matcher) =>
+      matcher.startsWith('touch:') ? { matcher: matcher.slice(6), parent: `@media ${TOUCH_LAYOUT_QUERY}` } : undefined,
+    (matcher) =>
+      matcher.startsWith('mouse:') ? { matcher: matcher.slice(6), parent: `@media ${MOUSE_LAYOUT_QUERY}` } : undefined,
+  ],
   safelist: [...Object.keys(customIconCollection[collectionName] || {}).map((x) => `i-ca:${x}`)],
   shortcuts: {
     'ca-ease-cubic-bezier': 'ease-[cubic-bezier(0.4,0,0.2,1)]',

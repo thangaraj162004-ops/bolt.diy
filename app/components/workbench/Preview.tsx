@@ -8,8 +8,7 @@ import { PortDropdown } from './PortDropdown';
 import { ScreenshotSelector } from './ScreenshotSelector';
 import { IconButton } from '~/components/ui/IconButton';
 import { ExpoQrModal } from '~/components/workbench/ExpoQrModal';
-import useViewport from '~/lib/hooks';
-import { PHONE_MAX_WIDTH } from '~/lib/stores/layout';
+import { useIsPhone } from '~/lib/hooks/useIsPhone';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { parseEsbuildPreviewUrl } from '~/lib/webcontainer/engine';
@@ -87,7 +86,7 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
   const [isDeviceModeOn, setIsDeviceModeOn] = useState(false);
 
   // phone: the preview always fills the width; there is no device frame to switch on
-  const isPhone = useViewport(PHONE_MAX_WIDTH);
+  const isPhone = useIsPhone();
 
   useEffect(() => {
     if (isPhone && isDeviceModeOn) {
@@ -656,25 +655,25 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
       {isPortDropdownOpen && (
         <div className="z-iframe-overlay w-full h-full absolute" onClick={() => setIsPortDropdownOpen(false)} />
       )}
-      <div className="bg-ca-elements-background-depth-2 p-2 max-md:p-1 flex items-center gap-2 max-md:gap-1 min-w-0">
-        <div className="flex items-center gap-2 max-md:gap-0 shrink-0">
+      <div className="bg-ca-elements-background-depth-2 p-2 touch:p-1 flex items-center gap-2 touch:gap-1 min-w-0">
+        <div className="flex items-center gap-2 touch:gap-0 shrink-0">
           <IconButton
             icon="i-ph:arrow-clockwise"
             onClick={reloadPreview}
             title="Reload preview"
-            className="max-md:min-w-11 max-md:min-h-11"
+            className="touch:min-w-11 touch:min-h-11"
           />
           {/* phone: only reload, the address and full screen fit; the rest are desktop tools */}
           <IconButton
             icon={isPreviewPaused ? 'i-ph:play' : 'i-ph:pause'}
             onClick={() => setIsPreviewPaused((prev) => !prev)}
             title={isPreviewPaused ? 'Resume Preview' : 'Pause Preview'}
-            className="max-md:hidden"
+            className="touch:hidden"
           />
           <IconButton
             icon="i-ph:selection"
             onClick={() => setIsSelectionMode(!isSelectionMode)}
-            className={`max-md:hidden ${isSelectionMode ? 'bg-ca-elements-background-depth-3' : ''}`}
+            className={`touch:hidden ${isSelectionMode ? 'bg-ca-elements-background-depth-3' : ''}`}
           />
         </div>
 
@@ -698,12 +697,12 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
           />
         </div>
 
-        <div className="flex items-center gap-2 max-md:gap-0 shrink-0">
+        <div className="flex items-center gap-2 touch:gap-0 shrink-0">
           <IconButton
             icon="i-ph:devices"
             onClick={toggleDeviceMode}
             title={isDeviceModeOn ? 'Switch to Responsive Mode' : 'Switch to Device Mode'}
-            className="max-md:hidden"
+            className="touch:hidden"
           />
 
           {expoUrl && <IconButton icon="i-ph:qr-code" onClick={() => setIsExpoQrModalOpen(true)} title="Show QR" />}
@@ -727,17 +726,17 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
           <IconButton
             icon="i-ph:cursor-click"
             onClick={toggleInspectorMode}
-            className={`max-md:hidden ${isInspectorMode ? 'bg-ca-elements-background-depth-3 !text-ca-elements-item-contentAccent' : ''}`}
+            className={`touch:hidden ${isInspectorMode ? 'bg-ca-elements-background-depth-3 !text-ca-elements-item-contentAccent' : ''}`}
             title={isInspectorMode ? 'Disable Element Inspector' : 'Enable Element Inspector'}
           />
           <IconButton
             icon={isFullscreen ? 'i-ph:arrows-in' : 'i-ph:arrows-out'}
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Exit Full Screen' : 'Full Screen'}
-            className="max-md:min-w-11 max-md:min-h-11"
+            className="touch:min-w-11 touch:min-h-11"
           />
 
-          <div className="flex items-center relative max-md:hidden">
+          <div className="flex items-center relative touch:hidden">
             <IconButton
               icon="i-ph:list"
               onClick={() => setIsWindowSizeDropdownOpen(!isWindowSizeDropdownOpen)}

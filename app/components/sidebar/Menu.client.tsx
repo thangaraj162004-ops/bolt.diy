@@ -20,6 +20,7 @@ import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from
 import { SettingsButton, OpenSourceNoticesLink } from '~/components/ui/SettingsButton';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { UserAvatar, displayName } from '~/components/ui/UserAvatar';
+import { leaveOverlays, useBackToClose } from '~/lib/hooks/useBackToClose';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import {
   db,
@@ -47,7 +48,7 @@ import {
   settingsPanelOpen,
   sidebarOpen,
 } from '~/lib/stores/layout';
-import { DEFAULT_AVATAR, profileStore } from '~/lib/stores/profile';
+import { profileStore } from '~/lib/stores/profile';
 import { authState } from '~/lib/supabase/auth';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
@@ -131,7 +132,17 @@ export const Menu = () => {
 
   const profile = useStore(profileStore);
   const auth = useStore(authState);
-  const phoneName = displayName(profile?.username, auth.status === 'signed-in' ? auth.email : undefined);
+
+  // the signed-in user's name or email prefix; empty (shown as "Guest") when signed out
+  const userName = auth.status === 'signed-in' ? displayName(profile?.username, auth.email) : '';
+
+  // touch layout: Back closes Settings, the Projects page or the chat list first
+  useBackToClose(open && !isSettingsOpen, () => setOpen(false));
+  useBackToClose(isSettingsOpen, () => {
+    setIsSettingsOpen(false);
+    setSettingsInitialTab(undefined);
+  });
+
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
@@ -363,6 +374,9 @@ export const Menu = () => {
         // an online-only project (or a newer online copy) is downloaded first
         const local = (await getProjectSync()?.ensureLocal(item)) ?? item;
 
+        // touch layout: remove the Projects page's history entries first, so Back from the project works as usual
+        await leaveOverlays();
+
         projectsPageOpen.set(false);
         navigate(`/chat/${local.urlId || local.id}`);
       } catch (error) {
@@ -471,7 +485,8 @@ export const Menu = () => {
        * A phone sends mouse events for every tap too: a tap on the menu button
        * (near the left edge) used to reopen the sidebar right after it closed.
        */
-      if (isSettingsOpen || event.pointerType !== 'mouse') {
+      // never in the touch layout: there the menu button alone opens and closes the list
+      if (isSettingsOpen || event.pointerType !== 'mouse' || isPhoneWidth()) {
         return;
       }
 
@@ -538,7 +553,7 @@ export const Menu = () => {
           aria-hidden="true"
           tabIndex={-1}
           data-testid="sidebar-backdrop"
-          className="md:hidden fixed inset-0 z-sidebar bg-black/40 cursor-default"
+          className="touch-wide:hidden mouse:hidden fixed inset-0 z-sidebar bg-black/40 cursor-default"
           onClick={() => setOpen(false)}
         />
       )}
@@ -549,44 +564,32 @@ export const Menu = () => {
         animate={open ? 'open' : 'closed'}
         variants={menuVariants}
         className={classNames(
-          'w-[340px] max-md:w-[min(340px,85vw)]', // never wider than 85% of a phone screen
+          'w-[340px] touch:w-[min(340px,85vw)]', // never wider than 85% of a phone screen
           'flex selection-accent flex-col side-menu fixed top-0 h-full rounded-r-2xl',
           'bg-ca-elements-background-depth-1 border-r border-ca-elements-borderColor',
           'shadow-sm text-sm',
           isSettingsOpen ? 'z-40' : 'z-sidebar',
         )}
       >
-        <div className="h-12 flex items-center justify-between px-4 max-md:pl-1 border-b border-ca-elements-borderColor bg-ca-elements-background-depth-2 rounded-tr-2xl">
+        <div className="h-12 flex items-center justify-between px-4 touch:pl-1 border-b border-ca-elements-borderColor bg-ca-elements-background-depth-2 rounded-tr-2xl">
           <div className="text-ca-elements-textPrimary font-medium">
             {/* phone: the same icon as the header's menu button closes the sidebar */}
             <button
               type="button"
               aria-label="Close menu"
               onClick={() => setOpen(false)}
-              className="md:hidden flex h-11 w-11 items-center justify-center bg-transparent text-ca-elements-textPrimary"
+              className="mouse:hidden flex h-11 w-11 items-center justify-center bg-transparent text-ca-elements-textPrimary"
             >
-              <span className="i-ph:sidebar-simple-duotone text-xl" aria-hidden="true" />
+              <span className="i-ph:x text-xl" aria-hidden="true" />
             </button>
           </div>
           <div className="flex items-center gap-3">
             <OpenSourceNoticesLink />
-            <span className="max-md:hidden font-medium text-sm text-ca-elements-textPrimary truncate">
-              {profile?.username || 'Guest User'}
+            {/* the signed-in name (or email prefix) and its letter, on every layout; "Guest" when signed out */}
+            <span className="font-medium text-sm text-ca-elements-textPrimary truncate" data-testid="sidebar-user-name">
+              {userName || 'Guest'}
             </span>
-            {/* phone: the same simple circle as the header, instead of the picture */}
-            <span className="md:hidden font-medium text-sm text-ca-elements-textPrimary truncate">
-              {phoneName || 'Guest'}
-            </span>
-            <UserAvatar name={phoneName} className="md:hidden" />
-            <div className="max-md:hidden flex items-center justify-center w-[32px] h-[32px] overflow-hidden bg-ca-elements-background-depth-3 text-ca-elements-textSecondary rounded-full shrink-0">
-              <img
-                src={profile?.avatar || DEFAULT_AVATAR}
-                alt={profile?.username || 'User'}
-                className="w-full h-full object-cover"
-                loading="eager"
-                decoding="sync"
-              />
-            </div>
+            <UserAvatar name={userName} className="h-8 w-8 text-sm" />
           </div>
         </div>
         <CurrentDateTime />
@@ -770,7 +773,7 @@ export const Menu = () => {
               setOpen(false);
               projectsPageOpen.set(true);
             }}
-            className="md:hidden flex min-h-11 items-center gap-3 border-t border-ca-elements-borderColor bg-transparent px-4 text-left text-sm font-medium text-ca-elements-textPrimary"
+            className="mouse:hidden flex min-h-11 items-center gap-3 border-t border-ca-elements-borderColor bg-transparent px-4 text-left text-sm font-medium text-ca-elements-textPrimary"
           >
             <span className="i-ph:folder-simple text-lg text-ca-elements-textSecondary" aria-hidden="true" />
             <span className="flex-1">Projects</span>
@@ -790,7 +793,7 @@ export const Menu = () => {
         <button
           onClick={() => setOpen(true)}
           className={classNames(
-            'max-md:hidden fixed left-0 top-[72px] z-sidebar',
+            'touch:hidden fixed left-0 top-[72px] z-sidebar',
             'bg-ca-elements-background-depth-1',
             'border border-l-0 border-ca-elements-borderColor',
             'rounded-r-lg p-1.5 shadow-sm',

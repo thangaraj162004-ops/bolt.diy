@@ -35,7 +35,7 @@ describe('Header on a phone', () => {
     render(<Header />);
 
     const [button] = screen.getAllByRole('button', { name: 'Open menu' });
-    expect(button.className).toContain('max-md:w-11 max-md:h-11');
+    expect(button.className).toContain('touch:w-11 touch:h-11');
 
     fireEvent.click(button);
     expect(sidebarOpen.get()).toBe(true);

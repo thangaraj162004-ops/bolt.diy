@@ -20,14 +20,14 @@ interface AccountMenuProps {
 }
 
 const buttonClass =
-  'rounded-lg border border-ca-elements-borderColor px-3 py-1.5 max-md:min-h-11 text-sm text-ca-elements-textPrimary hover:bg-ca-elements-background-depth-2';
+  'rounded-lg border border-ca-elements-borderColor px-3 py-1.5 touch:min-h-11 text-sm text-ca-elements-textPrimary hover:bg-ca-elements-background-depth-2';
 
 /*
  * Phone: a 44 px tap area around the 40 px circle; the right margin puts the
  * circle 12 px from the screen edge (header padding 4 + margin 6 + 2).
  */
 const avatarButtonClass =
-  'md:hidden mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-transparent p-0';
+  'mouse:hidden mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-transparent p-0';
 
 function creditsLabel(balance: number | null) {
   return balance === null ? '… credits' : `${balance} ${balance === 1 ? 'credit' : 'credits'}`;
@@ -66,7 +66,7 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
   if (state.status === 'signed-out') {
     return (
       <>
-        <button type="button" className={`max-md:hidden ${buttonClass}`} onClick={() => authDialog.set({})}>
+        <button type="button" className={`touch:hidden ${buttonClass}`} onClick={() => authDialog.set({})}>
           Log in
         </button>
         {/* phone: a guest avatar that opens the account sheet with "Sign in" */}
@@ -95,10 +95,10 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
   const name = displayName(profile.username, state.email);
 
   return (
-    <div className="flex items-center gap-2 max-md:gap-1">
+    <div className="flex items-center gap-2 touch:gap-1">
       {/* desktop: badge, plan, Buy credits and Log out side by side (unchanged) */}
       <span
-        className="max-md:hidden rounded-full bg-purple-500/10 px-3 py-1 text-sm font-medium text-purple-600 dark:text-purple-300"
+        className="touch:hidden rounded-full bg-purple-500/10 px-3 py-1 text-sm font-medium text-purple-600 dark:text-purple-300"
         title={state.email ? `Logged in as ${state.email}` : undefined}
         data-testid="credits-badge"
       >
@@ -106,23 +106,23 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
       </span>
       {plan && (
         <span
-          className="max-md:hidden rounded-full border border-purple-500/40 px-2 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-300"
+          className="touch:hidden rounded-full border border-purple-500/40 px-2 py-0.5 text-xs font-medium text-purple-600 dark:text-purple-300"
           title={`${plan} plan until ${planUntil ?? ''}`}
           data-testid="plan-badge"
         >
           {plan}
         </span>
       )}
-      <button type="button" className={`max-md:hidden ${buttonClass}`} onClick={() => buyCreditsDialog.set(true)}>
+      <button type="button" className={`touch:hidden ${buttonClass}`} onClick={() => buyCreditsDialog.set(true)}>
         Buy credits
       </button>
-      <button type="button" className={`max-md:hidden ${buttonClass}`} onClick={() => void signOut(client)}>
+      <button type="button" className={`touch:hidden ${buttonClass}`} onClick={() => void signOut(client)}>
         Log out
       </button>
 
       {/* phone: a one-line credits chip and an avatar that opens the account sheet */}
       <span
-        className="md:hidden flex items-center gap-1 whitespace-nowrap rounded-full bg-purple-500/10 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-300"
+        className="mouse:hidden flex items-center gap-1 whitespace-nowrap rounded-full bg-purple-500/10 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-300"
         aria-label={creditsLabel(state.balance)}
         data-testid="credits-chip"
       >

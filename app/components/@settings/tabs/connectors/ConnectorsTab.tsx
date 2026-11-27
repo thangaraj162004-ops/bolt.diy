@@ -331,7 +331,7 @@ export default function ConnectorsTab() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="group flex w-full items-center gap-4 max-md:flex-wrap max-md:gap-3 max-md:px-4 rounded-xl border border-ca-elements-borderColor bg-ca-elements-background-depth-2 px-5 py-4 text-left text-ca-elements-textPrimary transition-colors hover:border-ca-elements-borderColorActive hover:bg-ca-elements-background-depth-3"
+                    className="group flex w-full items-center gap-4 touch:flex-wrap touch:gap-3 touch:px-4 rounded-xl border border-ca-elements-borderColor bg-ca-elements-background-depth-2 px-5 py-4 text-left text-ca-elements-textPrimary transition-colors hover:border-ca-elements-borderColorActive hover:bg-ca-elements-background-depth-3"
                   >
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-ca-elements-background-depth-3 text-ca-elements-textSecondary">
                       {connector.icon}
@@ -346,8 +346,8 @@ export default function ConnectorsTab() {
                       <p className="text-sm text-ca-elements-textSecondary">{connector.description}</p>
                     </div>
                     {/* phone: the switch and Configure go on their own line, so the text keeps its width */}
-                    <div className="flex shrink-0 items-center gap-4 max-md:w-full max-md:justify-between">
-                      <div className="flex items-center gap-2 max-md:min-h-11">
+                    <div className="flex shrink-0 items-center gap-4 touch:w-full touch:justify-between">
+                      <div className="flex items-center gap-2 touch:min-h-11">
                         <span className="text-xs text-ca-elements-textSecondary">
                           {connectorEnabled[getSettingsId(connector)] ? 'On' : 'Off'}
                         </span>
@@ -361,7 +361,7 @@ export default function ConnectorsTab() {
                       <button
                         type="button"
                         onClick={() => setSelectedConnector(connector.id)}
-                        className="flex items-center gap-2 max-md:min-h-11 rounded-md border border-ca-elements-borderColor bg-ca-elements-background-depth-3 px-3 py-1.5 text-sm font-medium text-ca-elements-textSecondary transition-colors hover:border-ca-elements-borderColorActive hover:bg-ca-elements-background-depth-1 hover:text-ca-elements-textPrimary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50"
+                        className="flex items-center gap-2 touch:min-h-11 rounded-md border border-ca-elements-borderColor bg-ca-elements-background-depth-3 px-3 py-1.5 text-sm font-medium text-ca-elements-textSecondary transition-colors hover:border-ca-elements-borderColorActive hover:bg-ca-elements-background-depth-1 hover:text-ca-elements-textPrimary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50"
                       >
                         Configure <span aria-hidden="true">→</span>
                       </button>

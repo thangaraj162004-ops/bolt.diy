@@ -14,6 +14,26 @@ body {
   background-color: var(--ca-elements-bg-depth-1);
 }
 
+/*
+ * Touch layout (the same media query as TOUCH_LAYOUT_QUERY in
+ * app/lib/touchLayout.ts): no sideways overscroll on the page or any scroll
+ * panel, so a sideways scroll that reaches an edge never turns into Android's
+ * edge "Back" gesture or a bounce. A desktop with a mouse is unchanged.
+ */
+@media (max-width: 767.9px), (pointer: coarse) {
+  html,
+  body,
+  .overflow-auto,
+  .overflow-x-auto,
+  .overflow-y-auto,
+  .overflow-scroll,
+  .overflow-x-scroll,
+  .overflow-y-scroll,
+  .modern-scrollbar {
+    overscroll-behavior-x: none;
+  }
+}
+
 html[data-accent-intensity] .bg-accent-500 {
   background-color: color-mix(
     in srgb,

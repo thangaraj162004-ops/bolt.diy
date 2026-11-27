@@ -47,7 +47,7 @@ describe('MobileTabBar (phone)', () => {
 
     const bar = screen.getByTestId('mobile-tab-bar');
     expect(screen.getAllByRole('button').map((button) => button.textContent)).toEqual(['Chat', 'Code', 'Preview']);
-    expect(bar.className).toContain('md:hidden');
+    expect(bar.className).toContain('mouse:hidden');
     expect(bar.className).toContain('pb-[env(safe-area-inset-bottom)]');
 
     // 56 px tall buttons: bigger than the 44 px touch-target minimum

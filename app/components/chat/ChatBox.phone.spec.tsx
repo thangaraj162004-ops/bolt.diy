@@ -76,9 +76,9 @@ describe('ChatBox on a phone', () => {
     renderChatBox();
 
     const inline = screen.getByTestId('model-selector').parentElement!;
-    expect(inline.className).toContain('max-md:hidden');
-    expect(inline.className).not.toContain('md:hidden ');
-    expect(screen.getByTestId('model-chip').className).toContain('md:hidden');
+    expect(inline.className).toContain('touch:hidden');
+    expect(inline.className).not.toContain('mouse:hidden ');
+    expect(screen.getByTestId('model-chip').className).toContain('mouse:hidden');
   });
 
   it('starts as a one-line text box that grows to about four lines', () => {
@@ -126,7 +126,7 @@ describe('ChatBox on a phone', () => {
   it('every chat box button is at least 44 px on a phone', () => {
     renderChatBox({ input: 'hello' });
 
-    expect(screen.getByRole('button', { name: 'Send message' }).className).toContain('max-md:w-11 max-md:h-11');
-    expect(screen.getByRole('button', { name: /^Mode:/ }).className).toContain('max-md:min-h-11 max-md:min-w-11');
+    expect(screen.getByRole('button', { name: 'Send message' }).className).toContain('touch:w-11 touch:h-11');
+    expect(screen.getByRole('button', { name: /^Mode:/ }).className).toContain('touch:min-h-11 touch:min-w-11');
   });
 });

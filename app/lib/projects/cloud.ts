@@ -45,7 +45,10 @@ export function supabaseProjectsApi(client: SupabaseClient): ProjectsApi {
         fail(error);
       }
 
-      return (data ?? []) as OnlineProject[];
+      // only a real list of rows (anything else must never break the project lists)
+      return Array.isArray(data)
+        ? (data as OnlineProject[]).filter((row) => typeof row?.id === 'string' && typeof row.updated_at === 'string')
+        : [];
     },
 
     async get(id) {

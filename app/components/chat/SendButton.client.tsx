@@ -15,7 +15,7 @@ export const SendButton = ({ show, isStreaming, disabled, onClick }: SendButtonP
     <AnimatePresence>
       {show ? (
         <motion.button
-          className="absolute flex justify-center items-center top-[18px] right-[22px] max-md:top-0 max-md:right-0 p-1 bg-accent-500 hover:brightness-94 color-white rounded-md max-md:rounded-xl w-[34px] h-[34px] max-md:w-11 max-md:h-11 transition-theme disabled:opacity-50 disabled:cursor-not-allowed"
+          className="absolute flex justify-center items-center top-[18px] right-[22px] touch:top-0 touch:right-0 p-1 bg-accent-500 hover:brightness-94 color-white rounded-md touch:rounded-xl w-[34px] h-[34px] touch:w-11 touch:h-11 transition-theme disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label={isStreaming ? 'Stop' : 'Send message'}
           transition={{ ease: customEasingFn, duration: 0.17 }}
           initial={{ opacity: 0, y: 10 }}

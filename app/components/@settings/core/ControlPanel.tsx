@@ -47,7 +47,7 @@ const BetaLabel = () => (
 );
 
 /** A settings page; on a phone it fills the width with 16 px sides and long text wraps. */
-const phonePage = 'mx-auto max-w-5xl max-md:max-w-full max-md:min-w-0 max-md:p-4 max-md:break-words';
+const phonePage = 'mx-auto max-w-5xl touch:max-w-full touch:min-w-0 touch:p-4 touch:break-words';
 
 const NAV_GROUPS: { label: string; tabs: TabType[] }[] = [
   { label: 'Preferences', tabs: ['settings'] },
@@ -266,7 +266,7 @@ export const ControlPanel = ({ open, onClose, initialTab }: ControlPanelProps) =
                 'w-[min(1440px,calc(100vw-2rem))] h-[90vh]',
 
                 // phone: a full-screen page
-                'max-md:w-screen max-md:h-[100dvh] max-md:!rounded-none max-md:!border-0',
+                'touch:w-screen touch:h-[100dvh] touch:!rounded-none touch:!border-0',
                 'bg-ca-elements-background-depth-1 text-ca-elements-textPrimary',
                 'rounded-2xl shadow-2xl',
                 'border border-ca-elements-borderColor',
@@ -277,7 +277,7 @@ export const ControlPanel = ({ open, onClose, initialTab }: ControlPanelProps) =
               )}
             >
               <div className="relative z-10 flex h-full min-h-0">
-                <aside className="max-md:hidden flex w-[248px] shrink-0 flex-col border-r border-ca-elements-borderColor bg-ca-elements-background-depth-2">
+                <aside className="touch:hidden flex w-[248px] shrink-0 flex-col border-r border-ca-elements-borderColor bg-ca-elements-background-depth-2">
                   <button
                     onClick={handleClose}
                     className="mx-4 mt-4 flex appearance-none items-center gap-2 border-0 border-b border-solid border-ca-elements-borderColor bg-transparent px-2 pb-5 pt-2 text-left text-sm font-semibold text-ca-elements-textPrimary hover:text-ca-elements-item-contentAccent"
@@ -316,9 +316,9 @@ export const ControlPanel = ({ open, onClose, initialTab }: ControlPanelProps) =
                     <AvatarDropdown onSelectTab={handleTabClick} />
                   </div>
                 </aside>
-                <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden modern-scrollbar p-6 max-md:p-0 md:px-10 md:py-8">
+                <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden modern-scrollbar p-6 touch:p-0 mouse:px-10 mouse:py-8">
                   {/* phone: a top bar with a back arrow and the page title */}
-                  <div className="md:hidden sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-ca-elements-borderColor bg-ca-elements-background-depth-1 px-1">
+                  <div className="mouse:hidden sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-ca-elements-borderColor bg-ca-elements-background-depth-1 px-1">
                     <button
                       type="button"
                       aria-label="Back"
@@ -335,15 +335,15 @@ export const ControlPanel = ({ open, onClose, initialTab }: ControlPanelProps) =
                     <div className={phonePage}>{getTabComponent(activeTab)}</div>
                   ) : !activeTab ? (
                     <div className="mx-auto max-w-5xl">
-                      <DialogTitle className="mb-1 text-2xl font-semibold text-ca-elements-textPrimary max-md:sr-only">
+                      <DialogTitle className="mb-1 text-2xl font-semibold text-ca-elements-textPrimary touch:sr-only">
                         Control Panel
                       </DialogTitle>
-                      <p className="mb-6 text-sm text-ca-elements-textSecondary max-md:hidden">
+                      <p className="mb-6 text-sm text-ca-elements-textSecondary touch:hidden">
                         Manage your account, preferences, providers, and connected services.
                       </p>
 
                       {/* phone: one list of big rows, in the same groups as the desktop side menu */}
-                      <div className="md:hidden py-2" data-testid="settings-list">
+                      <div className="mouse:hidden py-2" data-testid="settings-list">
                         {navigationTabs.map((group) => (
                           <section key={group.label} className="mb-2">
                             <h3 className="px-4 pt-3 pb-1 text-xs font-medium uppercase tracking-wide text-ca-elements-textTertiary">
@@ -393,7 +393,7 @@ export const ControlPanel = ({ open, onClose, initialTab }: ControlPanelProps) =
                         ))}
                       </div>
 
-                      <div className="max-md:hidden grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div className="touch:hidden grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {visibleTabs.map((tab, index) => (
                           <div
                             key={tab.id}

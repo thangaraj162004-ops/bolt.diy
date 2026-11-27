@@ -3,6 +3,7 @@ import {
   getAgentCompletionProblems,
   getAgentLoopInstructions,
   getAgentLoopProgress,
+  isHelperFile,
   isServerAgentTool,
   MAX_AGENT_STEPS,
   type AgentPlan,
@@ -367,5 +368,40 @@ describe('agent stops instead of looping (Task 9F)', () => {
       response({ type: 'step-start' }, result('project_read_file', { content: 'x' }, `read-${i}`)),
     );
     expect(getAgentLoopProgress([user, response(planned), ...steps], true).status).toBe('limited');
+  });
+});
+
+describe('helper files the agent created (Task 11F)', () => {
+  it('knows helper file names, but not real ones like checkout.tsx', () => {
+    for (const path of ['src/test-check.ts', 'check.js', 'src/smoke-test.tsx', 'tmp-preview.ts', 'debug.mjs']) {
+      expect(isHelperFile(path)).toBe(true);
+    }
+
+    for (const path of ['src/Checkout.tsx', 'src/spellcheck.ts', 'src/App.tsx', 'src/test-check.css', 'README.md']) {
+      expect(isHelperFile(path)).toBe(false);
+    }
+  });
+
+  it('a helper file it created blocks completion until it deletes it', () => {
+    const created = result('project_write_file', { path: 'src/test-check.ts', written: true, created: true }, 'helper');
+    const removed = result('project_delete_path', { path: 'src/test-check.ts', deleted: true }, 'cleanup');
+
+    const left = getAgentLoopProgress([user, response(planned, edited, created, run, complete)], true);
+    expect(left.status).toBe('pending');
+    expect(left.helperFiles).toEqual(['src/test-check.ts']);
+    expect(getAgentCompletionProblems(left).join(' ')).toContain(
+      'Delete the helper files you created first: src/test-check.ts',
+    );
+    expect(getAgentLoopInstructions(left)).toContain('project_delete_path');
+
+    const cleaned = getAgentLoopProgress([user, response(planned, edited, created, run, removed, complete)], true);
+    expect(cleaned.helperFiles).toEqual([]);
+    expect(cleaned.status).toBe('ready');
+  });
+
+  it("a user's own file with such a name is not touched (only files the agent created count)", () => {
+    const patched = result('project_write_file', { path: 'src/check.ts', written: true, created: false }, 'edit2');
+
+    expect(getAgentLoopProgress([user, response(planned, patched, run, complete)], true).helperFiles).toEqual([]);
   });
 });

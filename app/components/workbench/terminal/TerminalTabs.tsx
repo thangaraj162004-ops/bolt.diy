@@ -132,10 +132,10 @@ export const TerminalTabs = memo(() => {
       }}
     >
       {isMinimized && (
-        <div className="h-full min-h-[34px] max-md:min-h-11 flex items-center justify-end bg-ca-elements-background-depth-2 border-t border-ca-elements-borderColor px-2">
+        <div className="h-full min-h-[34px] touch:min-h-11 flex items-center justify-end bg-ca-elements-background-depth-2 border-t border-ca-elements-borderColor px-2">
           <button
             type="button"
-            className="flex items-center gap-2 px-3 py-1 max-md:min-h-11 rounded-md bg-transparent text-sm text-ca-elements-textPrimary hover:bg-ca-elements-terminals-buttonBackground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ca-elements-focus"
+            className="flex items-center gap-2 px-3 py-1 touch:min-h-11 rounded-md bg-transparent text-sm text-ca-elements-textPrimary hover:bg-ca-elements-terminals-buttonBackground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ca-elements-focus"
             title="Expand terminal"
             onClick={() => {
               terminalPanelRef.current?.resize(`${DEFAULT_TERMINAL_SIZE}%`);
@@ -226,7 +226,7 @@ export const TerminalTabs = memo(() => {
               }}
             />
             <IconButton
-              className="ml-auto max-md:min-w-11 max-md:min-h-11"
+              className="ml-auto touch:min-w-11 touch:min-h-11"
               icon="i-ph:minus"
               title="Minimize terminal"
               size="md"
