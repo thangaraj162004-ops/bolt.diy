@@ -9,6 +9,9 @@ vi.mock('~/lib/persistence', () => ({
   getAll: vi.fn(),
   deleteById: vi.fn(),
   useChatHistory: () => ({ duplicateCurrentChat: vi.fn(), exportChat: vi.fn() }),
+  description: { get: () => undefined, set: vi.fn() },
+  duplicateChat: vi.fn(),
+  updateChatDescription: vi.fn(),
 }));
 
 // the chat rows; not shown here (no saved chats) and they pull in the workbench
@@ -110,5 +113,25 @@ describe('sidebar on a phone', () => {
 
     cleanup();
     expect(settingsPanelOpen.get()).toBe(false);
+  });
+
+  it('the "Projects" row at the bottom of the chat list opens the Projects page', async () => {
+    const { projectsPageOpen } = await import('~/lib/stores/layout');
+    renderMenu();
+    act(() => sidebarOpen.set(true));
+
+    const row = [...document.querySelectorAll<HTMLButtonElement>('.side-menu button')].find(
+      (button) => button.textContent === 'Projects',
+    )!;
+    expect(row.className).toContain('md:hidden');
+    expect(row.className).toContain('min-h-11');
+
+    act(() => row.click());
+    expect(sidebarOpen.get()).toBe(false);
+    expect(projectsPageOpen.get()).toBe(true);
+    expect(screen.getByTestId('projects-page')).toBeTruthy();
+
+    act(() => screen.getByRole('button', { name: 'Back' }).click());
+    expect(projectsPageOpen.get()).toBe(false);
   });
 });

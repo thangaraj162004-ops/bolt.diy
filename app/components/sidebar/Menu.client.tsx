@@ -1,7 +1,7 @@
 import { useStore } from '@nanostores/react';
 import { motion, type Variants } from 'framer-motion';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { HistoryItem } from './HistoryItem';
 import { binDates } from './date-binning';
@@ -14,15 +14,32 @@ import { binDates } from './date-binning';
 const LazyControlPanel = lazy(() =>
   import('~/components/@settings/core/ControlPanel').then((m) => ({ default: m.ControlPanel })),
 );
+import { ProjectsPage } from '~/components/projects/ProjectsPage';
 import { Button } from '~/components/ui/Button';
 import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { SettingsButton, OpenSourceNoticesLink } from '~/components/ui/SettingsButton';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { UserAvatar, displayName } from '~/components/ui/UserAvatar';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
-import { db, deleteById, getAll, chatId, type ChatHistoryItem, useChatHistory } from '~/lib/persistence';
+import {
+  db,
+  deleteById,
+  description as descriptionStore,
+  duplicateChat,
+  getAll,
+  chatId,
+  type ChatHistoryItem,
+  updateChatDescription,
+  useChatHistory,
+} from '~/lib/persistence';
 import { sidebarEntry } from '~/lib/persistence/chatTitle';
-import { OPEN_SETTINGS_EVENT, isPhoneWidth, settingsPanelOpen, sidebarOpen } from '~/lib/stores/layout';
+import {
+  OPEN_SETTINGS_EVENT,
+  isPhoneWidth,
+  projectsPageOpen,
+  settingsPanelOpen,
+  sidebarOpen,
+} from '~/lib/stores/layout';
 import { DEFAULT_AVATAR, profileStore } from '~/lib/stores/profile';
 import { authState } from '~/lib/supabase/auth';
 import { classNames } from '~/utils/classNames';
@@ -83,11 +100,14 @@ export const Menu = () => {
   const open = useStore(sidebarOpen);
   const setOpen = useCallback((value: boolean) => sidebarOpen.set(value), []);
   const location = useLocation();
+  const navigate = useNavigate();
+  const isProjectsOpen = useStore(projectsPageOpen);
 
-  // on a phone the sidebar covers the screen: close it after a chat is opened
+  // on a phone the sidebar covers the screen: close it (and the Projects page) after a chat is opened
   useEffect(() => {
     if (isPhoneWidth()) {
       sidebarOpen.set(false);
+      projectsPageOpen.set(false);
     }
   }, [location.pathname]);
 
@@ -299,10 +319,62 @@ export const Menu = () => {
   }, [filteredList]); // Depends only on filteredList
 
   useEffect(() => {
-    if (open) {
+    if (open || isProjectsOpen) {
       loadEntries();
     }
-  }, [open, loadEntries]);
+  }, [open, isProjectsOpen, loadEntries]);
+
+  // phone "Projects" page actions
+  const openProject = useCallback(
+    (item: ChatHistoryItem) => {
+      projectsPageOpen.set(false);
+      navigate(`/chat/${item.urlId || item.id}`);
+    },
+    [navigate],
+  );
+
+  const renameProject = useCallback(
+    async (item: ChatHistoryItem, title: string) => {
+      if (!db) {
+        return;
+      }
+
+      try {
+        await updateChatDescription(db, item.id, title);
+
+        if (chatId.get() === item.id) {
+          descriptionStore.set(title);
+        }
+
+        toast.success('Project renamed');
+      } catch (error) {
+        toast.error('Failed to rename project: ' + (error as Error).message);
+      }
+
+      loadEntries();
+    },
+    [loadEntries],
+  );
+
+  // copies exactly this project (not the chat that is open), and stays on the page
+  const duplicateProject = useCallback(
+    async (item: ChatHistoryItem) => {
+      if (!db) {
+        return;
+      }
+
+      try {
+        await duplicateChat(db, item.id);
+        toast.success('Project duplicated');
+      } catch (error) {
+        console.error('Failed to duplicate project:', error);
+        toast.error('Failed to duplicate project');
+      }
+
+      loadEntries();
+    },
+    [loadEntries],
+  );
 
   // Exit selection mode when sidebar is closed
   useEffect(() => {
@@ -614,6 +686,19 @@ export const Menu = () => {
               </Dialog>
             </DialogRoot>
           </div>
+          {/* phone: all projects on one full-screen page */}
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              projectsPageOpen.set(true);
+            }}
+            className="md:hidden flex min-h-11 items-center gap-3 border-t border-ca-elements-borderColor bg-transparent px-4 text-left text-sm font-medium text-ca-elements-textPrimary"
+          >
+            <span className="i-ph:folder-simple text-lg text-ca-elements-textSecondary" aria-hidden="true" />
+            <span className="flex-1">Projects</span>
+            <span className="i-ph:caret-right text-ca-elements-textTertiary" aria-hidden="true" />
+          </button>
           <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-800 px-4 py-3">
             <div className="flex items-center gap-3">
               <SettingsButton onClick={handleSettingsClick} />
@@ -644,6 +729,21 @@ export const Menu = () => {
       <Suspense fallback={null}>
         <LazyControlPanel open={isSettingsOpen} onClose={handleSettingsClose} initialTab={settingsInitialTab as any} />
       </Suspense>
+
+      <ProjectsPage
+        open={isProjectsOpen}
+        onClose={() => projectsPageOpen.set(false)}
+        projects={list}
+        onOpen={openProject}
+        onRename={renameProject}
+        onDuplicate={duplicateProject}
+        onExport={(item) => exportChat(item.id)}
+        onDelete={(item) =>
+          deleteItem({ preventDefault: noop, stopPropagation: noop } as unknown as React.UIEvent, item)
+        }
+      />
     </>
   );
 };
+
+const noop = () => undefined;

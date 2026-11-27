@@ -1,7 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AccountMenu } from './AccountMenu.client';
-import { OPEN_SETTINGS_EVENT, sidebarOpen } from '~/lib/stores/layout';
+import { OPEN_SETTINGS_EVENT, projectsPageOpen, sidebarOpen } from '~/lib/stores/layout';
 import { fakeSupabase, settle } from '~/lib/supabase/__fixtures__/fake-supabase';
 import { authDialog, authState, buyCreditsDialog, outOfCreditsDialog } from '~/lib/supabase/auth';
 
@@ -194,6 +194,7 @@ describe('AccountMenu', () => {
       'buy',
       'settings',
       'history',
+      'projects',
       'signout',
     ]);
     rows.forEach((row) => expect(row.className).toContain('min-h-[52px]'));
@@ -209,7 +210,7 @@ describe('AccountMenu', () => {
     expect(screen.queryByTestId('account-sheet')).toBeNull();
   });
 
-  it('phone: Settings and Chat history rows open them', async () => {
+  it('phone: Settings, Chat history and Projects rows open them', async () => {
     await renderMenu(fakeSupabase({ session: { user: { id: 'user-1', email: 'a@b.co' } }, balance: 3 }));
 
     const onSettings = vi.fn();
@@ -232,7 +233,16 @@ describe('AccountMenu', () => {
         fireEvent.click(await screen.findByRole('button', { name: 'Chat history' }));
       });
       expect(sidebarOpen.get()).toBe(true);
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Account menu' }));
+      });
+      await act(async () => {
+        fireEvent.click(await screen.findByRole('button', { name: 'Projects' }));
+      });
+      expect(projectsPageOpen.get()).toBe(true);
     } finally {
+      projectsPageOpen.set(false);
       document.removeEventListener(OPEN_SETTINGS_EVENT, onSettings);
       sidebarOpen.set(false);
     }
@@ -256,6 +266,7 @@ describe('AccountMenu', () => {
       'profile',
       'settings',
       'history',
+      'projects',
     ]);
     expect(sheet.textContent).toContain('Guest');
     expect(sheet.querySelector('img')).toBeNull();

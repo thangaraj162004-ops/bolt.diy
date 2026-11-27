@@ -31,3 +31,6 @@ export function openSettings() {
 
 /** Whether Settings (the Control Panel) is open; the header logo then stays under it. */
 export const settingsPanelOpen = atom(false);
+
+/** Phone: whether the full-screen "Projects" page is open. */
+export const projectsPageOpen = atom(false);

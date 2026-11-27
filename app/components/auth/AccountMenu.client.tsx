@@ -8,7 +8,7 @@ import { OutOfCreditsDialog } from './OutOfCreditsDialog';
 import { UserAvatar, displayName } from '~/components/ui/UserAvatar';
 import { formatPlanDate } from '~/lib/payments/checkout';
 import { planName } from '~/lib/payments/packs';
-import { openSettings, sidebarOpen } from '~/lib/stores/layout';
+import { openSettings, projectsPageOpen, sidebarOpen } from '~/lib/stores/layout';
 import { profileStore } from '~/lib/stores/profile';
 import { authDialog, authState, buyCreditsDialog, outOfCreditsDialog, signOut, startAuth } from '~/lib/supabase/auth';
 import { supabase as defaultClient } from '~/lib/supabase/client';
@@ -55,6 +55,7 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
     onBuyCredits: () => buyCreditsDialog.set(true),
     onSettings: openSettings,
     onChatHistory: () => sidebarOpen.set(true),
+    onProjects: () => projectsPageOpen.set(true),
     onSignOut: () => void signOut(client),
   };
 

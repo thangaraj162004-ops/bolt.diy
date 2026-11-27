@@ -12,6 +12,7 @@ interface AccountSheetProps {
   onBuyCredits: () => void;
   onSettings: () => void;
   onChatHistory: () => void;
+  onProjects: () => void;
   onSignOut: () => void;
 }
 
@@ -49,6 +50,7 @@ export function AccountSheet({
   onBuyCredits,
   onSettings,
   onChatHistory,
+  onProjects,
   onSignOut,
 }: AccountSheetProps) {
   // close the sheet first, then do the action
@@ -111,6 +113,9 @@ export function AccountSheet({
           </ActionRow>
           <ActionRow row="history" icon="i-ph:clock-counter-clockwise" onClick={then(onChatHistory)}>
             Chat history
+          </ActionRow>
+          <ActionRow row="projects" icon="i-ph:folder-simple" onClick={then(onProjects)}>
+            Projects
           </ActionRow>
           {user && (
             <ActionRow row="signout" icon="i-ph:sign-out" onClick={then(onSignOut)}>
