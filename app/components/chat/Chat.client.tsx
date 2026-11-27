@@ -44,6 +44,8 @@ import {
   creditsErrorCode,
   mayTrySend,
   refreshCreditsBadge,
+  REFUND_RECHECK_MS,
+  replyJustEnded,
   showCreditsError,
 } from '~/lib/supabase/credits';
 import type { LlmErrorAlertType } from '~/types/actions';
@@ -380,10 +382,31 @@ export const ChatImpl = memo(
     messagesRef.current = messages;
 
     // a reply started, so the server has spent the credit: show the new balance
+    const previousStatusRef = useRef(status);
+
     useEffect(() => {
+      const previous = previousStatusRef.current;
+      previousStatusRef.current = status;
+
       if (status === 'streaming') {
         void refreshCreditsBadge();
+        return undefined;
       }
+
+      /*
+       * The reply ended. After a failure (or an empty reply) the server gives
+       * the credit back a moment later, so read the balance now and again
+       * shortly after; before, the badge kept showing the spent credit.
+       */
+      if (replyJustEnded(previous, status)) {
+        void refreshCreditsBadge();
+
+        const timer = setTimeout(() => void refreshCreditsBadge(), REFUND_RECHECK_MS);
+
+        return () => clearTimeout(timer);
+      }
+
+      return undefined;
     }, [status]);
 
     const executingProjectCallsRef = useRef(new Set<string>());

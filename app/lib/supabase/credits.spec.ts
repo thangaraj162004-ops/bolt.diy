@@ -143,3 +143,20 @@ describe('browser credits', () => {
     vi.unstubAllGlobals();
   });
 });
+
+describe('reading the balance again after a reply', () => {
+  it('happens when a reply ends, finished or failed (a refund may follow on the server)', async () => {
+    const { replyJustEnded, REFUND_RECHECK_MS } = await import('./credits');
+
+    expect(replyJustEnded('streaming', 'error')).toBe(true);
+    expect(replyJustEnded('submitted', 'error')).toBe(true);
+    expect(replyJustEnded('streaming', 'ready')).toBe(true);
+
+    // not on page load, and not while a reply is still running
+    expect(replyJustEnded(undefined, 'ready')).toBe(false);
+    expect(replyJustEnded('ready', 'ready')).toBe(false);
+    expect(replyJustEnded('submitted', 'streaming')).toBe(false);
+
+    expect(REFUND_RECHECK_MS).toBeGreaterThanOrEqual(1_000);
+  });
+});

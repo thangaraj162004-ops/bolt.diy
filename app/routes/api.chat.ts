@@ -634,7 +634,10 @@ async function chatAction({ context, request }: ActionFunctionArgs) {
        * that every merged stream has drained.
        */
       onEnd: () => {
-        // no-op: stream is managed by merged consumer
+        // finished with no reply at all (and no error): the credit goes back, unless the user pressed Stop
+        if (!request.signal.aborted) {
+          void refund.onNoReply();
+        }
       },
       onError: (error: any) => {
         void refund.onFailure(error);

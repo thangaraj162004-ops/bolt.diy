@@ -137,3 +137,15 @@ export async function refreshCreditsBadge(): Promise<void> {
     await refreshBalance(client);
   }
 }
+
+/** How long after a failed or empty reply the balance is read again (the server refunds after the error). */
+export const REFUND_RECHECK_MS = 3_000;
+
+/**
+ * True when a reply just ended (finished or failed): the balance is read again
+ * then, because a refund for a failed reply happens on the server after the
+ * badge was last updated.
+ */
+export function replyJustEnded(previous: string | undefined, current: string): boolean {
+  return (previous === 'submitted' || previous === 'streaming') && (current === 'ready' || current === 'error');
+}

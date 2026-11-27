@@ -460,3 +460,73 @@ describe('agent provider recovery', () => {
     expect(chunks.some((chunk) => chunk.type === 'error')).toBe(false);
   });
 });
+
+describe('agent model wrappers keep the model (Task 9E)', () => {
+  /*
+   * Like the real SDK models (for example @ai-sdk/google): `provider` and
+   * `supportedUrls` are class getters and `doGenerate` a class method. A spread
+   * copy of such a model loses them, and streamText then failed with
+   * "Cannot read properties of undefined (reading 'split')" on `provider`.
+   */
+  class ClassModel {
+    readonly specificationVersion = 'v4' as const;
+    readonly modelId = 'gemini-3.5-flash-lite';
+
+    get provider() {
+      return 'google.generative-ai';
+    }
+
+    get supportedUrls() {
+      return {};
+    }
+
+    async doGenerate(): Promise<never> {
+      throw new Error('not used');
+    }
+
+    async doStream() {
+      return {
+        stream: new ReadableStream<any>({
+          start(controller) {
+            controller.enqueue({ type: 'text-start', id: 't' });
+            controller.enqueue({ type: 'text-delta', id: 't', delta: 'Hello' });
+            controller.enqueue({ type: 'text-end', id: 't' });
+            finish(controller);
+          },
+        }),
+      };
+    }
+  }
+
+  it.each([
+    ['withAgentStreamDeadlines', (model: ClassModel) => withAgentStreamDeadlines(model as any)],
+    ['withAgentToolCallRecovery', (model: ClassModel) => withAgentToolCallRecovery(model as any, () => undefined)],
+  ])('%s keeps provider, modelId, supportedUrls and doGenerate', async (_name, wrap) => {
+    const model = new ClassModel();
+    expect(Object.keys(model)).not.toContain('provider');
+    expect({ ...model }).not.toHaveProperty('provider');
+
+    const wrapped = wrap(model) as Exclude<ReturnType<typeof wrap>, string>;
+
+    expect(wrapped.provider).toBe('google.generative-ai');
+    expect(wrapped.modelId).toBe('gemini-3.5-flash-lite');
+    expect(typeof wrapped.doGenerate).toBe('function');
+    expect(await wrapped.supportedUrls).toEqual(await model.supportedUrls);
+
+    const result = streamText({ model: wrapped, prompt: 'hi' });
+
+    let text = '';
+
+    for await (const part of result.stream) {
+      if (part.type === 'error') {
+        throw part.error;
+      }
+
+      if (part.type === 'text-delta') {
+        text += part.text;
+      }
+    }
+
+    expect(text).toBe('Hello');
+  });
+});

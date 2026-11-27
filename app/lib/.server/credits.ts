@@ -516,6 +516,18 @@ export function createRefundOnFailure(
       replied = true;
     },
 
+    /**
+     * The AI finished without any reply (no text and no tool call) and without
+     * an error, for example an empty answer: the credit goes back too.
+     */
+    onNoReply(): Promise<unknown> | undefined {
+      if (replied || done) {
+        return undefined;
+      }
+
+      return this.onFailure(Object.assign(new Error('The AI sent no reply'), { name: 'EmptyReply' }));
+    },
+
     /** The AI call failed. Returns the refund promise, if one was started. */
     onFailure(error: unknown): Promise<unknown> | undefined {
       if (done || charge.kind !== 'charged') {

@@ -397,6 +397,27 @@ describe('refund on failure', () => {
     expect(fake.rpc).not.toHaveBeenCalled();
   });
 
+  it('refunds an empty reply (no text, no tool call, no error) once, but not a normal reply', async () => {
+    const fake = fakeCreateClient();
+    const options = { env: ENV, createSupabase: fake.createSupabase as unknown as CreateSupabase };
+
+    const empty = createRefundOnFailure(await chargedOutcome(), options);
+    expect(await empty.onNoReply()).toBe('refunded');
+    expect(empty.onNoReply()).toBeUndefined();
+    expect(empty.onFailure(new Error('late'))).toBeUndefined();
+
+    const answered = createRefundOnFailure(await chargedOutcome(), options);
+    answered.markReplied();
+    expect(answered.onNoReply()).toBeUndefined();
+
+    // after an error that was already refunded, the end of the stream refunds nothing more
+    const failed = createRefundOnFailure(await chargedOutcome(), options);
+    await failed.onFailure(new Error('503'));
+    expect(failed.onNoReply()).toBeUndefined();
+
+    expect(fake.rpc.mock.calls.filter(([name]) => name === 'refund_credits')).toHaveLength(2);
+  });
+
   it('skips the refund without the secret key and never logs secrets', async () => {
     const logs: string[] = [];
 
