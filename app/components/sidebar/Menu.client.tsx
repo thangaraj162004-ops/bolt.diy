@@ -1,6 +1,7 @@
 import { useStore } from '@nanostores/react';
 import { motion, type Variants } from 'framer-motion';
 import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { HistoryItem } from './HistoryItem';
 import { binDates } from './date-binning';
@@ -20,6 +21,7 @@ import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { db, deleteById, getAll, chatId, type ChatHistoryItem, useChatHistory } from '~/lib/persistence';
 import { sidebarEntry } from '~/lib/persistence/chatTitle';
+import { isPhoneWidth, sidebarOpen } from '~/lib/stores/layout';
 import { DEFAULT_AVATAR, profileStore } from '~/lib/stores/profile';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
@@ -74,7 +76,19 @@ export const Menu = () => {
   const { duplicateCurrentChat, exportChat } = useChatHistory({ loadHistory: false });
   const menuRef = useRef<HTMLDivElement>(null);
   const [list, setList] = useState<ChatHistoryItem[]>([]);
-  const [open, setOpen] = useState(false);
+
+  // shared, so the header's menu button can open it too
+  const open = useStore(sidebarOpen);
+  const setOpen = useCallback((value: boolean) => sidebarOpen.set(value), []);
+  const location = useLocation();
+
+  // on a phone the sidebar covers the screen: close it after a chat is opened
+  useEffect(() => {
+    if (isPhoneWidth()) {
+      sidebarOpen.set(false);
+    }
+  }, [location.pathname]);
+
   const [dialogContent, setDialogContent] = useState<DialogContent>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<string | undefined>(undefined);
@@ -350,13 +364,23 @@ export const Menu = () => {
 
   return (
     <>
+      {/* phone: tapping outside the open sidebar closes it (there is no mouse to move away) */}
+      {open && !isSettingsOpen && (
+        <button
+          type="button"
+          aria-label="Close menu"
+          className="md:hidden fixed inset-0 z-sidebar bg-black/40 cursor-default"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
       <motion.div
         ref={menuRef}
         initial="closed"
         animate={open ? 'open' : 'closed'}
         variants={menuVariants}
-        style={{ width: '340px' }}
         className={classNames(
+          'w-[340px] max-md:w-[min(340px,85vw)]', // never wider than 85% of a phone screen
           'flex selection-accent flex-col side-menu fixed top-0 h-full rounded-r-2xl',
           'bg-ca-elements-background-depth-1 border-r border-ca-elements-borderColor',
           'shadow-sm text-sm',
@@ -556,12 +580,12 @@ export const Menu = () => {
         </div>
       </motion.div>
 
-      {/* Persistent sidebar trigger — always visible when sidebar is closed */}
+      {/* Persistent sidebar trigger — always visible when sidebar is closed (phones use the header's menu button) */}
       {!open && !isSettingsOpen && (
         <button
           onClick={() => setOpen(true)}
           className={classNames(
-            'fixed left-0 top-[72px] z-sidebar',
+            'max-md:hidden fixed left-0 top-[72px] z-sidebar',
             'bg-ca-elements-background-depth-1',
             'border border-l-0 border-ca-elements-borderColor',
             'rounded-r-lg p-1.5 shadow-sm',

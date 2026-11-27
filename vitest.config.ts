@@ -43,6 +43,7 @@ const DOM_TESTS = [
   'app/components/preview-demo/PreviewDemo.spec.tsx',
   'app/components/header/Header.spec.tsx',
   'app/components/auth/AccountMenu.spec.tsx',
+  'app/components/workbench/MobileTabBar.spec.tsx',
   'app/lib/payments/checkout.spec.ts',
   'app/components/auth/BuyCreditsDialog.spec.tsx',
   'app/routes/open-source.spec.tsx',

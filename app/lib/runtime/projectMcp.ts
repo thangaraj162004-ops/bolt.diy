@@ -7,6 +7,7 @@ import { PROJECT_TOOL_NAMES, projectToolDefinitions } from './projectMcp.shared'
 export { PROJECT_TOOL_NAMES, projectToolDefinitions } from './projectMcp.shared';
 import { searchWithRipgrep } from './ripgrepClient';
 import { chatId } from '~/lib/persistence/useChatHistory';
+import { isPhoneWidth } from '~/lib/stores/layout';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { webcontainer } from '~/lib/webcontainer';
 import { WORK_DIR } from '~/utils/constants';
@@ -674,7 +675,12 @@ export async function createProjectMcpBridge() {
           }
 
           const processId = crypto.randomUUID();
-          workbenchStore.toggleTerminal(true);
+
+          // on a phone the terminal stays collapsed (it would cover the screen); its button opens it
+          if (!isPhoneWidth()) {
+            workbenchStore.toggleTerminal(true);
+          }
+
           workbenchStore.writeToCaTerminal(`\r\n$ ${command}\r\n`);
 
           const record: ProcessRecord = {

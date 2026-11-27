@@ -5,6 +5,7 @@ import { Terminal, type TerminalRef } from './Terminal';
 import { TerminalManager } from './TerminalManager';
 import { IconButton } from '~/components/ui/IconButton';
 import { PRODUCT_NAME } from '~/lib/brand';
+import { isPhoneWidth } from '~/lib/stores/layout';
 import { themeStore } from '~/lib/stores/theme';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { classNames } from '~/utils/classNames';
@@ -15,8 +16,10 @@ const logger = createScopedLogger('Terminal');
 const MAX_TERMINALS = 3;
 export const DEFAULT_TERMINAL_SIZE = 25;
 
-const MINIMIZED_TERMINAL_SIZE = '34px';
-const MINIMIZED_TERMINAL_HEIGHT = 34;
+/** Height of the collapsed terminal bar: 44 px on a phone (a full touch target), 34 px elsewhere. */
+function minimizedTerminalHeight() {
+  return isPhoneWidth() ? 44 : 34;
+}
 
 export const TerminalTabs = memo(() => {
   const showTerminal = useStore(workbenchStore.showTerminal);
@@ -90,9 +93,9 @@ export const TerminalTabs = memo(() => {
 
     const terminalSize = terminal.getSize().inPixels;
 
-    if (!showTerminal && terminalSize > MINIMIZED_TERMINAL_HEIGHT) {
-      terminal.resize(MINIMIZED_TERMINAL_SIZE);
-    } else if (showTerminal && terminalSize <= MINIMIZED_TERMINAL_HEIGHT) {
+    if (!showTerminal && terminalSize > minimizedTerminalHeight()) {
+      terminal.resize(`${minimizedTerminalHeight()}px`);
+    } else if (showTerminal && terminalSize <= minimizedTerminalHeight()) {
       terminal.resize(`${DEFAULT_TERMINAL_SIZE}%`);
     }
   }, [showTerminal]);
@@ -112,10 +115,15 @@ export const TerminalTabs = memo(() => {
   return (
     <Panel
       panelRef={terminalPanelRef}
-      defaultSize={showTerminal ? DEFAULT_TERMINAL_SIZE : MINIMIZED_TERMINAL_SIZE}
-      minSize={MINIMIZED_TERMINAL_SIZE}
+      defaultSize={showTerminal ? DEFAULT_TERMINAL_SIZE : `${minimizedTerminalHeight()}px`}
+      minSize={`${minimizedTerminalHeight()}px`}
       onResize={(size) => {
-        const minimized = size.inPixels <= MINIMIZED_TERMINAL_HEIGHT + 1;
+        /*
+         * A phone layout change (for example the workbench toolbar hiding for the
+         * preview) stretches the collapsed bar by a few pixels; that is not the user
+         * opening the terminal, so phones allow some slack.
+         */
+        const minimized = size.inPixels <= minimizedTerminalHeight() + (isPhoneWidth() ? 8 : 1);
         setIsMinimized(minimized);
 
         if (workbenchStore.showTerminal.get() !== !minimized) {
@@ -124,10 +132,10 @@ export const TerminalTabs = memo(() => {
       }}
     >
       {isMinimized && (
-        <div className="h-full min-h-[34px] flex items-center justify-end bg-ca-elements-background-depth-2 border-t border-ca-elements-borderColor px-2">
+        <div className="h-full min-h-[34px] max-md:min-h-11 flex items-center justify-end bg-ca-elements-background-depth-2 border-t border-ca-elements-borderColor px-2">
           <button
             type="button"
-            className="flex items-center gap-2 px-3 py-1 rounded-md bg-transparent text-sm text-ca-elements-textPrimary hover:bg-ca-elements-terminals-buttonBackground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ca-elements-focus"
+            className="flex items-center gap-2 px-3 py-1 max-md:min-h-11 rounded-md bg-transparent text-sm text-ca-elements-textPrimary hover:bg-ca-elements-terminals-buttonBackground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ca-elements-focus"
             title="Expand terminal"
             onClick={() => {
               terminalPanelRef.current?.resize(`${DEFAULT_TERMINAL_SIZE}%`);
@@ -218,12 +226,12 @@ export const TerminalTabs = memo(() => {
               }}
             />
             <IconButton
-              className="ml-auto"
+              className="ml-auto max-md:min-w-11 max-md:min-h-11"
               icon="i-ph:minus"
               title="Minimize terminal"
               size="md"
               onClick={() => {
-                terminalPanelRef.current?.resize(MINIMIZED_TERMINAL_SIZE);
+                terminalPanelRef.current?.resize(`${minimizedTerminalHeight()}px`);
                 workbenchStore.toggleTerminal(false);
               }}
             />

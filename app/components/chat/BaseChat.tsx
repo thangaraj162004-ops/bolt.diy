@@ -20,6 +20,7 @@ import DeployChatAlert from '~/components/deploy/DeployAlert';
 import { OpenSourceFooterLink } from '~/components/open-source/OpenSourceFooterLink';
 import { Menu } from '~/components/sidebar/Menu.client';
 import type { ElementInfo } from '~/components/workbench/Inspector';
+import { MobileTabBar } from '~/components/workbench/MobileTabBar';
 import { WorkbenchReopenButton } from '~/components/workbench/WorkbenchReopenButton';
 import { API_KEYS_UPDATED_EVENT, type ApiKeysUpdatedDetail } from '~/lib/api/apiKeys';
 
@@ -374,10 +375,14 @@ export const BaseChat = React.forwardRef<HTMLDivElement, BaseChatProps>(
     const baseChat = (
       <div
         ref={ref}
-        className={classNames(styles.BaseChat, 'relative flex h-full w-full overflow-hidden')}
+        className={classNames(styles.BaseChat, 'relative flex h-full w-full overflow-hidden', {
+          // phone: keep the chat input above the bottom tab bar
+          'max-md:pb-[calc(3.5rem+env(safe-area-inset-bottom))]': chatStarted,
+        })}
         data-chat-visible={showChat}
       >
         <ClientOnly>{() => <Menu />}</ClientOnly>
+        {chatStarted && <MobileTabBar />}
         {chatStarted && showChat && !showWorkbench && (
           <WorkbenchReopenButton onClick={() => workbenchStore.showWorkbench.set(true)} />
         )}

@@ -17,6 +17,7 @@ import {
 import { PanelHeader } from '~/components/ui/PanelHeader';
 import { PanelHeaderButton } from '~/components/ui/PanelHeaderButton';
 import type { FileMap } from '~/lib/stores/files';
+import { isPhoneWidth } from '~/lib/stores/layout';
 import { themeStore } from '~/lib/stores/theme';
 import type { FileHistory } from '~/types/actions';
 import { classNames } from '~/utils/classNames'; // <-- Import classNames if not already present
@@ -77,7 +78,13 @@ export const EditorPanel = memo(
 
     return (
       <Group orientation="horizontal">
-        <Panel defaultSize={20} minSize={15} collapsible className="border-r border-ca-elements-borderColor">
+        {/* phone: a wider file list, so file names can be read */}
+        <Panel
+          defaultSize={isPhoneWidth() ? 40 : 20}
+          minSize={15}
+          collapsible
+          className="border-r border-ca-elements-borderColor"
+        >
           <div className="h-full">
             <Tabs.Root defaultValue="files" className="flex flex-col h-full">
               <PanelHeader className="w-full text-sm font-medium text-ca-elements-textSecondary px-1">
@@ -136,7 +143,7 @@ export const EditorPanel = memo(
         </Panel>
 
         <Separator />
-        <Panel className="flex flex-col" defaultSize={80} minSize={20}>
+        <Panel className="flex flex-col" defaultSize={isPhoneWidth() ? 60 : 80} minSize={20}>
           <PanelHeader className="overflow-x-auto">
             {activeFileSegments?.length && (
               <div className="flex items-center flex-1 text-sm">

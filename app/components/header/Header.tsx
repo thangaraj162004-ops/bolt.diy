@@ -5,6 +5,7 @@ import { HeaderActionButtons } from './HeaderActionButtons.client';
 import { BrandWordmark } from '~/components/ui/BrandWordmark';
 import { ChatDescription } from '~/lib/persistence/ChatDescription.client';
 import { chatStore } from '~/lib/stores/chat';
+import { sidebarOpen } from '~/lib/stores/layout';
 import { classNames } from '~/utils/classNames';
 
 // loaded on its own so supabase-js stays out of the first page load; renders nothing without Supabase
@@ -17,32 +18,41 @@ export function Header() {
 
   return (
     <header
-      className={classNames('flex items-center px-4 border-b h-[var(--header-height)]', {
+      className={classNames('flex items-center px-4 max-md:px-1 max-md:gap-1 border-b h-[var(--header-height)]', {
         'border-transparent': !chat.started,
         'border-ca-elements-borderColor': chat.started,
       })}
     >
-      <div className="flex items-center gap-2 z-logo text-ca-elements-textPrimary cursor-pointer">
-        <div className="i-ph:sidebar-simple-duotone text-xl" />
-        <a href="/" className="text-2xl font-semibold text-accent flex items-center">
-          <BrandWordmark className="text-xl" />
+      <div className="flex items-center gap-2 max-md:gap-0 min-w-0 z-logo text-ca-elements-textPrimary cursor-pointer">
+        {/* opens the chat history (the only way to open it on a phone: there is no mouse hover) */}
+        <button
+          type="button"
+          aria-label="Open menu"
+          onClick={() => sidebarOpen.set(true)}
+          className="flex items-center justify-center bg-transparent max-md:w-11 max-md:h-11 max-md:shrink-0"
+        >
+          <span className="i-ph:sidebar-simple-duotone text-xl" aria-hidden="true" />
+        </button>
+        <a href="/" className="text-2xl font-semibold text-accent flex items-center max-md:min-w-0 max-md:truncate">
+          <BrandWordmark className="text-xl max-md:text-lg" />
         </a>
       </div>
       {chat.started && ( // Display ChatDescription and HeaderActionButtons only when the chat has started.
         <>
-          <span className="flex-1 px-4 truncate text-center text-ca-elements-textPrimary">
+          {/* the project name: hidden on a phone, where it is in the menu and there is no room */}
+          <span className="flex-1 px-4 truncate text-center text-ca-elements-textPrimary max-md:hidden">
             <ClientOnly>{() => <ChatDescription />}</ClientOnly>
           </span>
           <ClientOnly>
             {() => (
-              <div className="">
+              <div className="max-md:ml-auto max-md:shrink-0">
                 <HeaderActionButtons chatStarted={chat.started} />
               </div>
             )}
           </ClientOnly>
         </>
       )}
-      <div className={classNames('flex items-center', chat.started ? 'ml-2' : 'ml-auto')}>
+      <div className={classNames('flex items-center max-md:shrink-0', chat.started ? 'ml-2 max-md:ml-1' : 'ml-auto')}>
         <ClientOnly>
           {() => (
             <Suspense fallback={null}>

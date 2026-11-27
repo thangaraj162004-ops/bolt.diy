@@ -8,6 +8,8 @@ import { PortDropdown } from './PortDropdown';
 import { ScreenshotSelector } from './ScreenshotSelector';
 import { IconButton } from '~/components/ui/IconButton';
 import { ExpoQrModal } from '~/components/workbench/ExpoQrModal';
+import useViewport from '~/lib/hooks';
+import { PHONE_MAX_WIDTH } from '~/lib/stores/layout';
 import { expoUrlAtom } from '~/lib/stores/qrCodeStore';
 import { workbenchStore } from '~/lib/stores/workbench';
 import { parseEsbuildPreviewUrl } from '~/lib/webcontainer/engine';
@@ -83,6 +85,16 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
   const inspectorOriginalRef = useRef<{ styles: Record<string, string>; textContent: string } | null>(null);
   const [isPreviewPaused, setIsPreviewPaused] = useState(false);
   const [isDeviceModeOn, setIsDeviceModeOn] = useState(false);
+
+  // phone: the preview always fills the width; there is no device frame to switch on
+  const isPhone = useViewport(PHONE_MAX_WIDTH);
+
+  useEffect(() => {
+    if (isPhone && isDeviceModeOn) {
+      setIsDeviceModeOn(false);
+    }
+  }, [isPhone, isDeviceModeOn]);
+
   const [widthPercent, setWidthPercent] = useState<number>(37.5);
   const [currentWidth, setCurrentWidth] = useState<number>(0);
 
@@ -644,22 +656,29 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
       {isPortDropdownOpen && (
         <div className="z-iframe-overlay w-full h-full absolute" onClick={() => setIsPortDropdownOpen(false)} />
       )}
-      <div className="bg-ca-elements-background-depth-2 p-2 flex items-center gap-2">
-        <div className="flex items-center gap-2">
-          <IconButton icon="i-ph:arrow-clockwise" onClick={reloadPreview} />
+      <div className="bg-ca-elements-background-depth-2 p-2 max-md:p-1 flex items-center gap-2 max-md:gap-1 min-w-0">
+        <div className="flex items-center gap-2 max-md:gap-0 shrink-0">
+          <IconButton
+            icon="i-ph:arrow-clockwise"
+            onClick={reloadPreview}
+            title="Reload preview"
+            className="max-md:min-w-11 max-md:min-h-11"
+          />
+          {/* phone: only reload, the address and full screen fit; the rest are desktop tools */}
           <IconButton
             icon={isPreviewPaused ? 'i-ph:play' : 'i-ph:pause'}
             onClick={() => setIsPreviewPaused((prev) => !prev)}
             title={isPreviewPaused ? 'Resume Preview' : 'Pause Preview'}
+            className="max-md:hidden"
           />
           <IconButton
             icon="i-ph:selection"
             onClick={() => setIsSelectionMode(!isSelectionMode)}
-            className={isSelectionMode ? 'bg-ca-elements-background-depth-3' : ''}
+            className={`max-md:hidden ${isSelectionMode ? 'bg-ca-elements-background-depth-3' : ''}`}
           />
         </div>
 
-        <div className="flex-grow flex items-center gap-1 bg-ca-elements-preview-addressBar-background border border-ca-elements-borderColor text-ca-elements-preview-addressBar-text rounded-full px-1 py-1 text-sm hover:bg-ca-elements-preview-addressBar-backgroundHover hover:focus-within:bg-ca-elements-preview-addressBar-backgroundActive focus-within:bg-ca-elements-preview-addressBar-backgroundActive focus-within-border-ca-elements-borderColorActive focus-within:text-ca-elements-preview-addressBar-textActive">
+        <div className="flex-grow min-w-0 flex items-center gap-1 bg-ca-elements-preview-addressBar-background border border-ca-elements-borderColor text-ca-elements-preview-addressBar-text rounded-full px-1 py-1 text-sm hover:bg-ca-elements-preview-addressBar-backgroundHover hover:focus-within:bg-ca-elements-preview-addressBar-backgroundActive focus-within:bg-ca-elements-preview-addressBar-backgroundActive focus-within-border-ca-elements-borderColorActive focus-within:text-ca-elements-preview-addressBar-textActive">
           <PortDropdown
             activePreviewIndex={activePreviewIndex}
             setActivePreviewIndex={setActivePreviewIndex}
@@ -679,11 +698,12 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 max-md:gap-0 shrink-0">
           <IconButton
             icon="i-ph:devices"
             onClick={toggleDeviceMode}
             title={isDeviceModeOn ? 'Switch to Responsive Mode' : 'Switch to Device Mode'}
+            className="max-md:hidden"
           />
 
           {expoUrl && <IconButton icon="i-ph:qr-code" onClick={() => setIsExpoQrModalOpen(true)} title="Show QR" />}
@@ -707,16 +727,17 @@ export const Preview = memo(({ selectedElement, setSelectedElement }: PreviewPro
           <IconButton
             icon="i-ph:cursor-click"
             onClick={toggleInspectorMode}
-            className={isInspectorMode ? 'bg-ca-elements-background-depth-3 !text-ca-elements-item-contentAccent' : ''}
+            className={`max-md:hidden ${isInspectorMode ? 'bg-ca-elements-background-depth-3 !text-ca-elements-item-contentAccent' : ''}`}
             title={isInspectorMode ? 'Disable Element Inspector' : 'Enable Element Inspector'}
           />
           <IconButton
             icon={isFullscreen ? 'i-ph:arrows-in' : 'i-ph:arrows-out'}
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Exit Full Screen' : 'Full Screen'}
+            className="max-md:min-w-11 max-md:min-h-11"
           />
 
-          <div className="flex items-center relative">
+          <div className="flex items-center relative max-md:hidden">
             <IconButton
               icon="i-ph:list"
               onClick={() => setIsWindowSizeDropdownOpen(!isWindowSizeDropdownOpen)}

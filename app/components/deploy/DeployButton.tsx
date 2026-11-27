@@ -131,9 +131,12 @@ export const DeployButton = ({
         <DropdownMenu.Root>
           <DropdownMenu.Trigger
             disabled={isDeploying || !activePreview || isStreaming}
-            className="rounded-md items-center justify-center [&:is(:disabled,.disabled)]:cursor-not-allowed [&:is(:disabled,.disabled)]:opacity-60 px-3 py-1.5 text-xs bg-accent-500 text-white hover:text-ca-elements-item-contentAccent [&:not(:disabled,.disabled)]:hover:bg-ca-elements-button-primary-backgroundHover outline-accent-500 flex gap-1.7"
+            aria-label={isDeploying ? `Deploying to ${deployingTo}` : 'Deploy'}
+            className="rounded-md items-center justify-center [&:is(:disabled,.disabled)]:cursor-not-allowed [&:is(:disabled,.disabled)]:opacity-60 px-3 py-1.5 max-md:px-2 max-md:min-h-11 max-md:min-w-11 text-xs bg-accent-500 text-white hover:text-ca-elements-item-contentAccent [&:not(:disabled,.disabled)]:hover:bg-ca-elements-button-primary-backgroundHover outline-accent-500 flex gap-1.7"
           >
-            {isDeploying ? `Deploying to ${deployingTo}...` : 'Deploy'}
+            {/* phone: an icon instead of the word, to fit the header */}
+            <span className="md:hidden i-ph:rocket-launch text-base" aria-hidden="true" />
+            <span className="max-md:hidden">{isDeploying ? `Deploying to ${deployingTo}...` : 'Deploy'}</span>
             <span className={classNames('i-ph:caret-down transition-transform')} />
           </DropdownMenu.Trigger>
           <DropdownMenu.Content

@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 // the chat title component reads chat history (IndexedDB); not needed for the logo
@@ -23,6 +23,20 @@ describe('Header', () => {
     expect(container.querySelectorAll('img')).toHaveLength(0);
     expect(container.textContent).not.toMatch(OLD_BRAND);
     expect(container.innerHTML).not.toMatch(/logo-(light|dark)/);
+  });
+});
+
+describe('Header on a phone', () => {
+  it('has a 44 px menu button that opens the chat history', async () => {
+    const { sidebarOpen } = await import('~/lib/stores/layout');
+    sidebarOpen.set(false);
+    render(<Header />);
+
+    const [button] = screen.getAllByRole('button', { name: 'Open menu' });
+    expect(button.className).toContain('max-md:w-11 max-md:h-11');
+
+    fireEvent.click(button);
+    expect(sidebarOpen.get()).toBe(true);
   });
 });
 

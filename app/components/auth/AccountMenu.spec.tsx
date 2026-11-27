@@ -152,4 +152,43 @@ describe('AccountMenu', () => {
     expect(screen.getByTestId('credits-badge')).toBeTruthy();
     expect(screen.queryByTestId('plan-badge')).toBeNull();
   });
+
+  it('phone: one-line credits chip and one account menu with Buy credits and Log out', async () => {
+    await renderMenu(
+      fakeSupabase({
+        session: { user: { id: 'user-1', email: 'a@b.co' } },
+        balance: 1262,
+        profile: { plan: 'pro', plan_until: new Date(Date.now() + 5 * 86_400_000).toISOString() },
+      }),
+    );
+
+    // desktop controls are hidden below 768 px; the phone ones from 768 px up
+    expect(screen.getByTestId('credits-badge').className).toContain('max-md:hidden');
+
+    const chip = screen.getByTestId('credits-chip');
+    expect(chip.className).toContain('md:hidden');
+    expect(chip.className).toContain('whitespace-nowrap');
+    expect(chip.textContent).toBe('1262');
+    expect(chip.getAttribute('aria-label')).toBe('1262 credits');
+
+    const trigger = screen.getByRole('button', { name: 'Account menu' });
+    expect(trigger.className).toContain('h-11 w-11');
+
+    await act(async () => {
+      fireEvent.keyDown(trigger, { key: 'Enter' });
+    });
+
+    const menu = await screen.findByTestId('account-menu');
+    expect(menu.textContent).toContain('a@b.co');
+    expect(menu.textContent).toContain('1262 credits · Pro plan until');
+
+    const items = screen.getAllByRole('menuitem');
+    expect(items.map((item) => item.textContent)).toEqual(['Buy credits', 'Log out']);
+    items.forEach((item) => expect(item.className).toContain('min-h-11'));
+
+    await act(async () => {
+      fireEvent.click(items[0]);
+    });
+    expect(buyCreditsDialog.get()).toBe(true);
+  });
 });
