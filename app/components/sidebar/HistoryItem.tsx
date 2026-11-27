@@ -1,3 +1,4 @@
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { forwardRef, type ForwardedRef, useCallback } from 'react';
 import { Link, useParams } from 'react-router';
 import { Checkbox } from '~/components/ui/Checkbox';
@@ -68,7 +69,7 @@ export function HistoryItem({
   return (
     <div
       className={classNames(
-        'group rounded-lg text-sm text-ca-elements-textSecondary hover:text-ca-elements-textPrimary hover:bg-ca-elements-item-backgroundActive overflow-hidden flex justify-between items-center px-3 py-2 transition-colors',
+        'group rounded-lg text-sm text-ca-elements-textSecondary hover:text-ca-elements-textPrimary hover:bg-ca-elements-item-backgroundActive overflow-hidden flex justify-between items-center px-3 py-2 max-md:py-0 max-md:pr-0 max-md:min-h-11 transition-colors',
         { 'text-ca-elements-textPrimary bg-ca-elements-item-backgroundActive': isActiveChat },
         { 'cursor-pointer': selectionMode },
       )}
@@ -110,14 +111,14 @@ export function HistoryItem({
           onClick={selectionMode ? handleItemClick : undefined}
         >
           <WithTooltip tooltip={currentDescription}>
-            <span className="truncate pr-24">{currentDescription}</span>
+            <span className="truncate pr-24 max-md:pr-2">{currentDescription}</span>
           </WithTooltip>
           <div
             className={classNames(
               'absolute right-0 top-0 bottom-0 flex items-center bg-transparent px-2 transition-colors',
             )}
           >
-            <div className="flex items-center gap-2.5 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="max-md:hidden flex items-center gap-2.5 text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">
               <ChatActionButton
                 toolTipContent="Export"
                 icon="i-ph:download-simple h-4 w-4"
@@ -154,7 +155,77 @@ export function HistoryItem({
           </div>
         </Link>
       )}
+
+      {/* phone: there is no hover, so the chat actions are in a "⋯" menu */}
+      {!editing && !selectionMode && (
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger
+            aria-label={`Actions for ${currentDescription}`}
+            data-testid="chat-actions"
+            className="md:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-transparent text-ca-elements-textSecondary"
+          >
+            <span className="i-ph:dots-three-bold text-xl" aria-hidden="true" />
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Portal>
+            <DropdownMenu.Content
+              align="end"
+              sideOffset={4}
+              collisionPadding={16}
+
+              // keep focus away from the trigger, so "Rename" can focus its text box
+              onCloseAutoFocus={(event) => event.preventDefault()}
+              className="z-[1000] min-w-[180px] max-w-[calc(100vw-32px)] rounded-xl border border-ca-elements-borderColor bg-ca-elements-background-depth-1 p-1 shadow-lg"
+            >
+              <PhoneAction icon="i-ph:download-simple" onSelect={() => exportChat(item.id)}>
+                Export
+              </PhoneAction>
+              {onDuplicate && (
+                <PhoneAction icon="i-ph:copy" onSelect={() => onDuplicate(item.id)}>
+                  Duplicate
+                </PhoneAction>
+              )}
+              <PhoneAction icon="i-ph:pencil-simple" onSelect={toggleEditMode}>
+                Rename
+              </PhoneAction>
+              <PhoneAction
+                icon="i-ph:trash"
+                danger
+                onSelect={() => onDelete?.({ preventDefault: noop, stopPropagation: noop } as unknown as React.UIEvent)}
+              >
+                Delete
+              </PhoneAction>
+            </DropdownMenu.Content>
+          </DropdownMenu.Portal>
+        </DropdownMenu.Root>
+      )}
     </div>
+  );
+}
+
+const noop = () => undefined;
+
+function PhoneAction({
+  icon,
+  danger,
+  onSelect,
+  children,
+}: {
+  icon: string;
+  danger?: boolean;
+  onSelect: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <DropdownMenu.Item
+      onSelect={onSelect}
+      className={classNames(
+        'flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-3 text-sm outline-none data-[highlighted]:bg-ca-elements-item-backgroundActive',
+        danger ? 'text-red-500' : 'text-ca-elements-textPrimary',
+      )}
+    >
+      <span className={`${icon} text-lg`} aria-hidden="true" />
+      {children}
+    </DropdownMenu.Item>
   );
 }
 

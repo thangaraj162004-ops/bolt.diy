@@ -15,7 +15,8 @@ vi.mock('~/lib/persistence', () => ({
 vi.mock('./HistoryItem', () => ({ HistoryItem: () => null }));
 
 const { Menu } = await import('./Menu.client');
-const { sidebarOpen } = await import('~/lib/stores/layout');
+const { openSettings, sidebarOpen } = await import('~/lib/stores/layout');
+const { authState } = await import('~/lib/supabase/auth');
 
 function pointerMove(pointerType: string, x: number) {
   const event = new Event('pointermove') as Event & { pointerType: string; pageX: number; clientX: number };
@@ -72,5 +73,30 @@ describe('sidebar on a phone', () => {
 
     pointerMove('mouse', 5);
     expect(sidebarOpen.get()).toBe(true);
+  });
+
+  it('shows the letter avatar (not the guest picture) on a phone', () => {
+    authState.set({ status: 'signed-in', email: 'priya@b.co', balance: 1 });
+
+    try {
+      renderMenu();
+
+      const avatar = document.querySelector('.side-menu [data-testid="user-avatar"]')!;
+      expect(avatar.textContent).toBe('P');
+      expect(avatar.className).toContain('md:hidden');
+
+      // the picture is kept for desktop only
+      expect(document.querySelector('.side-menu img')!.parentElement!.className).toContain('max-md:hidden');
+    } finally {
+      authState.set({ status: 'loading', balance: null });
+    }
+  });
+
+  it('opens Settings when the phone account menu asks', () => {
+    renderMenu();
+    act(() => sidebarOpen.set(true));
+
+    act(() => openSettings());
+    expect(sidebarOpen.get()).toBe(false);
   });
 });

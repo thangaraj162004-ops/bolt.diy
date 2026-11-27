@@ -19,3 +19,12 @@ export function isPhoneWidth(): boolean {
 /** Chat box text area on a phone: one line to start, growing to about four lines. */
 export const PHONE_TEXTAREA_MIN_HEIGHT = 44;
 export const PHONE_TEXTAREA_MAX_HEIGHT = 112;
+
+/** Event the sidebar listens to, so other places (the phone account menu) can open Settings. */
+export const OPEN_SETTINGS_EVENT = 'ca:open-settings';
+
+export function openSettings() {
+  if (typeof document !== 'undefined') {
+    document.dispatchEvent(new Event(OPEN_SETTINGS_EVENT));
+  }
+}

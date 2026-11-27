@@ -866,7 +866,7 @@ export function EventLogsTab() {
 
   return (
     <div className="flex h-full flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between max-md:flex-wrap max-md:gap-3">
         <DropdownMenu.Root open={showLevelFilter} onOpenChange={setShowLevelFilter}>
           <DropdownMenu.Trigger asChild>
             <button
@@ -915,7 +915,7 @@ export function EventLogsTab() {
           </DropdownMenu.Portal>
         </DropdownMenu.Root>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 max-md:flex-wrap max-md:gap-x-4 max-md:gap-y-2 max-md:whitespace-nowrap">
           <div className="flex items-center gap-2">
             <Switch
               checked={showTimestamps}

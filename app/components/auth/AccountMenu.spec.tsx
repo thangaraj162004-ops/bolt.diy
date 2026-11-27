@@ -1,6 +1,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AccountMenu } from './AccountMenu.client';
+import { OPEN_SETTINGS_EVENT, sidebarOpen } from '~/lib/stores/layout';
 import { fakeSupabase, settle } from '~/lib/supabase/__fixtures__/fake-supabase';
 import { authDialog, authState, buyCreditsDialog, outOfCreditsDialog } from '~/lib/supabase/auth';
 
@@ -153,10 +154,10 @@ describe('AccountMenu', () => {
     expect(screen.queryByTestId('plan-badge')).toBeNull();
   });
 
-  it('phone: one-line credits chip and one account menu with Buy credits and Log out', async () => {
+  it('phone: one-line credits chip and a 40 px letter avatar that opens the account sheet', async () => {
     await renderMenu(
       fakeSupabase({
-        session: { user: { id: 'user-1', email: 'a@b.co' } },
+        session: { user: { id: 'user-1', email: 'priya@b.co' } },
         balance: 1262,
         profile: { plan: 'pro', plan_until: new Date(Date.now() + 5 * 86_400_000).toISOString() },
       }),
@@ -173,22 +174,95 @@ describe('AccountMenu', () => {
 
     const trigger = screen.getByRole('button', { name: 'Account menu' });
     expect(trigger.className).toContain('h-11 w-11');
+    expect(trigger.className).toContain('mr-1.5'); // 4 + 6 + 2 = 12 px from the screen edge
+    expect(trigger.className).toContain('bg-transparent');
+
+    const avatar = trigger.querySelector('[data-testid="user-avatar"]')!;
+    expect(avatar.textContent).toBe('P');
+    expect(avatar.className).toContain('h-10 w-10');
+    expect(avatar.className).not.toMatch(/bg-white/);
 
     await act(async () => {
-      fireEvent.keyDown(trigger, { key: 'Enter' });
+      fireEvent.click(trigger);
     });
 
-    const menu = await screen.findByTestId('account-menu');
-    expect(menu.textContent).toContain('a@b.co');
-    expect(menu.textContent).toContain('1262 credits · Pro plan until');
-
-    const items = screen.getAllByRole('menuitem');
-    expect(items.map((item) => item.textContent)).toEqual(['Buy credits', 'Log out']);
-    items.forEach((item) => expect(item.className).toContain('min-h-11'));
+    const sheet = await screen.findByTestId('account-sheet');
+    const rows = [...sheet.querySelectorAll('[data-row]')];
+    expect(rows.map((row) => row.getAttribute('data-row'))).toEqual([
+      'profile',
+      'credits',
+      'buy',
+      'settings',
+      'history',
+      'signout',
+    ]);
+    rows.forEach((row) => expect(row.className).toContain('min-h-[52px]'));
+    expect(sheet.textContent).toContain('priya');
+    expect(sheet.textContent).toContain('priya@b.co');
+    expect(sheet.textContent).toContain('1262 credits');
+    expect(sheet.textContent).toContain('Pro plan until');
 
     await act(async () => {
-      fireEvent.click(items[0]);
+      fireEvent.click(screen.getByRole('button', { name: 'Buy credits' }));
     });
     expect(buyCreditsDialog.get()).toBe(true);
+    expect(screen.queryByTestId('account-sheet')).toBeNull();
+  });
+
+  it('phone: Settings and Chat history rows open them', async () => {
+    await renderMenu(fakeSupabase({ session: { user: { id: 'user-1', email: 'a@b.co' } }, balance: 3 }));
+
+    const onSettings = vi.fn();
+    document.addEventListener(OPEN_SETTINGS_EVENT, onSettings);
+
+    try {
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Account menu' }));
+      });
+      await act(async () => {
+        fireEvent.click(await screen.findByRole('button', { name: 'Settings' }));
+      });
+      expect(onSettings).toHaveBeenCalledTimes(1);
+
+      sidebarOpen.set(false);
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Account menu' }));
+      });
+      await act(async () => {
+        fireEvent.click(await screen.findByRole('button', { name: 'Chat history' }));
+      });
+      expect(sidebarOpen.get()).toBe(true);
+    } finally {
+      document.removeEventListener(OPEN_SETTINGS_EVENT, onSettings);
+      sidebarOpen.set(false);
+    }
+  });
+
+  it('phone: a guest gets a person icon and a sheet with "Guest" and Sign in', async () => {
+    await renderMenu(fakeSupabase());
+
+    // the desktop "Log in" button stays, hidden on a phone
+    expect(screen.getByRole('button', { name: 'Log in' }).className).toContain('max-md:hidden');
+
+    const trigger = screen.getByRole('button', { name: 'Account menu' });
+    expect(trigger.querySelector('[data-testid="user-avatar"] .i-ph\\:user')).toBeTruthy();
+
+    await act(async () => {
+      fireEvent.click(trigger);
+    });
+
+    const sheet = await screen.findByTestId('account-sheet');
+    expect([...sheet.querySelectorAll('[data-row]')].map((row) => row.getAttribute('data-row'))).toEqual([
+      'profile',
+      'settings',
+      'history',
+    ]);
+    expect(sheet.textContent).toContain('Guest');
+    expect(sheet.querySelector('img')).toBeNull();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
+    });
+    expect(authDialog.get()).toEqual({});
   });
 });

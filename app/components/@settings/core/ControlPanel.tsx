@@ -46,6 +46,9 @@ const BetaLabel = () => (
   </div>
 );
 
+/** A settings page; on a phone it fills the width with 16 px sides and long text wraps. */
+const phonePage = 'mx-auto max-w-5xl max-md:max-w-full max-md:min-w-0 max-md:p-4 max-md:break-words';
+
 const NAV_GROUPS: { label: string; tabs: TabType[] }[] = [
   { label: 'Preferences', tabs: ['settings'] },
   { label: 'Account', tabs: ['profile', 'notifications'] },
@@ -261,6 +264,9 @@ export const ControlPanel = ({ open, onClose, initialTab }: ControlPanelProps) =
             <div
               className={classNames(
                 'w-[min(1440px,calc(100vw-2rem))] h-[90vh]',
+
+                // phone: a full-screen page
+                'max-md:w-screen max-md:h-[100dvh] max-md:!rounded-none max-md:!border-0',
                 'bg-ca-elements-background-depth-1 text-ca-elements-textPrimary',
                 'rounded-2xl shadow-2xl',
                 'border border-ca-elements-borderColor',
@@ -271,7 +277,7 @@ export const ControlPanel = ({ open, onClose, initialTab }: ControlPanelProps) =
               )}
             >
               <div className="relative z-10 flex h-full min-h-0">
-                <aside className="flex w-[248px] shrink-0 flex-col border-r border-ca-elements-borderColor bg-ca-elements-background-depth-2">
+                <aside className="max-md:hidden flex w-[248px] shrink-0 flex-col border-r border-ca-elements-borderColor bg-ca-elements-background-depth-2">
                   <button
                     onClick={handleClose}
                     className="mx-4 mt-4 flex appearance-none items-center gap-2 border-0 border-b border-solid border-ca-elements-borderColor bg-transparent px-2 pb-5 pt-2 text-left text-sm font-semibold text-ca-elements-textPrimary hover:text-ca-elements-item-contentAccent"
@@ -310,18 +316,84 @@ export const ControlPanel = ({ open, onClose, initialTab }: ControlPanelProps) =
                     <AvatarDropdown onSelectTab={handleTabClick} />
                   </div>
                 </aside>
-                <main className="min-w-0 flex-1 overflow-y-auto modern-scrollbar p-6 md:px-10 md:py-8">
+                <main className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden modern-scrollbar p-6 max-md:p-0 md:px-10 md:py-8">
+                  {/* phone: a top bar with a back arrow and the page title */}
+                  <div className="md:hidden sticky top-0 z-20 flex h-14 items-center gap-1 border-b border-ca-elements-borderColor bg-ca-elements-background-depth-1 px-1">
+                    <button
+                      type="button"
+                      aria-label="Back"
+                      onClick={() => (activeTab ? setActiveTab(null) : handleClose())}
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-transparent text-ca-elements-textPrimary"
+                    >
+                      <span className="i-ph:arrow-left text-xl" aria-hidden="true" />
+                    </button>
+                    <h2 data-testid="settings-title" className="min-w-0 truncate text-base font-semibold">
+                      {activeTab ? TAB_LABELS[activeTab] : 'Settings'}
+                    </h2>
+                  </div>
                   {activeTab && activeTab !== 'cloud-providers' ? (
-                    <div className="mx-auto max-w-5xl">{getTabComponent(activeTab)}</div>
+                    <div className={phonePage}>{getTabComponent(activeTab)}</div>
                   ) : !activeTab ? (
                     <div className="mx-auto max-w-5xl">
-                      <DialogTitle className="mb-1 text-2xl font-semibold text-ca-elements-textPrimary">
+                      <DialogTitle className="mb-1 text-2xl font-semibold text-ca-elements-textPrimary max-md:sr-only">
                         Control Panel
                       </DialogTitle>
-                      <p className="mb-6 text-sm text-ca-elements-textSecondary">
+                      <p className="mb-6 text-sm text-ca-elements-textSecondary max-md:hidden">
                         Manage your account, preferences, providers, and connected services.
                       </p>
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+                      {/* phone: one list of big rows, in the same groups as the desktop side menu */}
+                      <div className="md:hidden py-2" data-testid="settings-list">
+                        {navigationTabs.map((group) => (
+                          <section key={group.label} className="mb-2">
+                            <h3 className="px-4 pt-3 pb-1 text-xs font-medium uppercase tracking-wide text-ca-elements-textTertiary">
+                              {group.label}
+                            </h3>
+                            <ul>
+                              {group.tabs.map((tabId) => {
+                                const Icon = TAB_ICONS[tabId];
+
+                                return (
+                                  <li key={tabId}>
+                                    <button
+                                      type="button"
+                                      data-testid="settings-row"
+                                      data-tab={tabId}
+                                      onClick={() => handleTabClick(tabId)}
+                                      className="flex min-h-[60px] w-full items-center gap-3 bg-transparent px-4 py-2 text-left hover:bg-ca-elements-item-backgroundActive"
+                                    >
+                                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-ca-elements-background-depth-3 text-ca-elements-textSecondary">
+                                        <Icon className="h-5 w-5" />
+                                      </span>
+                                      <span className="min-w-0 flex-1">
+                                        <span className="block text-base text-ca-elements-textPrimary">
+                                          {TAB_LABELS[tabId]}
+                                          {BETA_TABS.has(tabId) && (
+                                            <span className="ml-2 rounded-full bg-purple-500/10 px-1.5 py-0.5 text-[10px] font-medium text-purple-600 dark:text-purple-400">
+                                              BETA
+                                            </span>
+                                          )}
+                                        </span>
+                                        <span className="block break-words text-sm text-ca-elements-textSecondary">
+                                          {getTabUpdateStatus(tabId)
+                                            ? getStatusMessage(tabId)
+                                            : TAB_DESCRIPTIONS[tabId]}
+                                        </span>
+                                      </span>
+                                      <span
+                                        className="i-ph:caret-right shrink-0 text-ca-elements-textTertiary"
+                                        aria-hidden="true"
+                                      />
+                                    </button>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          </section>
+                        ))}
+                      </div>
+
+                      <div className="max-md:hidden grid grid-cols-1 gap-3 sm:grid-cols-2">
                         {visibleTabs.map((tab, index) => (
                           <div
                             key={tab.id}
@@ -350,7 +422,7 @@ export const ControlPanel = ({ open, onClose, initialTab }: ControlPanelProps) =
                   {hasVisitedCloudProviders && (
                     <div
                       aria-hidden={activeTab !== 'cloud-providers'}
-                      className={classNames('mx-auto max-w-5xl', activeTab !== 'cloud-providers' && 'hidden')}
+                      className={classNames(phonePage, activeTab !== 'cloud-providers' && 'hidden')}
                     >
                       <CloudProvidersTab />
                     </div>

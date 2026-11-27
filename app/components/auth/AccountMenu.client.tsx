@@ -1,12 +1,15 @@
 import { useStore } from '@nanostores/react';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { AccountSheet } from './AccountSheet';
 import { AuthDialog } from './AuthDialog';
 import { BuyCreditsDialog } from './BuyCreditsDialog';
 import { OutOfCreditsDialog } from './OutOfCreditsDialog';
+import { UserAvatar, displayName } from '~/components/ui/UserAvatar';
 import { formatPlanDate } from '~/lib/payments/checkout';
 import { planName } from '~/lib/payments/packs';
+import { openSettings, sidebarOpen } from '~/lib/stores/layout';
+import { profileStore } from '~/lib/stores/profile';
 import { authDialog, authState, buyCreditsDialog, outOfCreditsDialog, signOut, startAuth } from '~/lib/supabase/auth';
 import { supabase as defaultClient } from '~/lib/supabase/client';
 
@@ -18,8 +21,12 @@ interface AccountMenuProps {
 const buttonClass =
   'rounded-lg border border-ca-elements-borderColor px-3 py-1.5 max-md:min-h-11 text-sm text-ca-elements-textPrimary hover:bg-ca-elements-background-depth-2';
 
-const menuItemClass =
-  'flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-md px-3 text-sm text-ca-elements-textPrimary outline-none data-[highlighted]:bg-ca-elements-background-depth-3';
+/*
+ * Phone: a 44 px tap area around the 40 px circle; the right margin puts the
+ * circle 12 px from the screen edge (header padding 4 + margin 6 + 2).
+ */
+const avatarButtonClass =
+  'md:hidden mr-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-transparent p-0';
 
 function creditsLabel(balance: number | null) {
   return balance === null ? '… credits' : `${balance} ${balance === 1 ? 'credit' : 'credits'}`;
@@ -34,6 +41,8 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
   const loginDialog = useStore(authDialog);
   const outOfCredits = useStore(outOfCreditsDialog);
   const buyOpen = useStore(buyCreditsDialog);
+  const profile = useStore(profileStore);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => (client ? startAuth(client) : undefined), [client]);
 
@@ -41,12 +50,31 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
     return null;
   }
 
+  const sheetActions = {
+    onSignIn: () => authDialog.set({}),
+    onBuyCredits: () => buyCreditsDialog.set(true),
+    onSettings: openSettings,
+    onChatHistory: () => sidebarOpen.set(true),
+    onSignOut: () => void signOut(client),
+  };
+
   if (state.status === 'signed-out') {
     return (
       <>
-        <button type="button" className={buttonClass} onClick={() => authDialog.set({})}>
+        <button type="button" className={`max-md:hidden ${buttonClass}`} onClick={() => authDialog.set({})}>
           Log in
         </button>
+        {/* phone: a guest avatar that opens the account sheet with "Sign in" */}
+        <button
+          type="button"
+          aria-label="Account menu"
+          data-testid="avatar-button"
+          className={avatarButtonClass}
+          onClick={() => setSheetOpen(true)}
+        >
+          <UserAvatar />
+        </button>
+        <AccountSheet open={sheetOpen} onOpenChange={setSheetOpen} user={null} {...sheetActions} />
         <AuthDialog
           client={client}
           open={loginDialog !== null}
@@ -59,6 +87,7 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
 
   const plan = planName(state.plan);
   const planUntil = formatPlanDate(state.planUntil);
+  const name = displayName(profile.username, state.email);
 
   return (
     <div className="flex items-center gap-2 max-md:gap-1">
@@ -86,7 +115,7 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
         Log out
       </button>
 
-      {/* phone: a one-line credits chip and one account menu with the rest */}
+      {/* phone: a one-line credits chip and an avatar that opens the account sheet */}
       <span
         className="md:hidden flex items-center gap-1 whitespace-nowrap rounded-full bg-purple-500/10 px-2.5 py-1 text-sm font-medium text-purple-600 dark:text-purple-300"
         aria-label={creditsLabel(state.balance)}
@@ -95,39 +124,26 @@ export function AccountMenu({ client = defaultClient }: AccountMenuProps) {
         <span className="i-ph:coins text-base" aria-hidden="true" />
         {state.balance === null ? '…' : state.balance}
       </span>
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger
-          aria-label="Account menu"
-          className="md:hidden flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-ca-elements-textPrimary hover:bg-ca-elements-background-depth-2"
-        >
-          <span className="i-ph:user-circle text-2xl" aria-hidden="true" />
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content
-            align="end"
-            sideOffset={4}
-            className="z-[1000] min-w-[220px] max-w-[calc(100vw-1rem)] rounded-lg border border-ca-elements-borderColor bg-ca-elements-background-depth-1 p-1 shadow-lg"
-            data-testid="account-menu"
-          >
-            <div className="px-3 py-2 text-xs text-ca-elements-textSecondary">
-              {state.email && <div className="truncate">{state.email}</div>}
-              <div>
-                {creditsLabel(state.balance)}
-                {plan ? ` · ${plan} plan${planUntil ? ` until ${planUntil}` : ''}` : ''}
-              </div>
-            </div>
-            <DropdownMenu.Separator className="my-1 h-px bg-ca-elements-borderColor" />
-            <DropdownMenu.Item className={menuItemClass} onSelect={() => buyCreditsDialog.set(true)}>
-              <span className="i-ph:shopping-cart text-base" aria-hidden="true" />
-              Buy credits
-            </DropdownMenu.Item>
-            <DropdownMenu.Item className={menuItemClass} onSelect={() => void signOut(client)}>
-              <span className="i-ph:sign-out text-base" aria-hidden="true" />
-              Log out
-            </DropdownMenu.Item>
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+      <button
+        type="button"
+        aria-label="Account menu"
+        data-testid="avatar-button"
+        className={avatarButtonClass}
+        onClick={() => setSheetOpen(true)}
+      >
+        <UserAvatar name={name} />
+      </button>
+      <AccountSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        user={{
+          name,
+          email: state.email,
+          credits: creditsLabel(state.balance),
+          plan: plan ? `${plan} plan${planUntil ? ` until ${planUntil}` : ''}` : 'No plan',
+        }}
+        {...sheetActions}
+      />
       <OutOfCreditsDialog
         open={outOfCredits}
         onClose={() => outOfCreditsDialog.set(false)}

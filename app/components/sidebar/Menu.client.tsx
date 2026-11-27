@@ -18,11 +18,13 @@ import { Button } from '~/components/ui/Button';
 import { Dialog, DialogButton, DialogDescription, DialogRoot, DialogTitle } from '~/components/ui/Dialog';
 import { SettingsButton, OpenSourceNoticesLink } from '~/components/ui/SettingsButton';
 import { ThemeSwitch } from '~/components/ui/ThemeSwitch';
+import { UserAvatar, displayName } from '~/components/ui/UserAvatar';
 import { useSearchFilter } from '~/lib/hooks/useSearchFilter';
 import { db, deleteById, getAll, chatId, type ChatHistoryItem, useChatHistory } from '~/lib/persistence';
 import { sidebarEntry } from '~/lib/persistence/chatTitle';
-import { isPhoneWidth, sidebarOpen } from '~/lib/stores/layout';
+import { OPEN_SETTINGS_EVENT, isPhoneWidth, sidebarOpen } from '~/lib/stores/layout';
 import { DEFAULT_AVATAR, profileStore } from '~/lib/stores/profile';
+import { authState } from '~/lib/supabase/auth';
 import { classNames } from '~/utils/classNames';
 import { cubicEasingFn } from '~/utils/easings';
 
@@ -93,6 +95,8 @@ export const Menu = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [settingsInitialTab, setSettingsInitialTab] = useState<string | undefined>(undefined);
   const profile = useStore(profileStore);
+  const auth = useStore(authState);
+  const phoneName = displayName(profile?.username, auth.status === 'signed-in' ? auth.email : undefined);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
@@ -340,10 +344,19 @@ export const Menu = () => {
       setOpen(false);
     };
 
+    // the phone account menu's "Settings" row
+    const handleOpenSettings = () => {
+      setSettingsInitialTab(undefined);
+      setIsSettingsOpen(true);
+      setOpen(false);
+    };
+
     document.addEventListener('open-github-settings', handleOpenGitHubSettings);
+    document.addEventListener(OPEN_SETTINGS_EVENT, handleOpenSettings);
 
     return () => {
       document.removeEventListener('open-github-settings', handleOpenGitHubSettings);
+      document.removeEventListener(OPEN_SETTINGS_EVENT, handleOpenSettings);
     };
   }, []);
 
@@ -408,10 +421,15 @@ export const Menu = () => {
           </div>
           <div className="flex items-center gap-3">
             <OpenSourceNoticesLink />
-            <span className="font-medium text-sm text-ca-elements-textPrimary truncate">
+            <span className="max-md:hidden font-medium text-sm text-ca-elements-textPrimary truncate">
               {profile?.username || 'Guest User'}
             </span>
-            <div className="flex items-center justify-center w-[32px] h-[32px] overflow-hidden bg-ca-elements-background-depth-3 text-ca-elements-textSecondary rounded-full shrink-0">
+            {/* phone: the same simple circle as the header, instead of the picture */}
+            <span className="md:hidden font-medium text-sm text-ca-elements-textPrimary truncate">
+              {phoneName || 'Guest'}
+            </span>
+            <UserAvatar name={phoneName} className="md:hidden" />
+            <div className="max-md:hidden flex items-center justify-center w-[32px] h-[32px] overflow-hidden bg-ca-elements-background-depth-3 text-ca-elements-textSecondary rounded-full shrink-0">
               <img
                 src={profile?.avatar || DEFAULT_AVATAR}
                 alt={profile?.username || 'User'}
